@@ -165,7 +165,7 @@ export default function BookingForm() {
       `;
       
       if (confirm(confirmationMessage + "\n\nWould you like to proceed to payment now?")) {
-        window.location.href = `/booking-confirmation?code=${booking.confirmationCode}&payment=true`;
+        window.location.href = `/payment?booking=${booking.confirmationCode}`;
       }
       
       form.reset();

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
+import { sendEmail, generateConfirmationEmail, generateCancellationEmail } from "./emailService";
 import { 
   insertBookingSchema, 
   adminLoginSchema, 
@@ -91,6 +92,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error validating coupon:", error);
       res.status(500).json({ message: "Failed to validate coupon" });
+    }
+  });
+
+  // Get booking by confirmation code
+  app.get("/api/bookings/:confirmationCode", async (req, res) => {
+    try {
+      const { confirmationCode } = req.params;
+      const booking = await storage.getBookingByConfirmationCode(confirmationCode);
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      res.json(booking);
+    } catch (error) {
+      console.error("Error fetching booking:", error);
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  // Update booking payment
+  app.put("/api/bookings/:id/payment", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { paymentStatus, utrNumber } = req.body;
+      
+      const booking = await storage.updateBooking(parseInt(id), {
+        paymentStatus,
+        upiTransactionId: utrNumber
+      });
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating booking payment:", error);
+      res.status(500).json({ error: "Failed to update booking payment" });
     }
   });
 
@@ -670,6 +710,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting amenity:", error);
       res.status(500).json({ message: "Failed to delete amenity" });
+    }
+  });
+
+  // Admin booking status management
+  app.patch("/api/admin/bookings/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { status, paymentStatus, paymentNotes } = req.body;
+      
+      const booking = await storage.getBookingById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Update booking
+      const updatedBooking = await storage.updateBooking(bookingId, {
+        status,
+        paymentStatus,
+        paymentNotes,
+        paymentVerifiedAt: paymentStatus === "verified" ? new Date() : booking.paymentVerifiedAt
+      });
+
+      if (!updatedBooking) {
+        return res.status(404).json({ message: "Failed to update booking" });
+      }
+
+      // Send email notifications based on status changes
+      if (booking.email) {
+        if (status === "complete" && paymentStatus === "verified") {
+          // Send confirmation email
+          const emailHtml = generateConfirmationEmail(updatedBooking);
+          await sendEmail({
+            to: booking.email,
+            subject: `🎉 Booking Confirmed - ${booking.confirmationCode}`,
+            html: emailHtml
+          });
+          console.log(`✅ Confirmation email sent to ${booking.email}`);
+        } else if (status === "canceled") {
+          // Send cancellation email
+          const emailHtml = generateCancellationEmail(updatedBooking, paymentNotes);
+          await sendEmail({
+            to: booking.email,
+            subject: `❌ Booking Cancelled - ${booking.confirmationCode}`,
+            html: emailHtml
+          });
+          console.log(`❌ Cancellation email sent to ${booking.email}`);
+        }
+      }
+
+      res.json({
+        message: "Booking updated successfully",
+        booking: updatedBooking,
+        emailSent: !!booking.email
+      });
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res.status(500).json({ message: "Failed to update booking status" });
     }
   });
 
