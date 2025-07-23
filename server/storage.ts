@@ -144,7 +144,7 @@ export class MemStorage implements IStorage {
   ];
 
   private adminUsers: AdminUser[] = [
-    { id: 1, username: "Admin12", password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", role: "admin", createdAt: new Date() }
+    { id: 1, username: "Admin12", password: "$2b$10$ZSUrc3r3CRg82iXK48ZTguctFlstvzRxIE4xDtq0vPSg3xf92kc/i", role: "admin", createdAt: new Date() }
   ];
 
   private seoSettings: SeoSettings[] = [
