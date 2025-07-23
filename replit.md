@@ -67,18 +67,24 @@ Preferred communication style: Simple, everyday language.
    - Admin verification workflow for payment approval/decline
    - Automatic email notifications sent after payment status changes
    - Payment status tracking: pending → paid → verified → confirmed
-4. **Booking Confirmation System**:
+4. **Dynamic Sitemap Generation**:
+   - Automatic sitemap.xml generation including all active pages, services, and gallery categories
+   - Dynamic robots.txt with proper crawling instructions and sitemap reference
+   - Admin panel for sitemap management and regeneration
+   - SEO-optimized with proper priorities and change frequencies
+   - Updates automatically when content is added or modified
+5. **Booking Confirmation System**:
    - Automatic confirmation code generation for each booking
    - Email notifications with detailed booking information and payment status
    - Admin management interface for confirming/cancelling bookings and verifying payments
    - Check-in reminder system for confirmed bookings
    - Public booking lookup by confirmation code with payment status
-5. **SEO Management**:
+6. **SEO Management**:
    - Dynamic review snippets for search engine results
    - Structured data (JSON-LD) for rich search snippets
    - Meta tag optimization for organic visibility
-6. **Data Persistence**: All data stored in PostgreSQL via Drizzle ORM
-7. **State Management**: TanStack Query handles caching and synchronization
+7. **Data Persistence**: All data stored in PostgreSQL via Drizzle ORM
+8. **State Management**: TanStack Query handles caching and synchronization
 
 ## External Dependencies
 

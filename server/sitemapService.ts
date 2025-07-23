@@ -1,0 +1,229 @@
+import type { Service, GalleryImage, SeoSettings } from "@shared/schema";
+import { storage } from "./storage";
+
+interface SitemapUrl {
+  loc: string;
+  lastmod: string;
+  changefreq: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  priority: string;
+}
+
+export class SitemapService {
+  private baseUrl: string;
+
+  constructor(baseUrl: string = 'https://farmfeastfarmhouse.shop') {
+    this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+  }
+
+  private formatDate(date: Date | string | null): string {
+    if (!date) return new Date().toISOString().split('T')[0];
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toISOString().split('T')[0];
+  }
+
+  private async getStaticPages(): Promise<SitemapUrl[]> {
+    const now = new Date();
+    const today = this.formatDate(now);
+
+    // Get SEO settings to determine if pages exist and their importance
+    const seoSettings = await storage.getAllSeoSettings();
+    const seoMap = seoSettings.reduce((acc, setting) => {
+      acc[setting.page] = setting;
+      return acc;
+    }, {} as { [key: string]: typeof seoSettings[0] });
+
+    const staticPages: SitemapUrl[] = [
+      {
+        loc: `${this.baseUrl}/`,
+        lastmod: today,
+        changefreq: 'daily',
+        priority: '1.0'
+      },
+      {
+        loc: `${this.baseUrl}/services`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: '0.9'
+      },
+      {
+        loc: `${this.baseUrl}/gallery`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: '0.8'
+      },
+      {
+        loc: `${this.baseUrl}/booking`,
+        lastmod: today,
+        changefreq: 'monthly',
+        priority: '0.9'
+      },
+      {
+        loc: `${this.baseUrl}/booking-confirmation`,
+        lastmod: today,
+        changefreq: 'monthly',
+        priority: '0.6'
+      }
+    ];
+
+    // Adjust priorities based on SEO settings
+    staticPages.forEach(page => {
+      const pageName = page.loc.replace(`${this.baseUrl}/`, '') || 'home';
+      const seoData = seoMap[pageName];
+      if (seoData && seoData.ranking) {
+        // Higher ranking = higher priority
+        const normalizedRanking = Math.max(0.5, Math.min(1.0, seoData.ranking / 100));
+        page.priority = normalizedRanking.toFixed(1);
+      }
+    });
+
+    return staticPages;
+  }
+
+  private async getServicePages(): Promise<SitemapUrl[]> {
+    try {
+      const services = await storage.getAllServices();
+      const activeServices = services.filter((service: any) => service.active);
+      
+      return activeServices.map((service: any) => ({
+        loc: `${this.baseUrl}/services/${this.slugify(service.name)}`,
+        lastmod: this.formatDate(new Date()),
+        changefreq: 'monthly' as const,
+        priority: '0.7'
+      }));
+    } catch (error) {
+      console.error('Error fetching services for sitemap:', error);
+      return [];
+    }
+  }
+
+  private async getGalleryPages(): Promise<SitemapUrl[]> {
+    try {
+      const images = await storage.getAllGalleryImages();
+      const activeImages = images.filter((img: any) => img.active);
+      
+      // Get unique categories
+      const categorySet = new Set(activeImages.map((img: any) => img.category));
+      const categories = Array.from(categorySet);
+      
+      return categories.map((category: string) => ({
+        loc: `${this.baseUrl}/gallery/${this.slugify(category)}`,
+        lastmod: this.formatDate(new Date()),
+        changefreq: 'weekly' as const,
+        priority: '0.6'
+      }));
+    } catch (error) {
+      console.error('Error fetching gallery categories for sitemap:', error);
+      return [];
+    }
+  }
+
+  private async getBlogPages(): Promise<SitemapUrl[]> {
+    // Future implementation for blog posts
+    // This would fetch from a blog/posts table when implemented
+    return [];
+  }
+
+  private slugify(text: string): string {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')        // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+      .replace(/\-\-+/g, '-')      // Replace multiple - with single -
+      .replace(/^-+/, '')          // Trim - from start of text
+      .replace(/-+$/, '');         // Trim - from end of text
+  }
+
+  async generateSitemap(): Promise<string> {
+    try {
+      // Get all URL types
+      const [staticPages, servicePages, galleryPages, blogPages] = await Promise.all([
+        this.getStaticPages(),
+        this.getServicePages(),
+        this.getGalleryPages(),
+        this.getBlogPages()
+      ]);
+
+      // Combine all URLs
+      const allUrls = [
+        ...staticPages,
+        ...servicePages,
+        ...galleryPages,
+        ...blogPages
+      ];
+
+      // Sort by priority (descending) then by URL
+      allUrls.sort((a, b) => {
+        const priorityDiff = parseFloat(b.priority) - parseFloat(a.priority);
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.loc.localeCompare(b.loc);
+      });
+
+      // Generate XML
+      const xml = this.generateSitemapXML(allUrls);
+      return xml;
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      throw error;
+    }
+  }
+
+  private generateSitemapXML(urls: SitemapUrl[]): string {
+    const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
+    const sitemapOpen = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    const sitemapClose = '</urlset>';
+
+    const urlEntries = urls.map(url => {
+      return `  <url>
+    <loc>${this.escapeXml(url.loc)}</loc>
+    <lastmod>${url.lastmod}</lastmod>
+    <changefreq>${url.changefreq}</changefreq>
+    <priority>${url.priority}</priority>
+  </url>`;
+    }).join('\n');
+
+    return `${xmlHeader}
+${sitemapOpen}
+${urlEntries}
+${sitemapClose}`;
+  }
+
+  private escapeXml(unsafe: string): string {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case "'": return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  }
+
+  async generateRobotsTxt(): Promise<string> {
+    const robotsTxt = `User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: ${this.baseUrl}/sitemap.xml
+
+# Optimize crawl budget
+Crawl-delay: 1
+
+# Block admin and internal pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /uploads/temp/
+
+# Allow important directories
+Allow: /uploads/gallery/
+Allow: /assets/`;
+
+    return robotsTxt;
+  }
+}
+
+export const sitemapService = new SitemapService();
