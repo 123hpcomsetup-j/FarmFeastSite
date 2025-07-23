@@ -4,7 +4,7 @@ import { Calendar, MessageCircle, MapPin, Star } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <section className="hero-gradient py-12 lg:py-20">
+    <section data-tour="hero" className="hero-gradient py-12 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
@@ -21,7 +21,7 @@ export default function HeroSection() {
             
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/booking">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button data-tour="booking-button" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <Calendar className="w-5 h-5 mr-2" />
                   Book Your Stay
                 </Button>
