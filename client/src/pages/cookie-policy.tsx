@@ -172,10 +172,10 @@ export default function CookiePolicy() {
                 <div className="space-y-3 text-gray-700">
                   <p><strong>Browser Settings:</strong></p>
                   <ul className="list-disc pl-6 space-y-1">
-                    <li><strong>Chrome:</strong> Settings > Privacy and Security > Cookies and other site data</li>
-                    <li><strong>Firefox:</strong> Options > Privacy & Security > Cookies and Site Data</li>
-                    <li><strong>Safari:</strong> Preferences > Privacy > Manage Website Data</li>
-                    <li><strong>Edge:</strong> Settings > Site permissions > Cookies and site data</li>
+                    <li><strong>Chrome:</strong> Settings &gt; Privacy and Security &gt; Cookies and other site data</li>
+                    <li><strong>Firefox:</strong> Options &gt; Privacy &amp; Security &gt; Cookies and Site Data</li>
+                    <li><strong>Safari:</strong> Preferences &gt; Privacy &gt; Manage Website Data</li>
+                    <li><strong>Edge:</strong> Settings &gt; Site permissions &gt; Cookies and site data</li>
                   </ul>
                   
                   <p className="mt-3">
