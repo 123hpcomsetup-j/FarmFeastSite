@@ -63,6 +63,7 @@ export const seoSettings = pgTable("seo_settings", {
   ogTitle: text("og_title"),
   ogDescription: text("og_description"),
   ogImage: text("og_image"),
+  canonicalUrl: text("canonical_url"),
   score: integer("score").default(0),
   ranking: integer("ranking").default(0),
   updatedAt: timestamp("updated_at").defaultNow(),

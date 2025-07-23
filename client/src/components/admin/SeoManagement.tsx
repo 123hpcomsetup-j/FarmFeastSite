@@ -124,27 +124,68 @@ export default function SeoManagement() {
   const getSeoScore = (page: any) => {
     let score = 0;
     const checks = [
-      { condition: page.title && page.title.length >= 30 && page.title.length <= 60, points: 20 },
-      { condition: page.description && page.description.length >= 120 && page.description.length <= 160, points: 20 },
-      { condition: page.keywords && page.keywords.split(',').length >= 3, points: 15 },
-      { condition: page.ogTitle && page.ogTitle.length > 0, points: 15 },
-      { condition: page.ogDescription && page.ogDescription.length > 0, points: 15 },
-      { condition: page.ogImage && page.ogImage.length > 0, points: 10 },
-      { condition: page.canonicalUrl && page.canonicalUrl.length > 0, points: 5 },
+      { 
+        condition: page.title && page.title.length >= 30 && page.title.length <= 60, 
+        points: 25,
+        name: "Title length (30-60 chars)"
+      },
+      { 
+        condition: page.description && page.description.length >= 120 && page.description.length <= 160, 
+        points: 25,
+        name: "Meta description (120-160 chars)"
+      },
+      { 
+        condition: page.keywords && page.keywords.split(',').filter(k => k.trim()).length >= 3, 
+        points: 15,
+        name: "Keywords (min 3)"
+      },
+      { 
+        condition: page.ogTitle && page.ogTitle.length > 0 && page.ogTitle.length <= 60, 
+        points: 10,
+        name: "Open Graph title"
+      },
+      { 
+        condition: page.ogDescription && page.ogDescription.length > 0 && page.ogDescription.length <= 160, 
+        points: 10,
+        name: "Open Graph description"
+      },
+      { 
+        condition: page.ogImage && page.ogImage.length > 0 && page.ogImage.startsWith('http'), 
+        points: 10,
+        name: "Open Graph image URL"
+      },
+      { 
+        condition: page.canonicalUrl && page.canonicalUrl.length > 0 && page.canonicalUrl.startsWith('http'), 
+        points: 5,
+        name: "Canonical URL"
+      },
     ];
 
     checks.forEach(check => {
       if (check.condition) score += check.points;
     });
 
-    return score;
+    return { score, checks };
   };
 
-  const getScoreBadge = (score: number) => {
-    if (score >= 80) return <Badge className="bg-green-100 text-green-800">Excellent ({score}%)</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800">Good ({score}%)</Badge>;
-    if (score >= 40) return <Badge className="bg-orange-100 text-orange-800">Fair ({score}%)</Badge>;
+  const getScoreBadge = (scoreData: { score: number; checks: any[] }) => {
+    const { score } = scoreData;
+    if (score >= 85) return <Badge className="bg-green-100 text-green-800">Excellent ({score}%)</Badge>;
+    if (score >= 70) return <Badge className="bg-blue-100 text-blue-800">Good ({score}%)</Badge>;
+    if (score >= 50) return <Badge className="bg-yellow-100 text-yellow-800">Fair ({score}%)</Badge>;
+    if (score >= 30) return <Badge className="bg-orange-100 text-orange-800">Needs Work ({score}%)</Badge>;
     return <Badge className="bg-red-100 text-red-800">Poor ({score}%)</Badge>;
+  };
+
+  const getSeoRecommendations = (scoreData: { score: number; checks: any[] }) => {
+    const failedChecks = scoreData.checks.filter(check => !check.condition);
+    if (failedChecks.length === 0) return [];
+    
+    return failedChecks.map(check => ({
+      issue: check.name,
+      points: check.points,
+      priority: check.points >= 20 ? 'high' : check.points >= 10 ? 'medium' : 'low'
+    }));
   };
 
   if (isLoading) {
@@ -179,6 +220,65 @@ export default function SeoManagement() {
           Add Page SEO
         </Button>
       </div>
+
+      {/* SEO Overview Dashboard */}
+      {seoPages && seoPages.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>SEO Overview Dashboard</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {seoPages.map((page: any) => {
+                const scoreData = getSeoScore(page);
+                const recommendations = getSeoRecommendations(scoreData);
+                return (
+                  <div key={page.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold capitalize">{page.page}</h3>
+                      {getScoreBadge(scoreData)}
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className={`h-4 w-4 ${page.title ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className={page.title ? 'text-gray-700' : 'text-gray-400'}>Title</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className={`h-4 w-4 ${page.description ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className={page.description ? 'text-gray-700' : 'text-gray-400'}>Description</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className={`h-4 w-4 ${page.keywords ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className={page.keywords ? 'text-gray-700' : 'text-gray-400'}>Keywords</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className={`h-4 w-4 ${page.ogImage ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className={page.ogImage ? 'text-gray-700' : 'text-gray-400'}>OG Image</span>
+                      </div>
+                      {recommendations.length > 0 && (
+                        <div className="mt-3 pt-2 border-t">
+                          <div className="text-xs font-medium text-red-600">
+                            {recommendations.length} issue{recommendations.length > 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-3"
+                      onClick={() => handleEdit(page)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit SEO
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {showForm && (
         <Card>
@@ -368,7 +468,8 @@ export default function SeoManagement() {
             </TableHeader>
             <TableBody>
               {seoPages?.map((page: any) => {
-                const score = getSeoScore(page);
+                const scoreData = getSeoScore(page);
+                const recommendations = getSeoRecommendations(scoreData);
                 return (
                   <TableRow key={page.id}>
                     <TableCell className="font-medium capitalize">{page.page}</TableCell>
@@ -378,6 +479,11 @@ export default function SeoManagement() {
                       </div>
                       <div className="text-xs text-gray-500">
                         {page.title?.length || 0} characters
+                        {page.title && (
+                          <span className={page.title.length >= 30 && page.title.length <= 60 ? "text-green-600" : "text-red-600"}>
+                            {page.title.length < 30 ? " (too short)" : page.title.length > 60 ? " (too long)" : " (optimal)"}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs">
@@ -386,9 +492,31 @@ export default function SeoManagement() {
                       </div>
                       <div className="text-xs text-gray-500">
                         {page.description?.length || 0} characters
+                        {page.description && (
+                          <span className={page.description.length >= 120 && page.description.length <= 160 ? "text-green-600" : "text-red-600"}>
+                            {page.description.length < 120 ? " (too short)" : page.description.length > 160 ? " (too long)" : " (optimal)"}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>{getScoreBadge(score)}</TableCell>
+                    <TableCell>
+                      <div className="space-y-2">
+                        {getScoreBadge(scoreData)}
+                        {recommendations.length > 0 && (
+                          <div className="text-xs">
+                            <div className="font-medium text-gray-700">Issues to fix:</div>
+                            {recommendations.slice(0, 2).map((rec, idx) => (
+                              <div key={idx} className={`${rec.priority === 'high' ? 'text-red-600' : rec.priority === 'medium' ? 'text-orange-600' : 'text-yellow-600'}`}>
+                                • {rec.issue}
+                              </div>
+                            ))}
+                            {recommendations.length > 2 && (
+                              <div className="text-gray-500">+{recommendations.length - 2} more</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="outline"
