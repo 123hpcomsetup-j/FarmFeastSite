@@ -63,13 +63,7 @@ export default function CouponsManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CouponForm }) => {
-      return apiRequest(`/api/admin/coupons/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("PATCH", `/api/admin/coupons/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
@@ -89,12 +83,7 @@ export default function CouponsManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/coupons/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("DELETE", `/api/admin/coupons/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
