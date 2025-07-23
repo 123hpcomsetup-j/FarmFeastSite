@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Search, Calendar, Users, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { CheckCircle, Search, Calendar, Users, Phone, Mail, MapPin, Clock, CreditCard } from "lucide-react";
 import { format } from "date-fns";
+import PaymentForm from "@/components/payment/PaymentForm";
 
 interface BookingDetails {
   id: number;
@@ -17,12 +18,29 @@ interface BookingDetails {
   checkoutDate: string;
   guestCount: number;
   status: string;
+  paymentStatus: string;
   finalTotal: number;
 }
 
 export default function BookingConfirmation() {
   const [confirmationCode, setConfirmationCode] = useState("");
   const [searchAttempted, setSearchAttempted] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  // Check URL parameters for auto-fill and payment flag
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeParam = urlParams.get('code');
+    const paymentParam = urlParams.get('payment');
+    
+    if (codeParam) {
+      setConfirmationCode(codeParam);
+      setSearchAttempted(true);
+      if (paymentParam === 'true') {
+        setShowPayment(true);
+      }
+    }
+  }, []);
 
   const { data: booking, isLoading, error, refetch } = useQuery<BookingDetails>({
     queryKey: ["/api/bookings/confirmation", confirmationCode],
@@ -55,6 +73,20 @@ export default function BookingConfirmation() {
         return 'bg-red-100 text-red-800 border-red-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'verified':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'paid':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'pending':
+      default:
+        return 'bg-orange-100 text-orange-800 border-orange-300';
     }
   };
 
@@ -141,9 +173,12 @@ export default function BookingConfirmation() {
             <CardContent className="space-y-6">
               {/* Status and Confirmation Code */}
               <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 flex-wrap">
                   <Badge className={`px-4 py-2 text-sm font-medium ${getStatusColor(booking.status)}`}>
                     {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </Badge>
+                  <Badge className={`px-4 py-2 text-sm font-medium ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                    Payment: {booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1)}
                   </Badge>
                 </div>
                 
@@ -246,7 +281,26 @@ export default function BookingConfirmation() {
                 </div>
               )}
 
-              {booking.status === 'pending' && (
+              {/* Payment Section */}
+              {booking.paymentStatus === 'pending' && !showPayment && (
+                <div className="bg-orange-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-orange-900 mb-4 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    Payment Required
+                  </h3>
+                  <p className="text-sm text-orange-800 mb-4">
+                    Complete your payment to confirm your booking. Your reservation will be confirmed once payment is verified.
+                  </p>
+                  <Button 
+                    onClick={() => setShowPayment(true)}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    Proceed to Payment
+                  </Button>
+                </div>
+              )}
+
+              {booking.status === 'pending' && booking.paymentStatus !== 'pending' && (
                 <div className="bg-yellow-50 p-6 rounded-lg">
                   <h3 className="font-semibold text-yellow-900 mb-4">
                     Booking Pending
@@ -258,6 +312,17 @@ export default function BookingConfirmation() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Payment Form */}
+        {booking && showPayment && (
+          <PaymentForm 
+            booking={booking as any}
+            onPaymentSubmitted={() => {
+              setShowPayment(false);
+              refetch(); // Refresh booking data
+            }}
+          />
         )}
 
         {/* Help Section */}

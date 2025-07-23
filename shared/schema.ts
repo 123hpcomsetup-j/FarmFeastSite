@@ -26,6 +26,11 @@ export const bookings = pgTable("bookings", {
   reminderSent: boolean("reminder_sent").default(false),
   cancelledAt: timestamp("cancelled_at"),
   cancellationReason: text("cancellation_reason"),
+  // Payment fields
+  paymentStatus: text("payment_status").default("pending"), // pending, paid, verified, failed
+  upiTransactionId: text("upi_transaction_id"), // UTR number
+  paymentVerifiedAt: timestamp("payment_verified_at"),
+  paymentNotes: text("payment_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

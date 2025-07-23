@@ -42,14 +42,15 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error handling middleware
 
 ### Database Schema
-- **bookings**: Customer booking records with pricing, status, and confirmation tracking
+- **bookings**: Customer booking records with pricing, status, confirmation tracking, and payment information
+  - Payment fields: paymentStatus, upiTransactionId, paymentVerifiedAt, paymentNotes
 - **services**: Available services with pricing and categories
 - **coupons**: Discount coupons with validation rules
 - **reviewSettings**: SEO review data for search engine snippets
 - **adminUsers**: Admin authentication and user management
 - **seoSettings**: Page-specific SEO meta data and optimization
 - **galleryImages**: Image management for photo gallery
-- **siteSettings**: Dynamic site configuration and WhatsApp numbers
+- **siteSettings**: Dynamic site configuration including UPI ID, WhatsApp numbers, and support contacts
 - **amenities**: Property amenities and features management
 
 ## Data Flow
@@ -60,18 +61,24 @@ Preferred communication style: Simple, everyday language.
    - Form calculates pricing in real-time based on selections
    - Coupon validation occurs via `/api/coupons/validate` endpoint
    - Final booking submission to `/api/bookings` endpoint with automatic confirmation code generation
-3. **Booking Confirmation System**:
+3. **Payment Integration System**:
+   - Real UPI payment flow with configurable UPI ID (ybl@ybl) managed from admin panel
+   - Customer submits UTR number after making UPI payment
+   - Admin verification workflow for payment approval/decline
+   - Automatic email notifications sent after payment status changes
+   - Payment status tracking: pending → paid → verified → confirmed
+4. **Booking Confirmation System**:
    - Automatic confirmation code generation for each booking
-   - Email notifications with detailed booking information
-   - Admin management interface for confirming/cancelling bookings
+   - Email notifications with detailed booking information and payment status
+   - Admin management interface for confirming/cancelling bookings and verifying payments
    - Check-in reminder system for confirmed bookings
-   - Public booking lookup by confirmation code
-4. **SEO Management**:
+   - Public booking lookup by confirmation code with payment status
+5. **SEO Management**:
    - Dynamic review snippets for search engine results
    - Structured data (JSON-LD) for rich search snippets
    - Meta tag optimization for organic visibility
-5. **Data Persistence**: All data stored in PostgreSQL via Drizzle ORM
-6. **State Management**: TanStack Query handles caching and synchronization
+6. **Data Persistence**: All data stored in PostgreSQL via Drizzle ORM
+7. **State Management**: TanStack Query handles caching and synchronization
 
 ## External Dependencies
 

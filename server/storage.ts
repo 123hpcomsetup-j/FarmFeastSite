@@ -282,6 +282,12 @@ export class DatabaseStorage implements IStorage {
           value: "500",
           type: "number",
           description: "Mandatory maintenance fee"
+        },
+        {
+          key: "upi_id",
+          value: "ybl@ybl",
+          type: "text",
+          description: "UPI ID for payments"
         }
       ];
 

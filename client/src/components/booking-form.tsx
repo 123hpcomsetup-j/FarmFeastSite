@@ -153,19 +153,19 @@ export default function BookingForm() {
       
       // Show confirmation dialog with booking details
       const confirmationMessage = `
-        🎉 Booking Confirmed!
+        ✅ Booking Created Successfully!
         
         Confirmation Code: ${booking.confirmationCode}
         Name: ${booking.fullName}
         Check-in: ${booking.checkinDate}
         Total: ₹${booking.finalTotal?.toLocaleString()}
         
+        Next Step: Complete Payment
         Save your confirmation code!
-        You can track your booking at /booking-confirmation
       `;
       
-      if (confirm(confirmationMessage + "\n\nWould you like to view your booking details now?")) {
-        window.location.href = "/booking-confirmation";
+      if (confirm(confirmationMessage + "\n\nWould you like to proceed to payment now?")) {
+        window.location.href = `/booking-confirmation?code=${booking.confirmationCode}&payment=true`;
       }
       
       form.reset();

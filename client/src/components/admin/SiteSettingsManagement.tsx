@@ -116,6 +116,7 @@ export default function SiteSettingsManagement() {
     { key: "contact_email", placeholder: "info@farmfeastfarmhouse.com", icon: Mail },
     { key: "contact_address", placeholder: "123 Rural Road, Village Name, State 12345", icon: MapPin },
     { key: "whatsapp_number", placeholder: "+91 9876543210", icon: Phone },
+    { key: "upi_id", placeholder: "ybl@ybl", icon: Settings },
     { key: "business_hours", placeholder: "24/7 Available", icon: Clock },
     { key: "booking_email", placeholder: "bookings@farmfeastfarmhouse.com", icon: Mail },
     { key: "emergency_contact", placeholder: "+91 9876543210", icon: Phone },
