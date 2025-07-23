@@ -127,3 +127,25 @@ Preferred communication style: Simple, everyday language.
 - **Fallback**: In-memory storage implementation for development/testing
 
 The architecture emphasizes developer experience with fast builds, type safety, and modern tooling while maintaining simplicity in deployment and maintenance.
+
+## GDPR & Legal Compliance
+
+### Comprehensive Privacy Framework
+- **Complete GDPR Compliance**: Full privacy policy, terms & conditions, cookie policy, and data processing agreements
+- **Cookie Consent Management**: Granular consent system with accept/decline options for essential, analytics, marketing, and preference cookies
+- **Data Subject Rights**: Complete implementation of GDPR rights including access, rectification, erasure, restriction, portability, and objection
+- **Consent Manager**: Advanced consent management with opt-in/opt-out controls and consent withdrawal mechanisms
+- **Legal Pages**: All required legal documents with proper structure and compliance language
+
+### Privacy Features
+- **Cookie Banner**: GDPR-compliant cookie consent banner with customizable preferences
+- **Data Processing Rights**: User interface for exercising GDPR rights including data download, correction, and deletion requests
+- **Consent Tracking**: Local storage of consent preferences with proper versioning and date tracking
+- **Privacy Dashboard**: Comprehensive privacy management interface accessible from footer
+- **International Compliance**: Support for data transfers with appropriate safeguards and adequacy decisions
+
+### Legal Documentation
+- **Privacy Policy**: Comprehensive privacy policy covering all data collection, processing, and sharing practices
+- **Terms & Conditions**: Complete terms covering booking, payments, cancellations, liability, and dispute resolution
+- **Cookie Policy**: Detailed cookie policy with types, purposes, retention, and management instructions
+- **Data Processing Agreement**: User rights and data processing information with contact details for Data Protection Officer

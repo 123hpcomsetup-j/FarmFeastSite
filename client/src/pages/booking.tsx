@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
+import Footer from "@/components/Footer";
 import BookingForm from "@/components/booking-form";
 
 export default function Booking() {

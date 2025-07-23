@@ -11,10 +11,14 @@ import Gallery from "@/pages/gallery";
 import Booking from "@/pages/booking";
 import BookingConfirmation from "@/pages/booking-confirmation";
 import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsConditions from "@/pages/terms-conditions";
+import CookiePolicy from "@/pages/cookie-policy";
+import DataProcessing from "@/pages/data-processing";
 import NotFoundChecker from "@/pages/404-checker";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import NotFound from "@/pages/not-found";
+import CookieConsent from "@/components/CookieConsent";
 
 function Router() {
   return (
@@ -25,6 +29,9 @@ function Router() {
       <Route path="/booking" component={Booking} />
       <Route path="/booking-confirmation" component={BookingConfirmation} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-conditions" component={TermsConditions} />
+      <Route path="/cookie-policy" component={CookiePolicy} />
+      <Route path="/data-processing" component={DataProcessing} />
       <Route path="/404-checker" component={NotFoundChecker} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
@@ -41,6 +48,7 @@ function App() {
           <SeoHead />
           <Toaster />
           <Router />
+          <CookieConsent />
         </TourProvider>
       </TooltipProvider>
     </QueryClientProvider>
