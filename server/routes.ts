@@ -102,10 +102,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Check minimum amount
-      if (amount < coupon.minAmount) {
+      // Check minimum amount - handle null/undefined minAmount as 0
+      const minAmount = coupon.minAmount || 0;
+      if (amount < minAmount) {
         return res.status(400).json({ 
-          message: `Minimum order amount of ₹${coupon.minAmount} required` 
+          message: `Minimum order amount of ₹${minAmount} required` 
         });
       }
 
@@ -127,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: `Coupon applied! You saved ₹${discountAmount}`,
       });
     } catch (error) {
+      console.error("Coupon validation error:", error);
       res.status(500).json({ message: "Failed to validate coupon" });
     }
   });
