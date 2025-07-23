@@ -138,7 +138,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create booking
   app.post("/api/bookings", async (req, res) => {
     try {
+      console.log("Received booking data:", req.body);
       const validatedData = insertBookingSchema.parse(req.body);
+      console.log("Validated booking data:", validatedData);
       
       // Generate confirmation code
       const confirmationCode = generateConfirmationCode();
@@ -151,13 +153,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(booking);
     } catch (error) {
+      console.error("Booking creation error:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           message: "Invalid booking data", 
           errors: error.errors 
         });
       } else {
-        res.status(500).json({ message: "Failed to create booking" });
+        res.status(500).json({ 
+          message: "Failed to create booking",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
       }
     }
   });

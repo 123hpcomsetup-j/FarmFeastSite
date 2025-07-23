@@ -129,7 +129,18 @@ export const amenities = pgTable("amenities", {
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
   status: true,
+  confirmationCode: true,
+  confirmedAt: true,
+  emailSent: true,
+  reminderSent: true,
+  cancelledAt: true,
+  cancellationReason: true,
+  paymentStatus: true,
+  upiTransactionId: true,
+  paymentVerifiedAt: true,
+  paymentNotes: true,
 });
 
 export const insertServiceSchema = createInsertSchema(services).omit({
