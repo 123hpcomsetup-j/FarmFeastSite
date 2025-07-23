@@ -139,7 +139,7 @@ export const blogPosts = pgTable("blog_posts", {
   tags: json("tags").$type<string[]>().default([]),
   metaTitle: text("meta_title"),
   metaDescription: text("meta_description"),
-  readTime: integer("read_time").default(5),
+  readTime: integer("read_time").default(5), // estimated reading time in minutes
   viewCount: integer("view_count").default(0),
   featured: boolean("featured").default(false),
   publishedAt: timestamp("published_at"),

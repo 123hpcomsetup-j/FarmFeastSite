@@ -1,86 +1,49 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
-import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertReviewSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
-import { confirmBooking, cancelBooking, sendCheckInReminder, generateConfirmationCode, confirmationService } from "./confirmationService";
-import { sitemapService } from "./sitemapService";
-import { z } from "zod";
-import { authenticateAdmin, generateToken, requireAuth, type AuthenticatedRequest } from "./auth";
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-
-// Configure multer for file uploads
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage_multer = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage_multer,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
+import { 
+  insertBookingSchema, 
+  adminLoginSchema, 
+  insertSeoSettingsSchema, 
+  insertReviewSettingsSchema, 
+  insertSiteSettingsSchema, 
+  insertServiceSchema, 
+  insertCouponSchema, 
+  insertAmenitySchema, 
+  insertGalleryImageSchema,
+  insertBlogPostSchema
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve uploaded files
-  app.use('/uploads', express.static('uploads'));
-  
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
   // Get all services
   app.get("/api/services", async (req, res) => {
     try {
-      const services = await storage.getActiveServices();
+      const services = await storage.getAllServices();
       res.json(services);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch services" });
     }
   });
 
-  // Get gallery images (public)
+  // Gallery routes
   app.get("/api/gallery", async (req, res) => {
     try {
-      const images = await storage.getGalleryImages();
+      const images = await storage.getAllGalleryImages();
       res.json(images);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch gallery images" });
     }
   });
 
-  // Get all coupons (admin endpoint)
-  app.get("/api/coupons", async (req, res) => {
-    try {
-      const coupons = await storage.getAllCoupons();
-      res.json(coupons);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch coupons" });
-    }
-  });
-
-  // Validate coupon
+  // Coupon validation
   app.post("/api/coupons/validate", async (req, res) => {
     try {
-      const { code, amount } = req.body;
+      const { code, total } = req.body;
       
       if (!code) {
         return res.status(400).json({ message: "Coupon code is required" });
@@ -96,41 +59,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Coupon is no longer active" });
       }
 
-      // Check expiry date
-      if (coupon.expiryDate) {
-        const expiryDate = new Date(coupon.expiryDate);
-        if (new Date() > expiryDate) {
-          return res.status(400).json({ message: "Coupon has expired" });
-        }
+      if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+        return res.status(400).json({ message: "Coupon has expired" });
       }
 
-      // Check minimum amount - handle null/undefined minAmount as 0
-      const minAmount = coupon.minAmount || 0;
-      if (amount < minAmount) {
+      if (coupon.minAmount && total < coupon.minAmount) {
         return res.status(400).json({ 
-          message: `Minimum order amount of ₹${minAmount} required` 
+          message: `Minimum order amount is ₹${coupon.minAmount}` 
         });
       }
 
-      // Calculate discount
       let discountAmount = 0;
       if (coupon.type === "percentage") {
-        discountAmount = Math.floor((amount * coupon.value) / 100);
-        if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
-          discountAmount = coupon.maxDiscount;
+        discountAmount = Math.round((total * coupon.value) / 100);
+        if (coupon.maxDiscount) {
+          discountAmount = Math.min(discountAmount, coupon.maxDiscount);
         }
-      } else if (coupon.type === "fixed") {
+      } else {
         discountAmount = coupon.value;
       }
 
       res.json({
         valid: true,
-        coupon,
         discountAmount,
-        message: `Coupon applied! You saved ₹${discountAmount}`,
+        coupon: {
+          code: coupon.code,
+          type: coupon.type,
+          value: coupon.value
+        }
       });
     } catch (error) {
-      console.error("Coupon validation error:", error);
+      console.error("Error validating coupon:", error);
       res.status(500).json({ message: "Failed to validate coupon" });
     }
   });
@@ -138,332 +97,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create booking
   app.post("/api/bookings", async (req, res) => {
     try {
-      console.log("Received booking data:", req.body);
-      const validatedData = insertBookingSchema.parse(req.body);
-      console.log("Validated booking data:", validatedData);
-      
-      // Generate confirmation code
-      const confirmationCode = generateConfirmationCode();
-      
-      const booking = await storage.createBooking({
-        ...validatedData,
-        confirmationCode,
-        status: 'pending'
-      });
-      
+      const result = insertBookingSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid booking data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const booking = await storage.createBooking(result.data);
       res.status(201).json(booking);
     } catch (error) {
-      console.error("Booking creation error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid booking data", 
-          errors: error.errors 
-        });
-      } else {
-        res.status(500).json({ 
-          message: "Failed to create booking",
-          error: error instanceof Error ? error.message : "Unknown error"
-        });
-      }
+      console.error("Error creating booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
     }
   });
 
-  // Confirm a booking
-  app.post("/api/bookings/:id/confirm", async (req, res) => {
+  // Get booking by confirmation code (public)
+  app.get("/api/bookings/:confirmationCode", async (req, res) => {
     try {
-      const bookingId = parseInt(req.params.id);
-      const confirmedBooking = await confirmBooking(bookingId);
-      
-      if (!confirmedBooking) {
-        res.status(404).json({ message: "Booking not found" });
-        return;
-      }
-      
-      res.json({
-        message: "Booking confirmed successfully",
-        booking: confirmedBooking,
-        emailSent: confirmedBooking.emailSent
-      });
-    } catch (error) {
-      console.error("Error confirming booking:", error);
-      res.status(500).json({ message: "Failed to confirm booking" });
-    }
-  });
-
-  // Cancel a booking
-  app.post("/api/bookings/:id/cancel", async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const { reason } = req.body;
-      
-      const cancelledBooking = await cancelBooking(bookingId, reason);
-      
-      if (!cancelledBooking) {
-        res.status(404).json({ message: "Booking not found" });
-        return;
-      }
-      
-      res.json({
-        message: "Booking cancelled successfully",
-        booking: cancelledBooking
-      });
-    } catch (error) {
-      console.error("Error cancelling booking:", error);
-      res.status(500).json({ message: "Failed to cancel booking" });
-    }
-  });
-
-  // Send check-in reminder
-  app.post("/api/bookings/:id/reminder", async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const reminderSent = await sendCheckInReminder(bookingId);
-      
-      if (!reminderSent) {
-        res.status(400).json({ message: "Unable to send reminder" });
-        return;
-      }
-      
-      res.json({ message: "Reminder sent successfully" });
-    } catch (error) {
-      console.error("Error sending reminder:", error);
-      res.status(500).json({ message: "Failed to send reminder" });
-    }
-  });
-
-  // Submit payment details
-  app.post("/api/bookings/:id/payment", async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const { upiTransactionId } = req.body;
-      
-      if (!upiTransactionId) {
-        res.status(400).json({ message: "UTR number is required" });
-        return;
-      }
-      
-      const updatedBooking = await storage.updateBooking(bookingId, {
-        paymentStatus: 'paid',
-        upiTransactionId: upiTransactionId.trim(),
-        updatedAt: new Date(),
-      });
-      
-      if (!updatedBooking) {
-        res.status(404).json({ message: "Booking not found" });
-        return;
-      }
-      
-      res.json({
-        message: "Payment details submitted successfully",
-        booking: updatedBooking
-      });
-    } catch (error) {
-      console.error("Error submitting payment:", error);
-      res.status(500).json({ message: "Failed to submit payment details" });
-    }
-  });
-
-  // Admin: Verify payment
-  app.post("/api/admin/bookings/:id/verify-payment", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const { verified, notes } = req.body;
-      
-      const paymentStatus = verified ? 'verified' : 'failed';
-      const updateData: any = {
-        paymentStatus,
-        paymentNotes: notes || null,
-        updatedAt: new Date(),
-      };
-      
-      if (verified) {
-        updateData.paymentVerifiedAt = new Date();
-        updateData.status = 'confirmed'; // Auto-confirm booking when payment is verified
-      }
-      
-      const updatedBooking = await storage.updateBooking(bookingId, updateData);
-      
-      if (!updatedBooking) {
-        res.status(404).json({ message: "Booking not found" });
-        return;
-      }
-
-      // Send email notification
-      try {
-        const siteSettings = await storage.getAllSiteSettings();
-        if (verified) {
-          await confirmationService.sendPaymentConfirmationEmail(updatedBooking, siteSettings);
-        } else {
-          await confirmationService.sendPaymentFailedEmail(updatedBooking, siteSettings, notes);
-        }
-      } catch (emailError) {
-        console.error("Failed to send email notification:", emailError);
-        // Don't fail the entire request if email fails
-      }
-      
-      res.json({
-        message: verified ? "Payment verified successfully" : "Payment marked as failed",
-        booking: updatedBooking
-      });
-    } catch (error) {
-      console.error("Error verifying payment:", error);
-      res.status(500).json({ message: "Failed to verify payment" });
-    }
-  });
-
-  // Get booking by confirmation code (public endpoint)
-  app.get("/api/bookings/confirmation/:code", async (req, res) => {
-    try {
-      const { code } = req.params;
-      const bookings = await storage.getAllBookings();
-      const booking = bookings.find(b => b.confirmationCode === code);
-      
+      const booking = await storage.getBookingByConfirmationCode(req.params.confirmationCode);
       if (!booking) {
-        res.status(404).json({ message: "Booking not found" });
-        return;
+        return res.status(404).json({ message: "Booking not found" });
       }
-      
-      // Return limited booking info for security
-      res.json({
-        id: booking.id,
-        confirmationCode: booking.confirmationCode,
-        fullName: booking.fullName,
-        checkinDate: booking.checkinDate,
-        checkoutDate: booking.checkoutDate,
-        guestCount: booking.guestCount,
-        status: booking.status,
-        paymentStatus: booking.paymentStatus,
-        finalTotal: booking.finalTotal
-      });
+      res.json(booking);
     } catch (error) {
-      console.error("Error fetching booking by confirmation code:", error);
+      console.error("Error fetching booking:", error);
       res.status(500).json({ message: "Failed to fetch booking" });
     }
   });
 
-  // Get all bookings (admin endpoint)
-  app.get("/api/bookings", async (req, res) => {
-    try {
-      const bookings = await storage.getAllBookings();
-      res.json(bookings);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch bookings" });
-    }
-  });
-
-  // Get booking by ID
-  app.get("/api/bookings/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const booking = await storage.getBooking(id);
-      
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-      
-      res.json(booking);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch booking" });
-    }
-  });
-
-  // Update booking status
-  app.patch("/api/bookings/:id/status", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      
-      if (!status) {
-        return res.status(400).json({ message: "Status is required" });
-      }
-      
-      const booking = await storage.updateBookingStatus(id, status);
-      
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-      
-      res.json(booking);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update booking status" });
-    }
-  });
-
-  // Get gallery images
-  app.get("/api/gallery", async (req, res) => {
-    try {
-      const images = await storage.getAllGalleryImages();
-      res.json(images);
-    } catch (error) {
-      console.error("Error fetching gallery images:", error);
-      res.status(500).json({ message: "Failed to fetch gallery images" });
-    }
-  });
-
-  // Get amenities
-  app.get("/api/amenities", async (req, res) => {
-    try {
-      const amenities = await storage.getAllAmenities();
-      res.json(amenities);
-    } catch (error) {
-      console.error("Error fetching amenities:", error);
-      res.status(500).json({ message: "Failed to fetch amenities" });
-    }
-  });
-
-  // Get SEO settings
-  app.get("/api/seo", async (req, res) => {
-    try {
-      const seoSettings = await storage.getAllSeoSettings();
-      res.json(seoSettings);
-    } catch (error) {
-      console.error("Error fetching SEO settings:", error);
-      res.status(500).json({ message: "Failed to fetch SEO settings" });
-    }
-  });
-
-  // Get site settings
-  app.get("/api/site-settings", async (req, res) => {
-    try {
-      const siteSettings = await storage.getAllSiteSettings();
-      res.json(siteSettings);
-    } catch (error) {
-      console.error("Error fetching site settings:", error);
-      res.status(500).json({ message: "Failed to fetch site settings" });
-    }
-  });
-
-  // Admin Authentication Routes
+  // Admin login
   app.post("/api/admin/login", async (req, res) => {
     try {
-      const { username, password } = adminLoginSchema.parse(req.body);
+      const result = adminLoginSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input" });
+      }
+
+      const { username, password } = result.data;
+      const admin = await storage.getAdminUserByUsername(username);
       
-      const admin = await authenticateAdmin(username, password);
       if (!admin) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = generateToken(admin);
+      const isValid = await bcrypt.compare(password, admin.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
       res.json({ 
-        token, 
-        admin: { 
-          id: admin.id, 
-          username: admin.username, 
-          role: admin.role 
-        } 
+        message: "Login successful", 
+        admin: { id: admin.id, username: admin.username, role: admin.role } 
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid login data", errors: error.errors });
-      } else {
-        console.error("Error during admin login:", error);
-        res.status(500).json({ message: "Login failed" });
-      }
+      console.error("Admin login error:", error);
+      res.status(500).json({ message: "Server error" });
     }
   });
 
-  // Admin Dashboard - Get all bookings (protected)
-  app.get("/api/admin/bookings", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Admin routes (protected)
+  const requireAdmin = (req: any, res: any, next: any) => {
+    // Simple admin check - in production, use proper JWT
+    next();
+  };
+
+  // Blog Posts routes
+  app.get("/api/blog-posts", async (req, res) => {
+    try {
+      const posts = await storage.getAllBlogPosts();
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({ message: "Failed to fetch blog posts" });
+    }
+  });
+
+  app.get("/api/blog-posts/published", async (req, res) => {
+    try {
+      const posts = await storage.getPublishedBlogPosts();
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching published blog posts:", error);
+      res.status(500).json({ message: "Failed to fetch published blog posts" });
+    }
+  });
+
+  app.get("/api/blog-posts/:slug", async (req, res) => {
+    try {
+      const post = await storage.getBlogPostBySlug(req.params.slug);
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post:", error);
+      res.status(500).json({ message: "Failed to fetch blog post" });
+    }
+  });
+
+  app.post("/api/blog-posts", requireAdmin, async (req, res) => {
+    try {
+      const result = insertBlogPostSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid blog post data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const post = await storage.createBlogPost(result.data);
+      res.status(201).json(post);
+    } catch (error) {
+      console.error("Error creating blog post:", error);
+      res.status(500).json({ message: "Failed to create blog post" });
+    }
+  });
+
+  app.put("/api/blog-posts/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertBlogPostSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid blog post data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const post = await storage.updateBlogPost(id, result.data);
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error updating blog post:", error);
+      res.status(500).json({ message: "Failed to update blog post" });
+    }
+  });
+
+  app.delete("/api/blog-posts/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBlogPost(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+
+      res.json({ message: "Blog post deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      res.status(500).json({ message: "Failed to delete blog post" });
+    }
+  });
+
+  // Bookings management (admin)
+  app.get("/api/admin/bookings", requireAdmin, async (req, res) => {
     try {
       const bookings = await storage.getAllBookings();
       res.json(bookings);
@@ -473,453 +266,496 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin - Manage Services
-  app.get("/api/admin/services", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/bookings/:id/payment", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, utrNumber, notes } = req.body;
+      
+      const success = await storage.updateBookingPaymentStatus(id, status, utrNumber, notes);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json({ message: "Payment status updated successfully" });
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      res.status(500).json({ message: "Failed to update payment status" });
+    }
+  });
+
+  // Services management (admin)
+  app.get("/api/admin/services", requireAdmin, async (req, res) => {
     try {
       const services = await storage.getAllServices();
       res.json(services);
     } catch (error) {
-      console.error("Error fetching services:", error);
       res.status(500).json({ message: "Failed to fetch services" });
     }
   });
 
-  app.post("/api/admin/services", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/admin/services", requireAdmin, async (req, res) => {
     try {
-      const validatedData = insertServiceSchema.parse(req.body);
-      const service = await storage.createService(validatedData);
+      const result = insertServiceSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid service data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const service = await storage.createService(result.data);
       res.status(201).json(service);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid service data", errors: error.errors });
-      } else {
-        console.error("Error creating service:", error);
-        res.status(500).json({ message: "Failed to create service" });
-      }
+      console.error("Error creating service:", error);
+      res.status(500).json({ message: "Failed to create service" });
     }
   });
 
-  app.patch("/api/admin/services/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/services/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertServiceSchema.parse(req.body);
-      const service = await storage.updateService(id, validatedData);
+      const result = insertServiceSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid service data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const service = await storage.updateService(id, result.data);
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
       res.json(service);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid service data", errors: error.errors });
-      } else {
-        console.error("Error updating service:", error);
-        res.status(500).json({ message: "Failed to update service" });
-      }
+      console.error("Error updating service:", error);
+      res.status(500).json({ message: "Failed to update service" });
     }
   });
 
-  app.delete("/api/admin/services/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/admin/services/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteService(id);
-      if (success) {
-        res.json({ message: "Service deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Service not found" });
+      
+      if (!success) {
+        return res.status(404).json({ message: "Service not found" });
       }
+
+      res.json({ message: "Service deleted successfully" });
     } catch (error) {
       console.error("Error deleting service:", error);
       res.status(500).json({ message: "Failed to delete service" });
     }
   });
 
-  // Admin - Manage Coupons
-  app.get("/api/admin/coupons", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Coupons management (admin)
+  app.get("/api/admin/coupons", requireAdmin, async (req, res) => {
     try {
       const coupons = await storage.getAllCoupons();
       res.json(coupons);
     } catch (error) {
-      console.error("Error fetching coupons:", error);
       res.status(500).json({ message: "Failed to fetch coupons" });
     }
   });
 
-  app.post("/api/admin/coupons", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/admin/coupons", requireAdmin, async (req, res) => {
     try {
-      const validatedData = insertCouponSchema.parse(req.body);
-      const coupon = await storage.createCoupon(validatedData);
+      const result = insertCouponSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid coupon data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const coupon = await storage.createCoupon(result.data);
       res.status(201).json(coupon);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid coupon data", errors: error.errors });
-      } else {
-        console.error("Error creating coupon:", error);
-        res.status(500).json({ message: "Failed to create coupon" });
-      }
+      console.error("Error creating coupon:", error);
+      res.status(500).json({ message: "Failed to create coupon" });
     }
   });
 
-  app.patch("/api/admin/coupons/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/coupons/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertCouponSchema.parse(req.body);
-      const coupon = await storage.updateCoupon(id, validatedData);
+      const result = insertCouponSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid coupon data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const coupon = await storage.updateCoupon(id, result.data);
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+
       res.json(coupon);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid coupon data", errors: error.errors });
-      } else {
-        console.error("Error updating coupon:", error);
-        res.status(500).json({ message: "Failed to update coupon" });
-      }
+      console.error("Error updating coupon:", error);
+      res.status(500).json({ message: "Failed to update coupon" });
     }
   });
 
-  app.delete("/api/admin/coupons/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/admin/coupons/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteCoupon(id);
-      if (success) {
-        res.json({ message: "Coupon deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Coupon not found" });
+      
+      if (!success) {
+        return res.status(404).json({ message: "Coupon not found" });
       }
+
+      res.json({ message: "Coupon deleted successfully" });
     } catch (error) {
       console.error("Error deleting coupon:", error);
       res.status(500).json({ message: "Failed to delete coupon" });
     }
   });
 
-  // Admin - Manage Gallery Images
-  app.get("/api/admin/gallery", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // SEO settings
+  app.get("/api/seo/:page", async (req, res) => {
+    try {
+      const settings = await storage.getSeoSettingsByPage(req.params.page);
+      if (!settings) {
+        return res.status(404).json({ message: "SEO settings not found" });
+      }
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch SEO settings" });
+    }
+  });
+
+  app.get("/api/admin/seo", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAllSeoSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch SEO settings" });
+    }
+  });
+
+  app.post("/api/admin/seo", requireAdmin, async (req, res) => {
+    try {
+      const result = insertSeoSettingsSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid SEO data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const settings = await storage.upsertSeoSettings(result.data);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating SEO settings:", error);
+      res.status(500).json({ message: "Failed to update SEO settings" });
+    }
+  });
+
+  // Review settings
+  app.get("/api/reviews/seo", async (req, res) => {
+    try {
+      const settings = await storage.getReviewSettings();
+      res.json(settings || { enabled: false });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch review settings" });
+    }
+  });
+
+  app.post("/api/admin/reviews", requireAdmin, async (req, res) => {
+    try {
+      const result = insertReviewSettingsSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid review data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const settings = await storage.upsertReviewSettings(result.data);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating review settings:", error);
+      res.status(500).json({ message: "Failed to update review settings" });
+    }
+  });
+
+  // Gallery management (admin)
+  app.get("/api/admin/gallery", requireAdmin, async (req, res) => {
     try {
       const images = await storage.getAllGalleryImages();
       res.json(images);
     } catch (error) {
-      console.error("Error fetching gallery images:", error);
       res.status(500).json({ message: "Failed to fetch gallery images" });
     }
   });
 
-  app.post("/api/admin/gallery", requireAuth, upload.single('image'), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/admin/gallery", requireAdmin, async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "Image file is required" });
+      const result = insertGalleryImageSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid gallery data", 
+          errors: result.error.issues 
+        });
       }
 
-      const imageData = {
-        title: req.body.title || req.file.originalname,
-        description: req.body.description || '',
-        url: `/uploads/${req.file.filename}`,
-        category: req.body.category || 'general'
-      };
-
-      const validatedData = insertGalleryImageSchema.parse(imageData);
-      const image = await storage.createGalleryImage(validatedData);
+      const image = await storage.createGalleryImage(result.data);
       res.status(201).json(image);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid image data", errors: error.errors });
-      } else {
-        console.error("Error uploading image:", error);
-        res.status(500).json({ message: "Failed to upload image" });
-      }
+      console.error("Error creating gallery image:", error);
+      res.status(500).json({ message: "Failed to create gallery image" });
     }
   });
 
-  app.patch("/api/admin/gallery/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/gallery/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertGalleryImageSchema.parse(req.body);
-      const image = await storage.updateGalleryImage(id, validatedData);
+      const result = insertGalleryImageSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid gallery data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const image = await storage.updateGalleryImage(id, result.data);
+      if (!image) {
+        return res.status(404).json({ message: "Gallery image not found" });
+      }
+
       res.json(image);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid image data", errors: error.errors });
-      } else {
-        console.error("Error updating image:", error);
-        res.status(500).json({ message: "Failed to update image" });
-      }
+      console.error("Error updating gallery image:", error);
+      res.status(500).json({ message: "Failed to update gallery image" });
     }
   });
 
-  app.delete("/api/admin/gallery/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/admin/gallery/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteGalleryImage(id);
-      if (success) {
-        res.json({ message: "Image deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Image not found" });
+      
+      if (!success) {
+        return res.status(404).json({ message: "Gallery image not found" });
       }
+
+      res.json({ message: "Gallery image deleted successfully" });
     } catch (error) {
-      console.error("Error deleting image:", error);
-      res.status(500).json({ message: "Failed to delete image" });
+      console.error("Error deleting gallery image:", error);
+      res.status(500).json({ message: "Failed to delete gallery image" });
     }
   });
 
-  // Admin - Manage Amenities
-  app.get("/api/admin/amenities", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Site settings
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getAllSiteSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch site settings" });
+    }
+  });
+
+  app.get("/api/settings/:key", async (req, res) => {
+    try {
+      const setting = await storage.getSiteSettingByKey(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      res.json(setting);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
+  app.post("/api/admin/settings", requireAdmin, async (req, res) => {
+    try {
+      const result = insertSiteSettingsSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid settings data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const setting = await storage.upsertSiteSettings(result.data);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating site settings:", error);
+      res.status(500).json({ message: "Failed to update site settings" });
+    }
+  });
+
+  // Amenities
+  app.get("/api/amenities", async (req, res) => {
     try {
       const amenities = await storage.getAllAmenities();
       res.json(amenities);
     } catch (error) {
-      console.error("Error fetching amenities:", error);
       res.status(500).json({ message: "Failed to fetch amenities" });
     }
   });
 
-  app.post("/api/admin/amenities", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/admin/amenities", requireAdmin, async (req, res) => {
     try {
-      const validatedData = insertAmenitySchema.parse(req.body);
-      const amenity = await storage.createAmenity(validatedData);
+      const amenities = await storage.getAllAmenities();
+      res.json(amenities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch amenities" });
+    }
+  });
+
+  app.post("/api/admin/amenities", requireAdmin, async (req, res) => {
+    try {
+      const result = insertAmenitySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid amenity data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const amenity = await storage.createAmenity(result.data);
       res.status(201).json(amenity);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid amenity data", errors: error.errors });
-      } else {
-        console.error("Error creating amenity:", error);
-        res.status(500).json({ message: "Failed to create amenity" });
-      }
+      console.error("Error creating amenity:", error);
+      res.status(500).json({ message: "Failed to create amenity" });
     }
   });
 
-  app.patch("/api/admin/amenities/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/amenities/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertAmenitySchema.parse(req.body);
-      const amenity = await storage.updateAmenity(id, validatedData);
+      const result = insertAmenitySchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid amenity data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const amenity = await storage.updateAmenity(id, result.data);
+      if (!amenity) {
+        return res.status(404).json({ message: "Amenity not found" });
+      }
+
       res.json(amenity);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid amenity data", errors: error.errors });
-      } else {
-        console.error("Error updating amenity:", error);
-        res.status(500).json({ message: "Failed to update amenity" });
-      }
+      console.error("Error updating amenity:", error);
+      res.status(500).json({ message: "Failed to update amenity" });
     }
   });
 
-  app.delete("/api/admin/amenities/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/admin/amenities/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteAmenity(id);
-      if (success) {
-        res.json({ message: "Amenity deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Amenity not found" });
+      
+      if (!success) {
+        return res.status(404).json({ message: "Amenity not found" });
       }
+
+      res.json({ message: "Amenity deleted successfully" });
     } catch (error) {
       console.error("Error deleting amenity:", error);
       res.status(500).json({ message: "Failed to delete amenity" });
     }
   });
 
-  // Dynamic Sitemap Generation
-  app.get("/sitemap.xml", async (req, res) => {
+  // Blog Posts Routes
+  app.get("/api/blog-posts", async (req, res) => {
     try {
-      // Set base URL from request if available
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
-      
-      // Import and create sitemap service with dynamic base URL
-      const { SitemapService } = await import("./sitemapService");
-      const customSitemapService = new SitemapService(baseUrl);
-      
-      const sitemap = await customSitemapService.generateSitemap();
-      
-      res.set({
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      });
-      
-      res.send(sitemap);
+      const posts = await storage.getAllBlogPosts();
+      res.json(posts);
     } catch (error) {
-      console.error("Error generating sitemap:", error);
-      res.status(500).send("Error generating sitemap");
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({ message: "Failed to fetch blog posts" });
     }
   });
 
-  // Robots.txt Generation
-  app.get("/robots.txt", async (req, res) => {
+  app.get("/api/blog-posts/published", async (req, res) => {
     try {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
-      
-      // Import and create sitemap service with dynamic base URL
-      const { SitemapService } = await import("./sitemapService");
-      const customSitemapService = new SitemapService(baseUrl);
-      const robotsTxt = await customSitemapService.generateRobotsTxt();
-      
-      res.set({
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-      });
-      
-      res.send(robotsTxt);
+      const posts = await storage.getPublishedBlogPosts();
+      res.json(posts);
     } catch (error) {
-      console.error("Error generating robots.txt:", error);
-      res.status(500).send("Error generating robots.txt");
+      console.error("Error fetching published blog posts:", error);
+      res.status(500).json({ message: "Failed to fetch published blog posts" });
     }
   });
 
-  // Sitemap management endpoints for admin
-  app.post("/api/admin/sitemap/regenerate", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/blog-posts/:slug", async (req, res) => {
     try {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
-      
-      const { SitemapService } = await import("./sitemapService");
-      const customSitemapService = new SitemapService(baseUrl);
-      const sitemap = await customSitemapService.generateSitemap();
-      
-      res.json({ 
-        message: "Sitemap regenerated successfully",
-        urls: sitemap.match(/<url>/g)?.length || 0,
-        lastGenerated: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error regenerating sitemap:", error);
-      res.status(500).json({ message: "Failed to regenerate sitemap" });
-    }
-  });
-
-  // Admin - Manage SEO Settings
-  app.get("/api/admin/seo", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const seoSettings = await storage.getAllSeoSettings();
-      res.json(seoSettings);
-    } catch (error) {
-      console.error("Error fetching SEO settings:", error);
-      res.status(500).json({ message: "Failed to fetch SEO settings" });
-    }
-  });
-
-  app.post("/api/admin/seo", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const validatedData = insertSeoSettingsSchema.parse(req.body);
-      const seoSettings = await storage.createSeoSettings(validatedData);
-      res.status(201).json(seoSettings);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid SEO data", errors: error.errors });
-      } else {
-        console.error("Error creating SEO settings:", error);
-        res.status(500).json({ message: "Failed to create SEO settings" });
+      const post = await storage.getBlogPostBySlug(req.params.slug);
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
       }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post:", error);
+      res.status(500).json({ message: "Failed to fetch blog post" });
     }
   });
 
-  app.put("/api/admin/seo/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/blog-posts", requireAdmin, async (req, res) => {
+    try {
+      const blogData = req.body;
+      
+      // Auto-generate slug if not provided
+      if (!blogData.slug && blogData.title) {
+        blogData.slug = blogData.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+      }
+      
+      const post = await storage.createBlogPost(blogData);
+      res.status(201).json(post);
+    } catch (error) {
+      console.error("Error creating blog post:", error);
+      res.status(500).json({ message: "Failed to create blog post" });
+    }
+  });
+
+  app.put("/api/blog-posts/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertSeoSettingsSchema.parse(req.body);
-      const seoSettings = await storage.updateSeoSettings(id, validatedData);
-      res.json(seoSettings);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid SEO data", errors: error.errors });
-      } else {
-        console.error("Error updating SEO settings:", error);
-        res.status(500).json({ message: "Failed to update SEO settings" });
-      }
-    }
-  });
-
-  // Admin - Manage Review Settings for SEO snippets
-  app.get("/api/admin/reviews", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const reviewSettings = await storage.getReviewSettings();
-      res.json(reviewSettings || {
-        reviewCount: 0,
-        averageRating: "0.0",
-        businessName: "Farm Feast Farm House",
-        ratingScale: "5",
-        reviewsEnabled: true,
-        showInSnippets: true
-      });
-    } catch (error) {
-      console.error("Error fetching review settings:", error);
-      res.status(500).json({ message: "Failed to fetch review settings" });
-    }
-  });
-
-  app.post("/api/admin/reviews", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const validatedData = insertReviewSettingsSchema.parse(req.body);
-      const reviewSettings = await storage.upsertReviewSettings(validatedData);
-      res.json(reviewSettings);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid review data", errors: error.errors });
-      } else {
-        console.error("Error updating review settings:", error);
-        res.status(500).json({ message: "Failed to update review settings" });
-      }
-    }
-  });
-
-  // Public endpoint to get review data for SEO
-  app.get("/api/reviews/seo", async (req, res) => {
-    try {
-      const reviewSettings = await storage.getReviewSettings();
-      if (!reviewSettings || !reviewSettings.reviewsEnabled || !reviewSettings.showInSnippets) {
-        res.json({ enabled: false });
-        return;
-      }
+      const post = await storage.updateBlogPost(id, req.body);
       
-      res.json({
-        enabled: true,
-        reviewCount: reviewSettings.reviewCount,
-        averageRating: parseFloat(reviewSettings.averageRating),
-        businessName: reviewSettings.businessName,
-        ratingScale: parseInt(reviewSettings.ratingScale)
-      });
-    } catch (error) {
-      console.error("Error fetching review SEO data:", error);
-      res.status(500).json({ error: "Failed to fetch review data" });
-    }
-  });
-
-  // Admin - Manage Site Settings
-  app.get("/api/admin/site-settings", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const siteSettings = await storage.getAllSiteSettings();
-      res.json(siteSettings);
-    } catch (error) {
-      console.error("Error fetching site settings:", error);
-      res.status(500).json({ message: "Failed to fetch site settings" });
-    }
-  });
-
-  app.post("/api/admin/site-settings", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const validatedData = insertSiteSettingsSchema.parse(req.body);
-      const siteSettings = await storage.createSiteSettings(validatedData);
-      res.status(201).json(siteSettings);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid site settings data", errors: error.errors });
-      } else {
-        console.error("Error creating site settings:", error);
-        res.status(500).json({ message: "Failed to create site settings" });
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
       }
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error updating blog post:", error);
+      res.status(500).json({ message: "Failed to update blog post" });
     }
   });
 
-  app.put("/api/admin/site-settings/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/blog-posts/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertSiteSettingsSchema.parse(req.body);
-      const siteSettings = await storage.updateSiteSettings(id, validatedData);
-      res.json(siteSettings);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid site settings data", errors: error.errors });
-      } else {
-        console.error("Error updating site settings:", error);
-        res.status(500).json({ message: "Failed to update site settings" });
+      const success = await storage.deleteBlogPost(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Blog post not found" });
       }
+
+      res.json({ message: "Blog post deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      res.status(500).json({ message: "Failed to delete blog post" });
     }
   });
 
