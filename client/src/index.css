@@ -369,3 +369,34 @@
     animation-delay: 0.3s;
   }
 }
+
+/* Tour styling */
+.farm-tour [data-reactour-wrapper] {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  max-width: 400px !important;
+  padding: 20px !important;
+  line-height: 1.6 !important;
+}
+
+.farm-tour [data-reactour-mask] {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+@keyframes tour-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+
+.tour-highlight {
+  animation: tour-pulse 2s infinite;
+}
