@@ -4,6 +4,7 @@ import {
   coupons, 
   adminUsers,
   seoSettings,
+  reviewSettings,
   galleryImages,
   siteSettings,
   amenities,
@@ -17,6 +18,8 @@ import {
   type InsertAdminUser,
   type SeoSettings,
   type InsertSeoSettings,
+  type ReviewSettings,
+  type InsertReviewSettings,
   type GalleryImage,
   type InsertGalleryImage,
   type SiteSettings,
@@ -57,6 +60,10 @@ export interface IStorage {
   getAllSeoSettings(): Promise<SeoSettings[]>;
   getSeoSettingsByPage(page: string): Promise<SeoSettings | undefined>;
   upsertSeoSettings(seo: InsertSeoSettings): Promise<SeoSettings>;
+  
+  // Review Settings
+  getReviewSettings(): Promise<ReviewSettings | undefined>;
+  upsertReviewSettings(review: InsertReviewSettings): Promise<ReviewSettings>;
   
   // Gallery Images
   getAllGalleryImages(): Promise<GalleryImage[]>;
@@ -317,6 +324,19 @@ export class DatabaseStorage implements IStorage {
 
       await db.insert(amenities).values(defaultAmenities);
 
+      // Initialize default review settings
+      const existingReviews = await db.select().from(reviewSettings).limit(1);
+      if (existingReviews.length === 0) {
+        await db.insert(reviewSettings).values({
+          reviewCount: 127,
+          averageRating: "4.8",
+          businessName: "Farm Feast Farm House",
+          ratingScale: "5",
+          reviewsEnabled: true,
+          showInSnippets: true
+        });
+      }
+
     } catch (error) {
       console.error("Error initializing default data:", error);
     }
@@ -434,6 +454,30 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result;
+  }
+
+  // Review Settings methods
+  async getReviewSettings(): Promise<ReviewSettings | undefined> {
+    const [settings] = await db.select().from(reviewSettings).limit(1);
+    return settings;
+  }
+
+  async upsertReviewSettings(review: InsertReviewSettings): Promise<ReviewSettings> {
+    // Get existing record if any
+    const existing = await this.getReviewSettings();
+    
+    if (existing) {
+      const [result] = await db.update(reviewSettings)
+        .set({ ...review, updatedAt: new Date() })
+        .where(eq(reviewSettings.id, existing.id))
+        .returning();
+      return result;
+    } else {
+      const [result] = await db.insert(reviewSettings)
+        .values(review)
+        .returning();
+      return result;
+    }
   }
 
   // Gallery methods

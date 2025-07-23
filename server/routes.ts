@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import { storage } from "./storage";
-import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
+import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertReviewSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateAdmin, generateToken, requireAuth, type AuthenticatedRequest } from "./auth";
 import multer from 'multer';
@@ -561,6 +561,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error updating SEO settings:", error);
         res.status(500).json({ message: "Failed to update SEO settings" });
       }
+    }
+  });
+
+  // Admin - Manage Review Settings for SEO snippets
+  app.get("/api/admin/reviews", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const reviewSettings = await storage.getReviewSettings();
+      res.json(reviewSettings || {
+        reviewCount: 0,
+        averageRating: "0.0",
+        businessName: "Farm Feast Farm House",
+        ratingScale: "5",
+        reviewsEnabled: true,
+        showInSnippets: true
+      });
+    } catch (error) {
+      console.error("Error fetching review settings:", error);
+      res.status(500).json({ message: "Failed to fetch review settings" });
+    }
+  });
+
+  app.post("/api/admin/reviews", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const validatedData = insertReviewSettingsSchema.parse(req.body);
+      const reviewSettings = await storage.upsertReviewSettings(validatedData);
+      res.json(reviewSettings);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid review data", errors: error.errors });
+      } else {
+        console.error("Error updating review settings:", error);
+        res.status(500).json({ message: "Failed to update review settings" });
+      }
+    }
+  });
+
+  // Public endpoint to get review data for SEO
+  app.get("/api/reviews/seo", async (req, res) => {
+    try {
+      const reviewSettings = await storage.getReviewSettings();
+      if (!reviewSettings || !reviewSettings.reviewsEnabled || !reviewSettings.showInSnippets) {
+        res.json({ enabled: false });
+        return;
+      }
+      
+      res.json({
+        enabled: true,
+        reviewCount: reviewSettings.reviewCount,
+        averageRating: parseFloat(reviewSettings.averageRating),
+        businessName: reviewSettings.businessName,
+        ratingScale: parseInt(reviewSettings.ratingScale)
+      });
+    } catch (error) {
+      console.error("Error fetching review SEO data:", error);
+      res.status(500).json({ error: "Failed to fetch review data" });
     }
   });
 

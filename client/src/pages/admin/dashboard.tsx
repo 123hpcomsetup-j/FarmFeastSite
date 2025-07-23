@@ -11,6 +11,7 @@ import CouponsManagement from "@/components/admin/CouponsManagement";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import AmenitiesManagement from "@/components/admin/AmenitiesManagement";
 import SeoManagement from "@/components/admin/SeoManagement";
+import ReviewsManagement from "@/components/admin/ReviewsManagement";
 import SiteSettingsManagement from "@/components/admin/SiteSettingsManagement";
 import { 
   Calendar, 
@@ -153,7 +154,7 @@ export default function AdminDashboard() {
 
         {/* Management Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="bookings" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Bookings
@@ -177,6 +178,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="seo" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               SEO
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Reviews
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
@@ -206,6 +211,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="seo">
             <SeoManagement />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <ReviewsManagement />
           </TabsContent>
 
           <TabsContent value="settings">

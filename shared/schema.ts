@@ -69,6 +69,18 @@ export const seoSettings = pgTable("seo_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Reviews management for SEO snippets
+export const reviewSettings = pgTable("review_settings", {
+  id: serial("id").primaryKey(),
+  reviewCount: integer("review_count").notNull().default(0),
+  averageRating: varchar("average_rating").notNull().default("0.0"), // Using varchar for precise decimal control
+  businessName: text("business_name").notNull().default("Farm Feast Farm House"),
+  ratingScale: text("rating_scale").notNull().default("5"), // Maximum rating (1-5 stars)
+  reviewsEnabled: boolean("reviews_enabled").default(true),
+  showInSnippets: boolean("show_in_snippets").default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Gallery images table
 export const galleryImages = pgTable("gallery_images", {
   id: serial("id").primaryKey(),
@@ -126,6 +138,11 @@ export const insertSeoSettingsSchema = createInsertSchema(seoSettings).omit({
   updatedAt: true,
 });
 
+export const insertReviewSettingsSchema = createInsertSchema(reviewSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
   id: true,
   uploadedAt: true,
@@ -156,6 +173,8 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type SeoSettings = typeof seoSettings.$inferSelect;
 export type InsertSeoSettings = z.infer<typeof insertSeoSettingsSchema>;
+export type ReviewSettings = typeof reviewSettings.$inferSelect;
+export type InsertReviewSettings = z.infer<typeof insertReviewSettingsSchema>;
 export type GalleryImage = typeof galleryImages.$inferSelect;
 export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
 export type SiteSettings = typeof siteSettings.$inferSelect;
