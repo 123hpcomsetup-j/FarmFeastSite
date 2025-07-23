@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -44,6 +44,63 @@ export const coupons = pgTable("coupons", {
   expiryDate: text("expiry_date"),
 });
 
+// Admin user table
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  password: text("password").notNull(),
+  role: text("role").default("admin"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// SEO settings table
+export const seoSettings = pgTable("seo_settings", {
+  id: serial("id").primaryKey(),
+  page: text("page").notNull().unique(), // home, services, gallery, booking
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  keywords: text("keywords"),
+  ogTitle: text("og_title"),
+  ogDescription: text("og_description"),
+  ogImage: text("og_image"),
+  score: integer("score").default(0),
+  ranking: integer("ranking").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Gallery images table
+export const galleryImages = pgTable("gallery_images", {
+  id: serial("id").primaryKey(),
+  filename: text("filename").notNull(),
+  alt: text("alt").notNull(),
+  category: text("category").notNull(),
+  url: text("url").notNull(),
+  order: integer("order").default(0),
+  active: boolean("active").default(true),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// Site settings table
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  type: text("type").default("text"), // text, number, boolean, json
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Amenities table
+export const amenities = pgTable("amenities", {
+  id: serial("id").primaryKey(),
+  icon: text("icon").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  color: text("color").default("bg-blue-50 text-blue-600"),
+  order: integer("order").default(0),
+  active: boolean("active").default(true),
+});
+
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   createdAt: true,
@@ -58,9 +115,50 @@ export const insertCouponSchema = createInsertSchema(coupons).omit({
   id: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSeoSettingsSchema = createInsertSchema(seoSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertAmenitySchema = createInsertSchema(amenities).omit({
+  id: true,
+});
+
+// Admin login schema
+export const adminLoginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type Service = typeof services.$inferSelect;
 export type Coupon = typeof coupons.$inferSelect;
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type SeoSettings = typeof seoSettings.$inferSelect;
+export type InsertSeoSettings = z.infer<typeof insertSeoSettingsSchema>;
+export type GalleryImage = typeof galleryImages.$inferSelect;
+export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
+export type SiteSettings = typeof siteSettings.$inferSelect;
+export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
+export type Amenity = typeof amenities.$inferSelect;
+export type InsertAmenity = z.infer<typeof insertAmenitySchema>;
+export type AdminLogin = z.infer<typeof adminLoginSchema>;
