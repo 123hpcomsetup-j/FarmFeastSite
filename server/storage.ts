@@ -25,7 +25,7 @@ import {
   type InsertAmenity
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import bcrypt from 'bcrypt';
 
 export interface IStorage {
@@ -375,7 +375,7 @@ export class DatabaseStorage implements IStorage {
   // Coupon methods
   async getCouponByCode(code: string): Promise<Coupon | undefined> {
     const [coupon] = await db.select().from(coupons)
-      .where(eq(coupons.code, code) && eq(coupons.active, true));
+      .where(and(eq(coupons.code, code), eq(coupons.active, true)));
     return coupon;
   }
 

@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, Trash2, RefreshCw, Calendar } from "lucide-react";
@@ -26,11 +26,7 @@ export default function CouponsManagement() {
 
   const { data: coupons, isLoading } = useQuery({
     queryKey: ["/api/admin/coupons"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<CouponForm>({
@@ -48,13 +44,7 @@ export default function CouponsManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CouponForm) => {
-      return apiRequest("/api/admin/coupons", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("POST", "/api/admin/coupons", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
