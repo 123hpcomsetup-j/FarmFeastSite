@@ -4,6 +4,7 @@ import express from "express";
 import { storage } from "./storage";
 import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertReviewSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
 import { confirmBooking, cancelBooking, sendCheckInReminder, generateConfirmationCode, confirmationService } from "./confirmationService";
+import { sitemapService } from "./sitemapService";
 import { z } from "zod";
 import { authenticateAdmin, generateToken, requireAuth, type AuthenticatedRequest } from "./auth";
 import multer from 'multer';
@@ -702,6 +703,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting amenity:", error);
       res.status(500).json({ message: "Failed to delete amenity" });
+    }
+  });
+
+  // Dynamic Sitemap Generation
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      // Set base URL from request if available
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      // Import and create sitemap service with dynamic base URL
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      
+      const sitemap = await customSitemapService.generateSitemap();
+      
+      res.set({
+        'Content-Type': 'application/xml',
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      });
+      
+      res.send(sitemap);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  // Robots.txt Generation
+  app.get("/robots.txt", async (req, res) => {
+    try {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      // Import and create sitemap service with dynamic base URL
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      const robotsTxt = await customSitemapService.generateRobotsTxt();
+      
+      res.set({
+        'Content-Type': 'text/plain',
+        'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+      });
+      
+      res.send(robotsTxt);
+    } catch (error) {
+      console.error("Error generating robots.txt:", error);
+      res.status(500).send("Error generating robots.txt");
+    }
+  });
+
+  // Sitemap management endpoints for admin
+  app.post("/api/admin/sitemap/regenerate", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      const sitemap = await customSitemapService.generateSitemap();
+      
+      res.json({ 
+        message: "Sitemap regenerated successfully",
+        urls: sitemap.match(/<url>/g)?.length || 0,
+        lastGenerated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error regenerating sitemap:", error);
+      res.status(500).json({ message: "Failed to regenerate sitemap" });
     }
   });
 
