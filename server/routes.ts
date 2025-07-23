@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import { storage } from "./storage";
 import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertReviewSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
+import { confirmBooking, cancelBooking, sendCheckInReminder, generateConfirmationCode } from "./confirmationService";
 import { z } from "zod";
 import { authenticateAdmin, generateToken, requireAuth, type AuthenticatedRequest } from "./auth";
 import multer from 'multer';
@@ -137,7 +138,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bookings", async (req, res) => {
     try {
       const validatedData = insertBookingSchema.parse(req.body);
-      const booking = await storage.createBooking(validatedData);
+      
+      // Generate confirmation code
+      const confirmationCode = generateConfirmationCode();
+      
+      const booking = await storage.createBooking({
+        ...validatedData,
+        confirmationCode,
+        status: 'pending'
+      });
+      
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -148,6 +158,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to create booking" });
       }
+    }
+  });
+
+  // Confirm a booking
+  app.post("/api/bookings/:id/confirm", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const confirmedBooking = await confirmBooking(bookingId);
+      
+      if (!confirmedBooking) {
+        res.status(404).json({ message: "Booking not found" });
+        return;
+      }
+      
+      res.json({
+        message: "Booking confirmed successfully",
+        booking: confirmedBooking,
+        emailSent: confirmedBooking.emailSent
+      });
+    } catch (error) {
+      console.error("Error confirming booking:", error);
+      res.status(500).json({ message: "Failed to confirm booking" });
+    }
+  });
+
+  // Cancel a booking
+  app.post("/api/bookings/:id/cancel", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      const cancelledBooking = await cancelBooking(bookingId, reason);
+      
+      if (!cancelledBooking) {
+        res.status(404).json({ message: "Booking not found" });
+        return;
+      }
+      
+      res.json({
+        message: "Booking cancelled successfully",
+        booking: cancelledBooking
+      });
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
+  // Send check-in reminder
+  app.post("/api/bookings/:id/reminder", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const reminderSent = await sendCheckInReminder(bookingId);
+      
+      if (!reminderSent) {
+        res.status(400).json({ message: "Unable to send reminder" });
+        return;
+      }
+      
+      res.json({ message: "Reminder sent successfully" });
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+      res.status(500).json({ message: "Failed to send reminder" });
+    }
+  });
+
+  // Get booking by confirmation code (public endpoint)
+  app.get("/api/bookings/confirmation/:code", async (req, res) => {
+    try {
+      const { code } = req.params;
+      const bookings = await storage.getAllBookings();
+      const booking = bookings.find(b => b.confirmationCode === code);
+      
+      if (!booking) {
+        res.status(404).json({ message: "Booking not found" });
+        return;
+      }
+      
+      // Return limited booking info for security
+      res.json({
+        id: booking.id,
+        confirmationCode: booking.confirmationCode,
+        fullName: booking.fullName,
+        checkinDate: booking.checkinDate,
+        checkoutDate: booking.checkoutDate,
+        guestCount: booking.guestCount,
+        status: booking.status,
+        finalTotal: booking.finalTotal
+      });
+    } catch (error) {
+      console.error("Error fetching booking by confirmation code:", error);
+      res.status(500).json({ message: "Failed to fetch booking" });
     }
   });
 

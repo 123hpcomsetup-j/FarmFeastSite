@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a modern farmhouse booking system built with React + TypeScript frontend and Node.js/Express backend. The application allows customers to browse services, view gallery images, and make bookings for a farmhouse rental business. It features a comprehensive booking form with service selection, coupon validation, and pricing calculations.
+This is a modern farmhouse booking system built with React + TypeScript frontend and Node.js/Express backend. The application allows customers to browse services, view gallery images, and make bookings for a farmhouse rental business. It features a comprehensive booking form with service selection, coupon validation, pricing calculations, and a complete booking confirmation system with email notifications.
 
 ## User Preferences
 
@@ -42,9 +42,15 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error handling middleware
 
 ### Database Schema
-- **bookings**: Customer booking records with pricing and status
+- **bookings**: Customer booking records with pricing, status, and confirmation tracking
 - **services**: Available services with pricing and categories
 - **coupons**: Discount coupons with validation rules
+- **reviewSettings**: SEO review data for search engine snippets
+- **adminUsers**: Admin authentication and user management
+- **seoSettings**: Page-specific SEO meta data and optimization
+- **galleryImages**: Image management for photo gallery
+- **siteSettings**: Dynamic site configuration and WhatsApp numbers
+- **amenities**: Property amenities and features management
 
 ## Data Flow
 
@@ -53,9 +59,19 @@ Preferred communication style: Simple, everyday language.
    - User fills booking form with dates, guest count, and service selection
    - Form calculates pricing in real-time based on selections
    - Coupon validation occurs via `/api/coupons/validate` endpoint
-   - Final booking submission to `/api/bookings` endpoint
-3. **Data Persistence**: Bookings stored in PostgreSQL via Drizzle ORM
-4. **State Management**: TanStack Query handles caching and synchronization
+   - Final booking submission to `/api/bookings` endpoint with automatic confirmation code generation
+3. **Booking Confirmation System**:
+   - Automatic confirmation code generation for each booking
+   - Email notifications with detailed booking information
+   - Admin management interface for confirming/cancelling bookings
+   - Check-in reminder system for confirmed bookings
+   - Public booking lookup by confirmation code
+4. **SEO Management**:
+   - Dynamic review snippets for search engine results
+   - Structured data (JSON-LD) for rich search snippets
+   - Meta tag optimization for organic visibility
+5. **Data Persistence**: All data stored in PostgreSQL via Drizzle ORM
+6. **State Management**: TanStack Query handles caching and synchronization
 
 ## External Dependencies
 

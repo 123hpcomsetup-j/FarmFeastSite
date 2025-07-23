@@ -19,8 +19,15 @@ export const bookings = pgTable("bookings", {
   servicesPrice: integer("services_price").default(0),
   discountAmount: integer("discount_amount").default(0),
   finalTotal: integer("final_total").notNull(),
-  status: text("status").default("pending"), // pending, confirmed, cancelled
+  status: text("status").default("pending"), // pending, confirmed, cancelled, completed
+  confirmationCode: text("confirmation_code").unique(),
+  confirmedAt: timestamp("confirmed_at"),
+  emailSent: boolean("email_sent").default(false),
+  reminderSent: boolean("reminder_sent").default(false),
+  cancelledAt: timestamp("cancelled_at"),
+  cancellationReason: text("cancellation_reason"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const services = pgTable("services", {

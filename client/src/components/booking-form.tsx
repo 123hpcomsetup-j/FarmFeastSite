@@ -145,11 +145,29 @@ export default function BookingForm() {
       const response = await apiRequest("POST", "/api/bookings", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (booking) => {
       toast({
-        title: "Booking Submitted!",
-        description: "We'll contact you within 24 hours to confirm your booking.",
+        title: "Booking Submitted Successfully!",
+        description: `Your confirmation code is: ${booking.confirmationCode}`,
       });
+      
+      // Show confirmation dialog with booking details
+      const confirmationMessage = `
+        🎉 Booking Confirmed!
+        
+        Confirmation Code: ${booking.confirmationCode}
+        Name: ${booking.fullName}
+        Check-in: ${booking.checkinDate}
+        Total: ₹${booking.finalTotal?.toLocaleString()}
+        
+        Save your confirmation code!
+        You can track your booking at /booking-confirmation
+      `;
+      
+      if (confirm(confirmationMessage + "\n\nWould you like to view your booking details now?")) {
+        window.location.href = "/booking-confirmation";
+      }
+      
       form.reset();
       setCouponValidation(null);
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
