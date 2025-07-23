@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertGalleryImageSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, Trash2, RefreshCw, Upload, Image as ImageIcon } from "lucide-react";
@@ -25,11 +25,7 @@ export default function GalleryManagement() {
 
   const { data: images, isLoading } = useQuery({
     queryKey: ["/api/admin/gallery"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<GalleryImageForm>({
