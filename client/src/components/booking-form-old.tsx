@@ -84,44 +84,99 @@ export default function BookingForm() {
 
   const watchedFields = form.watch();
 
+  // Update progress based on filled fields
+  useEffect(() => {
+    const allFields = ["fullName", "contactNumber", "checkinDate", "checkoutDate", "guestCount", "checkinTime"];
+    const filledFields = allFields.filter(field => {
+      const value = form.getValues(field as keyof BookingFormData);
+      return value && value.toString().trim() !== "";
+    });
+    const progress = (filledFields.length / allFields.length) * 100;
+    setFormProgress(progress);
+  }, [watchedFields, form]);
+
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setIsAnimating(false);
+      }, 150);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep - 1);
+        setIsAnimating(false);
+      }, 150);
+    }
+  };
+
+  const validateCurrentStep = () => {
+    const currentStepFields = steps[currentStep].fields;
+    return currentStepFields.every(field => {
+      const value = form.getValues(field as keyof BookingFormData);
+      if (field === "email") return true; // Email is optional
+      if (field === "checkoutTime") return true; // Checkout time is optional
+      if (field === "selectedServices") return true; // Services are optional
+      if (field === "couponCode") return true; // Coupon is optional
+      if (field === "specialRequests") return true; // Special requests are optional
+      return value && value.toString().trim() !== "";
+    });
+  };
+
   // Fetch available services
   const { data: services = [] } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
 
-  // Calculate pricing based on selections
+  // Calculate pricing in real-time
   const calculatePricing = () => {
     const basePrice = watchedFields.guestCount * 1150;
-    const servicesPrice = watchedFields.selectedServices.reduce((total, serviceId) => {
-      const service = services.find(s => s.id.toString() === serviceId);
-      return total + (service?.price || 0);
-    }, 0);
-    const subtotal = basePrice + servicesPrice + 500; // Include maintenance fee
-    const discountAmount = couponValidation?.valid ? couponValidation.discountAmount : 0;
-    const finalTotal = Math.max(0, subtotal - discountAmount);
+    const maintenanceFee = 500;
     
-    return { basePrice, servicesPrice, subtotal, discountAmount, finalTotal };
+    const selectedServicePrices = watchedFields.selectedServices.map(serviceId => {
+      const service = services.find(s => s.id.toString() === serviceId);
+      return service ? service.price : 0;
+    });
+    
+    const servicesPrice = selectedServicePrices.reduce((sum, price) => sum + price, 0);
+    const subtotal = basePrice + maintenanceFee + servicesPrice;
+    const finalTotal = Math.max(0, subtotal - watchedFields.discountAmount);
+    
+    return {
+      basePrice,
+      maintenanceFee,
+      servicesPrice,
+      subtotal,
+      finalTotal,
+    };
   };
 
   const pricing = calculatePricing();
 
+  // Update form values when calculations change
+  useState(() => {
+    form.setValue('basePrice', pricing.basePrice);
+    form.setValue('servicesPrice', pricing.servicesPrice);
+    form.setValue('finalTotal', pricing.finalTotal);
+  });
+
   // Validate coupon mutation
   const validateCouponMutation = useMutation({
-    mutationFn: async ({ code, amount }: { code: string; amount: number }) => {
-      const response = await apiRequest("POST", "/api/coupons/validate", { code, amount });
+    mutationFn: async (data: { code: string; amount: number }) => {
+      const response = await apiRequest("POST", "/api/coupons/validate", data);
       return response.json();
     },
     onSuccess: (data) => {
-      setCouponValidation({
-        valid: true,
-        coupon: data.coupon,
-        discountAmount: data.discountAmount,
-        message: `Coupon applied! You saved ₹${data.discountAmount.toLocaleString()}`,
-      });
+      setCouponValidation(data);
       form.setValue('discountAmount', data.discountAmount);
       toast({
         title: "Coupon Applied!",
-        description: `You saved ₹${data.discountAmount.toLocaleString()}`,
+        description: data.message,
       });
     },
     onError: (error: any) => {
@@ -191,50 +246,6 @@ export default function BookingForm() {
     };
     
     submitBookingMutation.mutate(submissionData);
-  };
-
-  // Update progress based on filled fields
-  useEffect(() => {
-    const allFields = ["fullName", "contactNumber", "checkinDate", "checkoutDate", "guestCount", "checkinTime"];
-    const filledFields = allFields.filter(field => {
-      const value = form.getValues(field as keyof BookingFormData);
-      return value && value.toString().trim() !== "";
-    });
-    const progress = (filledFields.length / allFields.length) * 100;
-    setFormProgress(progress);
-  }, [watchedFields, form]);
-
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentStep(currentStep + 1);
-        setIsAnimating(false);
-      }, 150);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentStep(currentStep - 1);
-        setIsAnimating(false);
-      }, 150);
-    }
-  };
-
-  const validateCurrentStep = () => {
-    const currentStepFields = steps[currentStep].fields;
-    return currentStepFields.every(field => {
-      const value = form.getValues(field as keyof BookingFormData);
-      if (field === "email") return true; // Email is optional
-      if (field === "checkoutTime") return true; // Checkout time is optional
-      if (field === "selectedServices") return true; // Services are optional
-      if (field === "couponCode") return true; // Coupon is optional
-      if (field === "specialRequests") return true; // Special requests are optional
-      return value && value.toString().trim() !== "";
-    });
   };
 
   return (
@@ -662,78 +673,77 @@ export default function BookingForm() {
           </Form>
         </div>
 
-        {/* Booking Summary */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle>Booking Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Base Price:</span>
-                <span>{pricing.basePrice > 0 ? `${watchedFields.guestCount} Guest${watchedFields.guestCount > 1 ? 's' : ''} × ₹1,150 = ₹${pricing.basePrice.toLocaleString()}` : '-'}</span>
+      {/* Booking Summary */}
+      <div className="lg:col-span-1">
+        <Card className="sticky top-24">
+          <CardHeader>
+            <CardTitle>Booking Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <span>Base Price:</span>
+              <span>{pricing.basePrice > 0 ? `${watchedFields.guestCount} Guest${watchedFields.guestCount > 1 ? 's' : ''} × ₹1,150 = ₹${pricing.basePrice.toLocaleString()}` : '-'}</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span>Maintenance Fee:</span>
+              <span className="text-muted-foreground">₹500</span>
+            </div>
+            
+            {pricing.servicesPrice > 0 && (
+              <div className="space-y-2">
+                {watchedFields.selectedServices.map(serviceId => {
+                  const service = services.find(s => s.id.toString() === serviceId);
+                  return service ? (
+                    <div key={service.id} className="flex justify-between text-sm">
+                      <span>{service.name}:</span>
+                      <span>₹{service.price.toLocaleString()}</span>
+                    </div>
+                  ) : null;
+                })}
               </div>
-              
-              <div className="flex justify-between">
-                <span>Maintenance Fee:</span>
-                <span className="text-muted-foreground">₹500</span>
+            )}
+            
+            {couponValidation?.valid && watchedFields.discountAmount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Coupon Discount:</span>
+                <span>-₹{watchedFields.discountAmount.toLocaleString()}</span>
               </div>
-              
-              {pricing.servicesPrice > 0 && (
-                <div className="space-y-2">
-                  {watchedFields.selectedServices.map(serviceId => {
-                    const service = services.find(s => s.id.toString() === serviceId);
-                    return service ? (
-                      <div key={service.id} className="flex justify-between text-sm">
-                        <span>{service.name}:</span>
-                        <span>₹{service.price.toLocaleString()}</span>
-                      </div>
-                    ) : null;
-                  })}
-                </div>
-              )}
-              
-              {couponValidation?.valid && watchedFields.discountAmount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Coupon Discount:</span>
-                  <span>-₹{watchedFields.discountAmount.toLocaleString()}</span>
-                </div>
-              )}
-              
-              <Separator />
-              
-              <div className="flex justify-between text-xl font-bold">
-                <span>Final Total:</span>
-                <span className="text-primary">₹{pricing.finalTotal.toLocaleString()}</span>
+            )}
+            
+            <Separator />
+            
+            <div className="flex justify-between text-xl font-bold">
+              <span>Final Total:</span>
+              <span className="text-primary">₹{pricing.finalTotal.toLocaleString()}</span>
+            </div>
+            
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800 flex items-center">
+                <Info className="w-4 h-4 mr-2" />
+                *Mandatory fee, negotiable for parties of 20+ guests
+              </p>
+            </div>
+            
+            {/* Contact Information */}
+            <div className="space-y-3">
+              <h4 className="font-semibold">Contact Information</h4>
+              <div className="space-y-2">
+                <a href="tel:8897326898" className="flex items-center text-primary hover:text-primary/80">
+                  <Phone className="w-4 h-4 mr-2" />
+                  8897326898
+                </a>
+                <a href="tel:9951214770" className="flex items-center text-primary hover:text-primary/80">
+                  <Phone className="w-4 h-4 mr-2" />
+                  9951214770
+                </a>
               </div>
-              
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800 flex items-center">
-                  <Info className="w-4 h-4 mr-2" />
-                  *Mandatory fee, negotiable for parties of 20+ guests
-                </p>
-              </div>
-              
-              {/* Contact Information */}
-              <div className="space-y-3">
-                <h4 className="font-semibold">Contact Information</h4>
-                <div className="space-y-2">
-                  <a href="tel:8897326898" className="flex items-center text-primary hover:text-primary/80">
-                    <Phone className="w-4 h-4 mr-2" />
-                    8897326898
-                  </a>
-                  <a href="tel:9951214770" className="flex items-center text-primary hover:text-primary/80">
-                    <Phone className="w-4 h-4 mr-2" />
-                    9951214770
-                  </a>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  We'll contact you within 24 hours to confirm your booking and provide payment details.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <p className="text-sm text-muted-foreground">
+                We'll contact you within 24 hours to confirm your booking and provide payment details.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

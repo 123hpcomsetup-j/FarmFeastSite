@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/services/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/admin/services/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertServiceSchema.parse(req.body);
@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/coupons/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/admin/coupons/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertCouponSchema.parse(req.body);
@@ -434,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/gallery/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/admin/gallery/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertGalleryImageSchema.parse(req.body);
@@ -491,7 +491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/amenities/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/admin/amenities/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertAmenitySchema.parse(req.body);
