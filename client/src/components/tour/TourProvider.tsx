@@ -9,6 +9,7 @@ interface TourContextType {
   isFirstVisit: boolean;
   setFirstVisit: (value: boolean) => void;
   completeTour: () => void;
+  skipTour: () => void;
 }
 
 const TourContext = createContext<TourContextType | null>(null);
@@ -125,7 +126,7 @@ const tourSteps = [
         </p>
         <div className="bg-indigo-50 p-3 rounded-lg">
           <p className="text-sm text-indigo-700">
-            💬 <strong>Quick Support:</strong> WhatsApp us for instant responses and real-time assistance
+            📱 <strong>Quick tip:</strong> Use our WhatsApp for instant responses!
           </p>
         </div>
       </div>
@@ -133,174 +134,270 @@ const tourSteps = [
     position: 'top',
   },
   {
-    selector: '[data-tour="hero"]',
+    selector: '[data-tour="navigation"]',
     content: (
-      <div className="space-y-4 text-center">
-        <h3 className="text-xl font-semibold text-green-800">Tour Complete! 🎊</h3>
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-pink-800">Easy Navigation 🧭</h3>
         <p className="text-gray-700">
-          You're now ready to explore Farm Feast Farmhouse and make your perfect booking. 
-          Thanks for taking the tour!
+          Use our intuitive navigation menu to explore different sections: Home, Services, 
+          Gallery, and Booking. Everything is organized for your convenience.
         </p>
-        <div className="bg-green-50 p-4 rounded-lg">
-          <p className="text-sm text-green-700 mb-3">
-            🚀 <strong>Next Steps:</strong>
+        <div className="bg-pink-50 p-3 rounded-lg text-center">
+          <p className="text-sm text-pink-700 font-medium">
+            🎉 Tour Complete! You're ready to explore Farm Feast Farmhouse!
           </p>
-          <div className="space-y-2 text-sm text-green-600">
-            <div>1. Browse our services and amenities</div>
-            <div>2. Check out the photo gallery</div>
-            <div>3. Make your booking when ready</div>
-            <div>4. Contact us for any questions</div>
-          </div>
         </div>
-        <p className="text-xs text-gray-500">
-          You can restart this tour anytime from the help menu
-        </p>
       </div>
     ),
-    position: 'center',
+    position: 'bottom',
   },
 ];
 
-const TourControls = () => {
-  const { currentStep, steps, setCurrentStep, setIsOpen } = useTour();
-  const isLastStep = currentStep === steps.length - 1;
-  const isFirstStep = currentStep === 0;
-
-  return (
-    <div className="flex items-center justify-between mt-4 pt-4 border-t">
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className="text-xs">
-          {currentStep + 1} of {steps.length}
-        </Badge>
-        <div className="w-24 bg-gray-200 rounded-full h-1.5">
-          <div 
-            className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
-            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-          />
+// Welcome Dialog Component
+const WelcomeDialog = ({ isOpen, onClose, onStartTour }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onStartTour: () => void;
+}) => (
+  <div className={`fixed inset-0 z-50 ${isOpen ? 'block' : 'hidden'}`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+    <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative animate-in fade-in-0 zoom-in-95 duration-300">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+        >
+          <X className="h-6 w-6" />
+        </button>
+        
+        <div className="p-8 text-center">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-4">
+              <span className="text-2xl">🌾</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome to Farm Feast Farmhouse!
+            </h2>
+            <p className="text-gray-600 leading-relaxed">
+              Ready to discover our luxury farmhouse experience? Take a quick guided tour 
+              to see all our amazing features and learn how to make your perfect booking.
+            </p>
+          </div>
+          
+          <div className="bg-green-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-sm text-green-700 mb-2">
+              <span>🎯</span>
+              <span className="font-medium">What you'll discover:</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-green-600">
+              <div>• Luxury services</div>
+              <div>• Photo gallery</div>
+              <div>• Booking process</div>
+              <div>• Amenities & features</div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Skip for now
+            </Button>
+            <Button
+              onClick={onStartTour}
+              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Start Tour
+            </Button>
+          </div>
         </div>
       </div>
-      
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsOpen(false)}
-          className="text-gray-500 hover:text-gray-700"
+    </div>
+  </div>
+);
+
+const CustomTourComponent = ({ steps, currentStep, setCurrentStep, setIsOpen }: any) => {
+  const { setIsOpen: setTourOpen } = useTour();
+
+  if (currentStep >= steps.length) {
+    return null;
+  }
+
+  const step = steps[currentStep];
+  const isLastStep = currentStep === steps.length - 1;
+
+  const handleSkip = () => {
+    setIsOpen(false);
+    setTourOpen(false);
+    localStorage.setItem('farmhouse-tour-completed', 'true');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 relative animate-in fade-in-0 zoom-in-95 duration-200">
+        <button
+          onClick={handleSkip}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <SkipForward className="h-4 w-4 mr-1" />
-          Skip
-        </Button>
+          <X className="h-5 w-5" />
+        </button>
         
-        {!isFirstStep && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentStep(currentStep - 1)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-        )}
-        
-        <Button
-          size="sm"
-          onClick={() => {
-            if (isLastStep) {
-              setIsOpen(false);
-            } else {
-              setCurrentStep(currentStep + 1);
-            }
-          }}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          {isLastStep ? (
-            <>
-              <X className="h-4 w-4 mr-1" />
-              Finish
-            </>
-          ) : (
-            <>
-              Next
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </>
-          )}
-        </Button>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-gray-500">
+              Step {currentStep + 1} of {steps.length}
+            </span>
+            <div className="flex gap-1">
+              {steps.map((_: any, index: number) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index <= currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="mb-6">
+            {step.content}
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              className="text-gray-500 hover:text-gray-700 flex items-center gap-2"
+            >
+              <SkipForward className="h-4 w-4" />
+              Skip Tour
+            </Button>
+            
+            <div className="flex gap-2">
+              {currentStep > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+              )}
+              
+              <Button
+                onClick={() => {
+                  if (isLastStep) {
+                    setIsOpen(false);
+                    setTourOpen(false);
+                    localStorage.setItem('farmhouse-tour-completed', 'true');
+                  } else {
+                    setCurrentStep(currentStep + 1);
+                  }
+                }}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isLastStep ? (
+                  <>
+                    Complete Tour
+                    <X className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-interface TourProviderProps {
-  children: React.ReactNode;
-}
-
-export default function TourProvider({ children }: TourProviderProps) {
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
+const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isFirstVisit, setFirstVisit] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // Check if user has visited before
-    const hasVisited = localStorage.getItem('farm-feast-visited');
-    if (!hasVisited) {
-      setIsFirstVisit(true);
-      // Delay the tour start to allow page to load
-      const timer = setTimeout(() => {
-        setIsTourOpen(true);
-      }, 2000);
-      return () => clearTimeout(timer);
+    const hasCompletedTour = localStorage.getItem('farmhouse-tour-completed');
+    const hasVisited = localStorage.getItem('farmhouse-visited');
+    
+    if (!hasVisited && !hasCompletedTour) {
+      setFirstVisit(true);
+      setShowWelcome(true);
+      localStorage.setItem('farmhouse-visited', 'true');
     }
   }, []);
 
   const startTour = () => {
+    setShowWelcome(false);
     setIsTourOpen(true);
-  };
-
-  const setFirstVisit = (value: boolean) => {
-    setIsFirstVisit(value);
-    if (!value) {
-      localStorage.setItem('farm-feast-visited', 'true');
-    }
+    setCurrentStep(0);
   };
 
   const completeTour = () => {
     setIsTourOpen(false);
-    setFirstVisit(false);
+    localStorage.setItem('farmhouse-tour-completed', 'true');
   };
 
-  const tourConfig = {
-    steps: tourSteps,
-    isOpen: isTourOpen,
-    onRequestClose: completeTour,
-    styles: {
-      popover: (base: any) => ({
-        ...base,
-        '--reactour-accent': '#16a34a',
-        borderRadius: '12px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        maxWidth: '400px',
-      }),
-      mask: (base: any) => ({ 
-        ...base, 
-        color: 'rgba(0, 0, 0, 0.7)' 
-      }),
-      badge: (base: any) => ({ 
-        ...base, 
-        display: 'none' // Hide default badge, we have custom controls
-      }),
-    },
-    showNavigation: false, // We use custom navigation
-    showBadge: false,
-    showCloseButton: false,
-    disableInteraction: false,
-    className: 'farm-tour',
+  const skipTour = () => {
+    setShowWelcome(false);
+    setIsTourOpen(false);
+    localStorage.setItem('farmhouse-tour-completed', 'true');
+  };
+
+  const contextValue: TourContextType = {
+    startTour,
+    isFirstVisit,
+    setFirstVisit,
+    completeTour,
+    skipTour,
   };
 
   return (
-    <TourContext.Provider value={{ startTour, isFirstVisit, setFirstVisit, completeTour }}>
-      <ReactTourProvider {...tourConfig}>
+    <TourContext.Provider value={contextValue}>
+      <ReactTourProvider
+        steps={tourSteps}
+        isOpen={isTourOpen}
+        onRequestClose={() => setIsTourOpen(false)}
+        showCloseButton={false}
+        showNavigation={false}
+        showBadge={false}
+        className="tour-mask"
+        styles={{
+          popover: (base) => ({
+            ...base,
+            display: 'none', // Hide default popover since we use custom component
+          }),
+        }}
+      >
         {children}
-        <TourControls />
+        
+        <WelcomeDialog
+          isOpen={showWelcome}
+          onClose={skipTour}
+          onStartTour={startTour}
+        />
+        
+        {isTourOpen && (
+          <CustomTourComponent
+            steps={tourSteps}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            setIsOpen={setIsTourOpen}
+          />
+        )}
       </ReactTourProvider>
     </TourContext.Provider>
   );
-}
+};
+
+export default TourProvider;
