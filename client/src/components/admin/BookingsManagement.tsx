@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Eye, Download, RefreshCw } from "lucide-react";
 
@@ -17,22 +17,12 @@ export default function BookingsManagement() {
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["/api/admin/bookings"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest(`/api/bookings/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("PATCH", `/api/admin/bookings/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });

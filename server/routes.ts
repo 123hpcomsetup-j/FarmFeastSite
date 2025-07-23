@@ -55,6 +55,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get gallery images (public)
+  app.get("/api/gallery", async (req, res) => {
+    try {
+      const images = await storage.getGalleryImages();
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch gallery images" });
+    }
+  });
+
   // Get all coupons (admin endpoint)
   app.get("/api/coupons", async (req, res) => {
     try {

@@ -41,6 +41,25 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Admin query function with authentication
+export const getAdminQueryFn: QueryFunction = async ({ queryKey }) => {
+  const token = localStorage.getItem("admin_token");
+  const res = await fetch(queryKey.join("/") as string, {
+    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (res.status === 401) {
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
+    window.location.href = "/admin";
+    throw new Error("Authentication required");
+  }
+
+  await throwIfResNotOk(res);
+  return await res.json();
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

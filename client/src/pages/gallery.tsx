@@ -1,13 +1,32 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const galleryImages = [
+  // Fetch gallery images from API
+  const { data: galleryImages = [], isLoading } = useQuery({
+    queryKey: ["/api/gallery"],
+  });
+
+  // Transform API data to match component expectations
+  const transformedImages = galleryImages.map((img: any) => ({
+    src: img.url,
+    alt: img.alt,
+    category: img.category,
+  }));
+
+  // Get unique categories from API data
+  const categories = ["All", ...Array.from(new Set(galleryImages.map((img: any) => img.category)))];
+
+  // Fallback images if API data is empty
+  const fallbackImages = [
     {
       src: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
       alt: "Beautiful farmhouse exterior with green landscaping",
@@ -23,59 +42,13 @@ export default function Gallery() {
       alt: "Event celebration with outdoor party setup and happy guests",
       category: "Events",
     },
-    {
-      src: "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Outdoor wedding ceremony with beautiful decorations and seating",
-      category: "Events",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Birthday party celebration with colorful decorations and cake",
-      category: "Events",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Luxury bedroom with comfortable bedding and modern amenities",
-      category: "Rooms",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Spacious air-conditioned bedroom with modern furnishing",
-      category: "Rooms",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1565301660306-29e08751cc53?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Outdoor BBQ area with grilling equipment and dining setup",
-      category: "Activities",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Outdoor BBQ setup with grilling equipment and seating area",
-      category: "Activities",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1529636798458-92182e662485?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Family gathering with people enjoying time together outdoors",
-      category: "Events",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Large parking area with vehicles and green surroundings",
-      category: "Exterior",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-      alt: "Outdoor activities and games area with sports equipment",
-      category: "Activities",
-    },
   ];
 
-  const categories = ["All", "Exterior", "Pool & Amenities", "Events", "Rooms", "Activities"];
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const imagesToDisplay = transformedImages.length > 0 ? transformedImages : fallbackImages;
 
   const filteredImages = selectedCategory === "All" 
-    ? galleryImages 
-    : galleryImages.filter(img => img.category === selectedCategory);
+    ? imagesToDisplay 
+    : imagesToDisplay.filter(img => img.category === selectedCategory);
 
   const openModal = (index: number) => {
     setSelectedImage(index);
@@ -136,9 +109,16 @@ export default function Gallery() {
         {/* Gallery Grid */}
         <section className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredImages.map((image, index) => (
-                <div
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <Skeleton key={index} className="h-64 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredImages.map((image, index) => (
+                  <div
                   key={index}
                   className="relative group cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                   onClick={() => openModal(index)}
@@ -154,9 +134,10 @@ export default function Gallery() {
                       {image.category}
                     </span>
                   </div>
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

@@ -510,6 +510,38 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(amenities).where(eq(amenities.id, id));
     return (result.rowCount ?? 0) > 0;
   }
+
+  // Gallery methods
+  async getGalleryImages(): Promise<GalleryImage[]> {
+    try {
+      return await db.select().from(galleryImages).where(eq(galleryImages.active, true)).orderBy(galleryImages.order);
+    } catch (error) {
+      console.error("Error fetching gallery images:", error);
+      return []; // Return empty array instead of throwing
+    }
+  }
+
+  async getAllGalleryImages(): Promise<GalleryImage[]> {
+    return await db.select().from(galleryImages).orderBy(galleryImages.order);
+  }
+
+  async createGalleryImage(imageData: InsertGalleryImage): Promise<GalleryImage> {
+    const [image] = await db.insert(galleryImages).values(imageData).returning();
+    return image;
+  }
+
+  async updateGalleryImage(id: number, imageData: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
+    const [image] = await db.update(galleryImages)
+      .set(imageData)
+      .where(eq(galleryImages.id, id))
+      .returning();
+    return image;
+  }
+
+  async deleteGalleryImage(id: number): Promise<boolean> {
+    const result = await db.delete(galleryImages).where(eq(galleryImages.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();
