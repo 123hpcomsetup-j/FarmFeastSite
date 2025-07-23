@@ -10,6 +10,7 @@ import ServicesManagement from "@/components/admin/ServicesManagement";
 import CouponsManagement from "@/components/admin/CouponsManagement";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import AmenitiesManagement from "@/components/admin/AmenitiesManagement";
+import BlogManagement from "@/components/admin/BlogManagement";
 import SeoManagement from "@/components/admin/SeoManagement";
 import ReviewsManagement from "@/components/admin/ReviewsManagement";
 import BookingConfirmationManagement from "@/components/admin/BookingConfirmationManagement";
@@ -157,7 +158,7 @@ export default function AdminDashboard() {
 
         {/* Management Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-11">
+          <TabsList className="grid w-full grid-cols-12">
             <TabsTrigger value="bookings" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Bookings
@@ -178,6 +179,10 @@ export default function AdminDashboard() {
               <Settings className="h-4 w-4" />
               Amenities
             </TabsTrigger>
+            <TabsTrigger value="blog" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Blog
+            </TabsTrigger>
             <TabsTrigger value="seo" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               SEO
@@ -197,6 +202,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="sitemap" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               Sitemap
+            </TabsTrigger>
+            <TabsTrigger value="blog" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Blog Posts
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
@@ -224,6 +233,10 @@ export default function AdminDashboard() {
             <AmenitiesManagement />
           </TabsContent>
 
+          <TabsContent value="blog">
+            <BlogManagement />
+          </TabsContent>
+
           <TabsContent value="seo">
             <SeoManagement />
           </TabsContent>
@@ -242,6 +255,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="sitemap">
             <SitemapManagement />
+          </TabsContent>
+
+          <TabsContent value="blog">
+            <BlogManagement />
           </TabsContent>
 
           <TabsContent value="settings">

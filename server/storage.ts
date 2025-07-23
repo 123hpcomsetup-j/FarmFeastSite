@@ -8,6 +8,7 @@ import {
   galleryImages,
   siteSettings,
   amenities,
+  blogPosts,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -25,54 +26,54 @@ import {
   type SiteSettings,
   type InsertSiteSettings,
   type Amenity,
-  type InsertAmenity
+  type InsertAmenity,
+  type BlogPost,
+  type InsertBlogPost
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, and } from "drizzle-orm";
-import bcrypt from 'bcrypt';
 
 export interface IStorage {
   // Bookings
-  createBooking(booking: InsertBooking): Promise<Booking>;
-  getBooking(id: number): Promise<Booking | undefined>;
   getAllBookings(): Promise<Booking[]>;
-  updateBooking(id: number, updates: Partial<Booking>): Promise<Booking>;
-  updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
-
+  getBookingById(id: number): Promise<Booking | undefined>;
+  getBookingByConfirmationCode(code: string): Promise<Booking | undefined>;
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined>;
+  deleteBooking(id: number): Promise<boolean>;
+  updateBookingPaymentStatus(id: number, status: string, utrNumber?: string, notes?: string): Promise<boolean>;
+  
   // Services
   getAllServices(): Promise<Service[]>;
-  getActiveServices(): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
   updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined>;
   deleteService(id: number): Promise<boolean>;
-
+  
   // Coupons
-  getCouponByCode(code: string): Promise<Coupon | undefined>;
   getAllCoupons(): Promise<Coupon[]>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
   createCoupon(coupon: InsertCoupon): Promise<Coupon>;
   updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined>;
   deleteCoupon(id: number): Promise<boolean>;
 
   // Admin Users
-  getAdminByUsername(username: string): Promise<AdminUser | undefined>;
-  createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
-  
+  getAdminUserByUsername(username: string): Promise<AdminUser | undefined>;
+  createAdminUser(user: InsertAdminUser): Promise<AdminUser>;
+
   // SEO Settings
-  getAllSeoSettings(): Promise<SeoSettings[]>;
   getSeoSettingsByPage(page: string): Promise<SeoSettings | undefined>;
-  upsertSeoSettings(seo: InsertSeoSettings): Promise<SeoSettings>;
-  
+  getAllSeoSettings(): Promise<SeoSettings[]>;
+  upsertSeoSettings(settings: InsertSeoSettings): Promise<SeoSettings>;
+
   // Review Settings
   getReviewSettings(): Promise<ReviewSettings | undefined>;
-  upsertReviewSettings(review: InsertReviewSettings): Promise<ReviewSettings>;
-  
+  upsertReviewSettings(settings: InsertReviewSettings): Promise<ReviewSettings>;
+
   // Gallery Images
   getAllGalleryImages(): Promise<GalleryImage[]>;
-  getActiveGalleryImages(): Promise<GalleryImage[]>;
+  getGalleryImagesByCategory(category: string): Promise<GalleryImage[]>;
   createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
   updateGalleryImage(id: number, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined>;
   deleteGalleryImage(id: number): Promise<boolean>;
-  
+
   // Site Settings
   getAllSiteSettings(): Promise<SiteSettings[]>;
   getSiteSettingByKey(key: string): Promise<SiteSettings | undefined>;
@@ -80,527 +81,468 @@ export interface IStorage {
   
   // Amenities
   getAllAmenities(): Promise<Amenity[]>;
-  getActiveAmenities(): Promise<Amenity[]>;
   createAmenity(amenity: InsertAmenity): Promise<Amenity>;
   updateAmenity(id: number, amenity: Partial<InsertAmenity>): Promise<Amenity | undefined>;
   deleteAmenity(id: number): Promise<boolean>;
+  
+  // Blog Posts
+  getAllBlogPosts(): Promise<BlogPost[]>;
+  getPublishedBlogPosts(): Promise<BlogPost[]>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
 }
 
-export class DatabaseStorage implements IStorage {
-  constructor() {
-    this.initializeDefaultData();
-  }
-
-  private async initializeDefaultData() {
-    try {
-      // Check if data already exists
-      const existingServices = await db.select().from(services);
-      if (existingServices.length > 0) return;
-
-      // Initialize default admin user
-      const hashedPassword = await bcrypt.hash("test@1234", 10);
-      await db.insert(adminUsers).values({
-        username: "Admin12",
-        password: hashedPassword,
-        role: "admin"
-      }).onConflictDoNothing();
-
-      // Initialize default services
-      const defaultServices: InsertService[] = [
-        {
-          name: "Pet Essentials",
-          description: "Pet-friendly amenities and care",
-          price: 800,
-          icon: "🐾",
-          category: "amenities",
-          active: true,
-        },
-        {
-          name: "Box Cricket & Sand Volleyball",
-          description: "Per Hour For Your Group",
-          price: 1000,
-          icon: "🏐",
-          category: "activities",
-          active: true,
-        },
-        {
-          name: "Bonfire Arrangement",
-          description: "Evening bonfire with seating arrangement",
-          price: 1200,
-          icon: "🔥",
-          category: "activities",
-          active: true,
-        },
-        {
-          name: "BBQ Setup",
-          description: "Complete BBQ setup with equipment and assistance",
-          price: 1500,
-          icon: "🍖",
-          category: "food",
-          active: true,
-        },
-        {
-          name: "Utensils",
-          description: "Utensils & Gas",
-          price: 1500,
-          icon: "🍽️",
-          category: "food",
-          active: true,
-        },
-        {
-          name: "Personal Chef",
-          description: "Professional chef service for your meals",
-          price: 3000,
-          icon: "👨‍🍳",
-          category: "food",
-          active: true,
-        },
-        {
-          name: "Party Decorations",
-          description: "Vendor Rates Starts from",
-          price: 30000,
-          icon: "🎉",
-          category: "decorations",
-          active: true,
-        },
-      ];
-
-      await db.insert(services).values(defaultServices);
-
-      // Initialize default coupons
-      const defaultCoupons: InsertCoupon[] = [
-        {
-          code: "WELCOME10",
-          type: "percentage",
-          value: 10,
-          minAmount: 2000,
-          maxDiscount: 1000,
-          active: true,
-          expiryDate: "2025-12-31",
-        },
-        {
-          code: "FIRST500",
-          type: "fixed",
-          value: 500,
-          minAmount: 1500,
-          active: true,
-          expiryDate: "2025-12-31",
-        },
-        {
-          code: "FAMILY20",
-          type: "percentage",
-          value: 20,
-          minAmount: 5000,
-          maxDiscount: 2000,
-          active: true,
-          expiryDate: "2025-12-31",
-        },
-      ];
-
-      await db.insert(coupons).values(defaultCoupons);
-
-      // Initialize default SEO settings
-      const defaultSeoSettings: InsertSeoSettings[] = [
-        {
-          page: "home",
-          title: "Farm Feast Farm House - Premium Farmhouse Rental Near Hyderabad",
-          description: "Escape to luxury at Farm Feast Farm House. Premium farmhouse rental with swimming pool, modern amenities, and professional services. Perfect for events, family gatherings, and weekend getaways near Hyderabad.",
-          keywords: "farmhouse rental, luxury farmhouse, swimming pool, Hyderabad, weekend getaway, event venue, family gathering",
-          ogTitle: "Farm Feast Farm House - Your Perfect Getaway Near Hyderabad",
-          ogDescription: "Premium farmhouse with luxury amenities, swimming pool, and professional services. Book your perfect weekend escape today!",
-          score: 85,
-          ranking: 1
-        },
-        {
-          page: "services",
-          title: "Premium Services - Farm Feast Farm House",
-          description: "Enhance your farmhouse experience with our carefully curated services. BBQ setup, personal chef, party decorations, and more professional services available.",
-          keywords: "farmhouse services, BBQ setup, personal chef, party decorations, bonfire arrangement",
-          ogTitle: "Premium Farmhouse Services",
-          ogDescription: "Professional services to make your farmhouse stay perfect and memorable.",
-          score: 78,
-          ranking: 2
-        },
-        {
-          page: "gallery",
-          title: "Gallery - Farm Feast Farm House Photos",
-          description: "Browse our beautiful farmhouse gallery. See luxury amenities, spacious grounds, swimming pool, and memorable events at Farm Feast Farm House.",
-          keywords: "farmhouse photos, gallery, luxury amenities, swimming pool, event photos",
-          ogTitle: "Farm Feast Farm House Gallery",
-          ogDescription: "Beautiful photos of our luxury farmhouse, amenities, and memorable events.",
-          score: 72,
-          ranking: 3
-        },
-        {
-          page: "booking",
-          title: "Book Your Stay - Farm Feast Farm House",
-          description: "Reserve your perfect farmhouse getaway. Easy online booking with instant pricing, service selection, and availability checking.",
-          keywords: "book farmhouse, online booking, reservation, availability, pricing",
-          ogTitle: "Book Your Farmhouse Stay",
-          ogDescription: "Easy online booking system with instant pricing and service selection.",
-          score: 80,
-          ranking: 2
-        }
-      ];
-
-      await db.insert(seoSettings).values(defaultSeoSettings);
-
-      // Initialize default site settings
-      const defaultSiteSettings: InsertSiteSettings[] = [
-        {
-          key: "whatsapp_number",
-          value: "918897326898",
-          type: "text",
-          description: "WhatsApp contact number"
-        },
-        {
-          key: "phone_primary",
-          value: "8897326898",
-          type: "text",
-          description: "Primary phone number"
-        },
-        {
-          key: "phone_secondary",
-          value: "8309001021",
-          type: "text",
-          description: "Secondary phone number"
-        },
-        {
-          key: "address",
-          value: "SY. No 170/A, Near Cheeryal Kaman, Keesara, Rangareddy - 501301",
-          type: "text",
-          description: "Farm house address"
-        },
-        {
-          key: "base_price_per_guest",
-          value: "1150",
-          type: "number",
-          description: "Base price per guest"
-        },
-        {
-          key: "maintenance_fee",
-          value: "500",
-          type: "number",
-          description: "Mandatory maintenance fee"
-        },
-        {
-          key: "upi_id",
-          value: "ybl@ybl",
-          type: "text",
-          description: "UPI ID for payments"
-        }
-      ];
-
-      await db.insert(siteSettings).values(defaultSiteSettings);
-
-      // Initialize default amenities
-      const defaultAmenities: InsertAmenity[] = [
-        {
-          icon: "🏊‍♂️",
-          title: "Swimming Pool",
-          description: "Large outdoor pool with kids section for family fun",
-          color: "bg-blue-50 text-blue-600",
-          order: 1,
-          active: true
-        },
-        {
-          icon: "🚗",
-          title: "Parking Available",
-          description: "Spacious parking area for multiple vehicles",
-          color: "bg-green-50 text-green-600",
-          order: 2,
-          active: true
-        },
-        {
-          icon: "❄️",
-          title: "Air Conditioned",
-          description: "Comfortable AC rooms for a relaxing stay",
-          color: "bg-blue-50 text-blue-600",
-          order: 3,
-          active: true
-        },
-        {
-          icon: "🐕",
-          title: "Pet-Friendly",
-          description: "Bring your furry friends along for the adventure",
-          color: "bg-amber-50 text-amber-600",
-          order: 4,
-          active: true
-        }
-      ];
-
-      await db.insert(amenities).values(defaultAmenities);
-
-      // Initialize default review settings
-      const existingReviews = await db.select().from(reviewSettings).limit(1);
-      if (existingReviews.length === 0) {
-        await db.insert(reviewSettings).values({
-          reviewCount: 127,
-          averageRating: "4.8",
-          businessName: "Farm Feast Farm House",
-          ratingScale: "5",
-          reviewsEnabled: true,
-          showInSnippets: true
-        });
-      }
-
-    } catch (error) {
-      console.error("Error initializing default data:", error);
+export class MemStorage implements IStorage {
+  private bookings: Booking[] = [
+    {
+      id: 1,
+      fullName: "Anand Tiwari",
+      contactNumber: "+91 9876543210",
+      email: "anand@example.com",
+      checkinDate: "2024-12-01",
+      checkoutDate: "2024-12-03",
+      guestCount: 4,
+      checkinTime: "14:00",
+      checkoutTime: "11:00",
+      selectedServices: ["Pet Essentials", "Farm Tour"],
+      couponCode: "",
+      specialRequests: "Need extra towels",
+      basePrice: 12000,
+      servicesPrice: 3000,
+      discountAmount: 0,
+      finalTotal: 15000,
+      status: "confirmed",
+      confirmationCode: "FF240001",
+      confirmedAt: new Date("2024-11-25T10:00:00Z"),
+      emailSent: true,
+      reminderSent: false,
+      cancelledAt: null,
+      cancellationReason: null,
+      paymentStatus: "verified",
+      upiTransactionId: "UTR123456789",
+      paymentVerifiedAt: new Date("2024-11-25T11:00:00Z"),
+      paymentNotes: "Payment verified via UPI",
+      createdAt: new Date("2024-11-25T09:00:00Z"),
+      updatedAt: new Date("2024-11-25T11:00:00Z"),
     }
-  }
+  ];
+
+  private services: Service[] = [
+    { id: 1, name: "Pet Essentials", description: "Complete pet care package with food, bedding, and toys", price: 1500, icon: "PawPrint", category: "pets", active: true },
+    { id: 2, name: "Farm Tour", description: "Guided tour of the entire farm with interactive experiences", price: 1500, icon: "MapPin", category: "experiences", active: true },
+    { id: 3, name: "Breakfast", description: "Fresh farm-to-table breakfast served daily", price: 800, icon: "Coffee", category: "dining", active: true },
+    { id: 4, name: "Dinner", description: "Traditional home-style dinner with local ingredients", price: 1200, icon: "UtensilsCrossed", category: "dining", active: true },
+    { id: 5, name: "BBQ Setup", description: "Complete barbecue setup with fresh meat and vegetables", price: 2000, icon: "Flame", category: "dining", active: true },
+    { id: 6, name: "Bonfire Evening", description: "Cozy bonfire setup with seating and marshmallows", price: 1000, icon: "Flame", category: "experiences", active: true }
+  ];
+
+  private coupons: Coupon[] = [
+    { id: 1, code: "WELCOME10", type: "percentage", value: 10, minAmount: 5000, maxDiscount: 2000, active: true, expiryDate: "2024-12-31" },
+    { id: 2, code: "SAVE500", type: "fixed", value: 500, minAmount: 3000, maxDiscount: null, active: true, expiryDate: "2024-12-25" }
+  ];
+
+  private adminUsers: AdminUser[] = [
+    { id: 1, username: "Admin12", password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", role: "admin", createdAt: new Date() }
+  ];
+
+  private seoSettings: SeoSettings[] = [
+    { 
+      id: 1, 
+      page: "home", 
+      title: "Farm Feast Farm House - Luxury Farmhouse Rental & Events", 
+      description: "Experience luxury farmhouse rental with modern amenities, pet-friendly accommodations, and farm-to-table dining. Book your perfect getaway today.", 
+      keywords: "farmhouse rental, luxury accommodation, pet-friendly, farm stay, weekend getaway",
+      ogTitle: "Farm Feast Farm House - Luxury Farmhouse Rental",
+      ogDescription: "Book your luxury farmhouse getaway with modern amenities and farm-to-table experiences",
+      ogImage: "/api/placeholder/1200/630",
+      canonicalUrl: "https://farmfeastfarmhouse.shop",
+      score: 95,
+      ranking: 1,
+      updatedAt: new Date()
+    }
+  ];
+
+  private reviewSettings: ReviewSettings[] = [
+    {
+      id: 1,
+      reviewCount: 127,
+      averageRating: "4.8",
+      businessName: "Farm Feast Farm House",
+      ratingScale: "5",
+      reviewsEnabled: true,
+      showInSnippets: true,
+      updatedAt: new Date()
+    }
+  ];
+
+  private galleryImages: GalleryImage[] = [
+    { id: 1, filename: "farmhouse-exterior.jpg", alt: "Beautiful farmhouse exterior", category: "exterior", url: "/api/placeholder/800/600", order: 1, active: true, uploadedAt: new Date() },
+    { id: 2, filename: "bedroom-1.jpg", alt: "Spacious master bedroom", category: "bedrooms", url: "/api/placeholder/800/600", order: 1, active: true, uploadedAt: new Date() },
+    { id: 3, filename: "kitchen.jpg", alt: "Modern farmhouse kitchen", category: "interior", url: "/api/placeholder/800/600", order: 1, active: true, uploadedAt: new Date() }
+  ];
+
+  private siteSettings: SiteSettings[] = [
+    { id: 1, key: "upi_id", value: "ybl@ybl", type: "text", description: "UPI ID for payments", updatedAt: new Date() },
+    { id: 2, key: "whatsapp_number", value: "+91 8897326898", type: "text", description: "WhatsApp contact number", updatedAt: new Date() },
+    { id: 3, key: "support_email", value: "info@farmfeastfarmhouse.shop", type: "text", description: "Support email address", updatedAt: new Date() },
+    { id: 4, key: "contact_phone", value: "+91 8897326898", type: "text", description: "Primary contact phone number", updatedAt: new Date() },
+    { id: 5, key: "whatsapp_message", value: "I need to know more details about the farm feast farm house", type: "text", description: "Default WhatsApp message", updatedAt: new Date() },
+    { id: 6, key: "email_notifications", value: "info@farmfeastfarmhouse.shop", type: "text", description: "Email for booking notifications", updatedAt: new Date() }
+  ];
+
+  private amenities: Amenity[] = [
+    { id: 1, icon: "Wifi", title: "Free WiFi", description: "High-speed internet throughout the property", color: "bg-blue-50 text-blue-600", order: 1, active: true },
+    { id: 2, icon: "Car", title: "Free Parking", description: "Ample parking space for multiple vehicles", color: "bg-green-50 text-green-600", order: 2, active: true },
+    { id: 3, icon: "Flame", title: "Bonfire Area", description: "Cozy outdoor bonfire setup for evening relaxation", color: "bg-orange-50 text-orange-600", order: 3, active: true },
+    { id: 4, icon: "PawPrint", title: "Pet Friendly", description: "Pets are welcome with special amenities", color: "bg-purple-50 text-purple-600", order: 4, active: true }
+  ];
+
+  private blogPosts: BlogPost[] = [
+    {
+      id: 1,
+      title: "Welcome to Farm Feast Farm House",
+      slug: "welcome-to-farm-feast",
+      excerpt: "Discover the perfect blend of luxury and nature at our farmhouse retreat",
+      content: "# Welcome to Farm Feast Farm House\n\nExperience the perfect getaway...",
+      featuredImage: "/api/placeholder/800/400",
+      author: "Farm Feast Team",
+      status: "published",
+      tags: ["welcome", "farmhouse", "luxury"],
+      metaTitle: "Welcome to Farm Feast Farm House - Luxury Farmhouse Experience",
+      metaDescription: "Discover luxury farmhouse accommodation with modern amenities and farm experiences",
+      readTime: 3,
+      viewCount: 245,
+      featured: true,
+      publishedAt: new Date("2024-01-15"),
+      createdAt: new Date("2024-01-10"),
+      updatedAt: new Date("2024-01-15")
+    }
+  ];
+
+  private nextId = {
+    bookings: 2,
+    services: 7,
+    coupons: 3,
+    adminUsers: 2,
+    seoSettings: 2,
+    reviewSettings: 2,
+    galleryImages: 4,
+    siteSettings: 7,
+    amenities: 5,
+    blogPosts: 2
+  };
 
   // Booking methods
-  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const [booking] = await db.insert(bookings).values(insertBooking).returning();
-    return booking;
-  }
-
-  async getBooking(id: number): Promise<Booking | undefined> {
-    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
-    return booking;
-  }
-
   async getAllBookings(): Promise<Booking[]> {
-    return await db.select().from(bookings);
+    return [...this.bookings];
   }
 
-  async updateBooking(id: number, updates: Partial<Booking>): Promise<Booking> {
-    const [booking] = await db.update(bookings)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(bookings.id, id))
-      .returning();
-    return booking;
+  async getBookingById(id: number): Promise<Booking | undefined> {
+    return this.bookings.find(b => b.id === id);
   }
 
-  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    const [booking] = await db.update(bookings)
-      .set({ status })
-      .where(eq(bookings.id, id))
-      .returning();
-    return booking;
+  async getBookingByConfirmationCode(code: string): Promise<Booking | undefined> {
+    return this.bookings.find(b => b.confirmationCode === code);
+  }
+
+  async createBooking(booking: InsertBooking): Promise<Booking> {
+    const confirmationCode = `FF${new Date().getFullYear().toString().slice(-2)}${this.nextId.bookings.toString().padStart(4, '0')}`;
+    const newBooking: Booking = {
+      ...booking,
+      id: this.nextId.bookings++,
+      status: "pending",
+      confirmationCode,
+      confirmedAt: null,
+      emailSent: false,
+      reminderSent: false,
+      cancelledAt: null,
+      cancellationReason: null,
+      paymentStatus: "pending",
+      upiTransactionId: null,
+      paymentVerifiedAt: null,
+      paymentNotes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.bookings.push(newBooking);
+    return newBooking;
+  }
+
+  async updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined> {
+    const index = this.bookings.findIndex(b => b.id === id);
+    if (index === -1) return undefined;
+    
+    this.bookings[index] = { ...this.bookings[index], ...booking, updatedAt: new Date() };
+    return this.bookings[index];
+  }
+
+  async deleteBooking(id: number): Promise<boolean> {
+    const index = this.bookings.findIndex(b => b.id === id);
+    if (index === -1) return false;
+    this.bookings.splice(index, 1);
+    return true;
+  }
+
+  async updateBookingPaymentStatus(id: number, status: string, utrNumber?: string, notes?: string): Promise<boolean> {
+    const booking = this.bookings.find(b => b.id === id);
+    if (!booking) return false;
+    
+    booking.paymentStatus = status;
+    if (utrNumber) booking.upiTransactionId = utrNumber;
+    if (notes) booking.paymentNotes = notes;
+    if (status === "verified") booking.paymentVerifiedAt = new Date();
+    booking.updatedAt = new Date();
+    
+    return true;
   }
 
   // Service methods
   async getAllServices(): Promise<Service[]> {
-    return await db.select().from(services);
+    return [...this.services];
   }
 
-  async getActiveServices(): Promise<Service[]> {
-    return await db.select().from(services).where(eq(services.active, true));
+  async createService(service: InsertService): Promise<Service> {
+    const newService: Service = { ...service, id: this.nextId.services++ };
+    this.services.push(newService);
+    return newService;
   }
 
-  async createService(insertService: InsertService): Promise<Service> {
-    const [service] = await db.insert(services).values(insertService).returning();
-    return service;
-  }
-
-  async updateService(id: number, serviceData: Partial<InsertService>): Promise<Service | undefined> {
-    const [service] = await db.update(services)
-      .set(serviceData)
-      .where(eq(services.id, id))
-      .returning();
-    return service;
+  async updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined> {
+    const index = this.services.findIndex(s => s.id === id);
+    if (index === -1) return undefined;
+    this.services[index] = { ...this.services[index], ...service };
+    return this.services[index];
   }
 
   async deleteService(id: number): Promise<boolean> {
-    const result = await db.delete(services).where(eq(services.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const index = this.services.findIndex(s => s.id === id);
+    if (index === -1) return false;
+    this.services.splice(index, 1);
+    return true;
   }
 
   // Coupon methods
-  async getCouponByCode(code: string): Promise<Coupon | undefined> {
-    const [coupon] = await db.select().from(coupons)
-      .where(and(eq(coupons.code, code), eq(coupons.active, true)));
-    return coupon;
-  }
-
   async getAllCoupons(): Promise<Coupon[]> {
-    return await db.select().from(coupons);
+    return [...this.coupons];
   }
 
-  async createCoupon(insertCoupon: InsertCoupon): Promise<Coupon> {
-    const [coupon] = await db.insert(coupons).values(insertCoupon).returning();
-    return coupon;
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    return this.coupons.find(c => c.code === code && c.active);
   }
 
-  async updateCoupon(id: number, couponData: Partial<InsertCoupon>): Promise<Coupon | undefined> {
-    const [coupon] = await db.update(coupons)
-      .set(couponData)
-      .where(eq(coupons.id, id))
-      .returning();
-    return coupon;
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const newCoupon: Coupon = { ...coupon, id: this.nextId.coupons++ };
+    this.coupons.push(newCoupon);
+    return newCoupon;
+  }
+
+  async updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    const index = this.coupons.findIndex(c => c.id === id);
+    if (index === -1) return undefined;
+    this.coupons[index] = { ...this.coupons[index], ...coupon };
+    return this.coupons[index];
   }
 
   async deleteCoupon(id: number): Promise<boolean> {
-    const result = await db.delete(coupons).where(eq(coupons.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const index = this.coupons.findIndex(c => c.id === id);
+    if (index === -1) return false;
+    this.coupons.splice(index, 1);
+    return true;
   }
 
-  // Admin methods
-  async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
-    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
-    return admin;
+  // Admin user methods
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    return this.adminUsers.find(u => u.username === username);
   }
 
-  async createAdmin(admin: InsertAdminUser): Promise<AdminUser> {
-    const hashedPassword = await bcrypt.hash(admin.password, 10);
-    const [newAdmin] = await db.insert(adminUsers)
-      .values({ ...admin, password: hashedPassword })
-      .returning();
-    return newAdmin;
+  async createAdminUser(user: InsertAdminUser): Promise<AdminUser> {
+    const newUser: AdminUser = { ...user, id: this.nextId.adminUsers++, createdAt: new Date() };
+    this.adminUsers.push(newUser);
+    return newUser;
   }
 
-  // SEO methods
-  async getAllSeoSettings(): Promise<SeoSettings[]> {
-    return await db.select().from(seoSettings);
-  }
-
+  // SEO Settings methods
   async getSeoSettingsByPage(page: string): Promise<SeoSettings | undefined> {
-    const [seo] = await db.select().from(seoSettings).where(eq(seoSettings.page, page));
-    return seo;
+    return this.seoSettings.find(s => s.page === page);
   }
 
-  async upsertSeoSettings(seo: InsertSeoSettings): Promise<SeoSettings> {
-    const [result] = await db.insert(seoSettings)
-      .values(seo)
-      .onConflictDoUpdate({
-        target: seoSettings.page,
-        set: { ...seo, updatedAt: new Date() }
-      })
-      .returning();
-    return result;
+  async getAllSeoSettings(): Promise<SeoSettings[]> {
+    return [...this.seoSettings];
+  }
+
+  async upsertSeoSettings(settings: InsertSeoSettings): Promise<SeoSettings> {
+    const existingIndex = this.seoSettings.findIndex(s => s.page === settings.page);
+    
+    if (existingIndex !== -1) {
+      this.seoSettings[existingIndex] = { 
+        ...this.seoSettings[existingIndex], 
+        ...settings, 
+        updatedAt: new Date() 
+      };
+      return this.seoSettings[existingIndex];
+    } else {
+      const newSettings: SeoSettings = { 
+        ...settings, 
+        id: this.nextId.seoSettings++, 
+        updatedAt: new Date() 
+      };
+      this.seoSettings.push(newSettings);
+      return newSettings;
+    }
   }
 
   // Review Settings methods
   async getReviewSettings(): Promise<ReviewSettings | undefined> {
-    const [settings] = await db.select().from(reviewSettings).limit(1);
-    return settings;
+    return this.reviewSettings[0];
   }
 
-  async upsertReviewSettings(review: InsertReviewSettings): Promise<ReviewSettings> {
-    // Get existing record if any
-    const existing = await this.getReviewSettings();
-    
-    if (existing) {
-      const [result] = await db.update(reviewSettings)
-        .set({ ...review, updatedAt: new Date() })
-        .where(eq(reviewSettings.id, existing.id))
-        .returning();
-      return result;
+  async upsertReviewSettings(settings: InsertReviewSettings): Promise<ReviewSettings> {
+    if (this.reviewSettings.length > 0) {
+      this.reviewSettings[0] = { 
+        ...this.reviewSettings[0], 
+        ...settings, 
+        updatedAt: new Date() 
+      };
+      return this.reviewSettings[0];
     } else {
-      const [result] = await db.insert(reviewSettings)
-        .values(review)
-        .returning();
-      return result;
+      const newSettings: ReviewSettings = { 
+        ...settings, 
+        id: this.nextId.reviewSettings++, 
+        updatedAt: new Date() 
+      };
+      this.reviewSettings.push(newSettings);
+      return newSettings;
     }
   }
 
-  // Gallery methods
+  // Gallery Image methods
   async getAllGalleryImages(): Promise<GalleryImage[]> {
-    return await db.select().from(galleryImages);
+    return [...this.galleryImages];
   }
 
-  async getActiveGalleryImages(): Promise<GalleryImage[]> {
-    return await db.select().from(galleryImages).where(eq(galleryImages.active, true));
+  async getGalleryImagesByCategory(category: string): Promise<GalleryImage[]> {
+    return this.galleryImages.filter(img => img.category === category && img.active);
   }
 
   async createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage> {
-    const [newImage] = await db.insert(galleryImages).values(image).returning();
+    const newImage: GalleryImage = { 
+      ...image, 
+      id: this.nextId.galleryImages++, 
+      uploadedAt: new Date() 
+    };
+    this.galleryImages.push(newImage);
     return newImage;
   }
 
-  async updateGalleryImage(id: number, imageData: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
-    const [image] = await db.update(galleryImages)
-      .set(imageData)
-      .where(eq(galleryImages.id, id))
-      .returning();
-    return image;
+  async updateGalleryImage(id: number, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
+    const index = this.galleryImages.findIndex(img => img.id === id);
+    if (index === -1) return undefined;
+    this.galleryImages[index] = { ...this.galleryImages[index], ...image };
+    return this.galleryImages[index];
   }
 
   async deleteGalleryImage(id: number): Promise<boolean> {
-    const result = await db.delete(galleryImages).where(eq(galleryImages.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const index = this.galleryImages.findIndex(img => img.id === id);
+    if (index === -1) return false;
+    this.galleryImages.splice(index, 1);
+    return true;
   }
 
-  // Site settings methods
+  // Site Settings methods
   async getAllSiteSettings(): Promise<SiteSettings[]> {
-    return await db.select().from(siteSettings);
+    return [...this.siteSettings];
   }
 
   async getSiteSettingByKey(key: string): Promise<SiteSettings | undefined> {
-    const [setting] = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
-    return setting;
+    return this.siteSettings.find(s => s.key === key);
   }
 
   async upsertSiteSettings(setting: InsertSiteSettings): Promise<SiteSettings> {
-    const [result] = await db.insert(siteSettings)
-      .values(setting)
-      .onConflictDoUpdate({
-        target: siteSettings.key,
-        set: { ...setting, updatedAt: new Date() }
-      })
-      .returning();
-    return result;
-  }
-
-  // Amenities methods
-  async getAllAmenities(): Promise<Amenity[]> {
-    return await db.select().from(amenities);
-  }
-
-  async getActiveAmenities(): Promise<Amenity[]> {
-    return await db.select().from(amenities).where(eq(amenities.active, true));
-  }
-
-  async createAmenity(amenity: InsertAmenity): Promise<Amenity> {
-    const [newAmenity] = await db.insert(amenities).values(amenity).returning();
-    return newAmenity;
-  }
-
-  async updateAmenity(id: number, amenityData: Partial<InsertAmenity>): Promise<Amenity | undefined> {
-    const [amenity] = await db.update(amenities)
-      .set(amenityData)
-      .where(eq(amenities.id, id))
-      .returning();
-    return amenity;
-  }
-
-  async deleteAmenity(id: number): Promise<boolean> {
-    const result = await db.delete(amenities).where(eq(amenities.id, id));
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  // Gallery methods
-  async getGalleryImages(): Promise<GalleryImage[]> {
-    try {
-      return await db.select().from(galleryImages).where(eq(galleryImages.active, true)).orderBy(galleryImages.order);
-    } catch (error) {
-      console.error("Error fetching gallery images:", error);
-      return []; // Return empty array instead of throwing
+    const existingIndex = this.siteSettings.findIndex(s => s.key === setting.key);
+    
+    if (existingIndex !== -1) {
+      this.siteSettings[existingIndex] = { 
+        ...this.siteSettings[existingIndex], 
+        ...setting, 
+        updatedAt: new Date() 
+      };
+      return this.siteSettings[existingIndex];
+    } else {
+      const newSetting: SiteSettings = { 
+        ...setting, 
+        id: this.nextId.siteSettings++, 
+        updatedAt: new Date() 
+      };
+      this.siteSettings.push(newSetting);
+      return newSetting;
     }
   }
 
-  async getAllGalleryImages(): Promise<GalleryImage[]> {
-    return await db.select().from(galleryImages).orderBy(galleryImages.order);
+  // Amenity methods
+  async getAllAmenities(): Promise<Amenity[]> {
+    return [...this.amenities];
   }
 
-  async createGalleryImage(imageData: InsertGalleryImage): Promise<GalleryImage> {
-    const [image] = await db.insert(galleryImages).values(imageData).returning();
-    return image;
+  async createAmenity(amenity: InsertAmenity): Promise<Amenity> {
+    const newAmenity: Amenity = { ...amenity, id: this.nextId.amenities++ };
+    this.amenities.push(newAmenity);
+    return newAmenity;
   }
 
-  async updateGalleryImage(id: number, imageData: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
-    const [image] = await db.update(galleryImages)
-      .set(imageData)
-      .where(eq(galleryImages.id, id))
-      .returning();
-    return image;
+  async updateAmenity(id: number, amenity: Partial<InsertAmenity>): Promise<Amenity | undefined> {
+    const index = this.amenities.findIndex(a => a.id === id);
+    if (index === -1) return undefined;
+    this.amenities[index] = { ...this.amenities[index], ...amenity };
+    return this.amenities[index];
   }
 
-  async deleteGalleryImage(id: number): Promise<boolean> {
-    const result = await db.delete(galleryImages).where(eq(galleryImages.id, id));
-    return (result.rowCount ?? 0) > 0;
+  async deleteAmenity(id: number): Promise<boolean> {
+    const index = this.amenities.findIndex(a => a.id === id);
+    if (index === -1) return false;
+    this.amenities.splice(index, 1);
+    return true;
+  }
+
+  // Blog Post methods
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return [...this.blogPosts];
+  }
+
+  async getPublishedBlogPosts(): Promise<BlogPost[]> {
+    return this.blogPosts.filter(post => post.status === "published");
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    return this.blogPosts.find(post => post.slug === slug);
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const newPost: BlogPost = { 
+      ...post, 
+      id: this.nextId.blogPosts++,
+      viewCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.blogPosts.push(newPost);
+    return newPost;
+  }
+
+  async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const index = this.blogPosts.findIndex(p => p.id === id);
+    if (index === -1) return undefined;
+    this.blogPosts[index] = { ...this.blogPosts[index], ...post, updatedAt: new Date() };
+    return this.blogPosts[index];
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    const index = this.blogPosts.findIndex(p => p.id === id);
+    if (index === -1) return false;
+    this.blogPosts.splice(index, 1);
+    return true;
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
