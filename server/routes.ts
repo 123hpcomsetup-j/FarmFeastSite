@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import { storage } from "./storage";
 import { insertBookingSchema, adminLoginSchema, insertSeoSettingsSchema, insertReviewSettingsSchema, insertSiteSettingsSchema, insertServiceSchema, insertCouponSchema, insertAmenitySchema, insertGalleryImageSchema } from "@shared/schema";
-import { confirmBooking, cancelBooking, sendCheckInReminder, generateConfirmationCode } from "./confirmationService";
+import { confirmBooking, cancelBooking, sendCheckInReminder, generateConfirmationCode, confirmationService } from "./confirmationService";
 import { z } from "zod";
 import { authenticateAdmin, generateToken, requireAuth, type AuthenticatedRequest } from "./auth";
 import multer from 'multer';
@@ -224,6 +224,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit payment details
+  app.post("/api/bookings/:id/payment", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { upiTransactionId } = req.body;
+      
+      if (!upiTransactionId) {
+        res.status(400).json({ message: "UTR number is required" });
+        return;
+      }
+      
+      const updatedBooking = await storage.updateBooking(bookingId, {
+        paymentStatus: 'paid',
+        upiTransactionId: upiTransactionId.trim(),
+        updatedAt: new Date(),
+      });
+      
+      if (!updatedBooking) {
+        res.status(404).json({ message: "Booking not found" });
+        return;
+      }
+      
+      res.json({
+        message: "Payment details submitted successfully",
+        booking: updatedBooking
+      });
+    } catch (error) {
+      console.error("Error submitting payment:", error);
+      res.status(500).json({ message: "Failed to submit payment details" });
+    }
+  });
+
+  // Admin: Verify payment
+  app.post("/api/admin/bookings/:id/verify-payment", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { verified, notes } = req.body;
+      
+      const paymentStatus = verified ? 'verified' : 'failed';
+      const updateData: any = {
+        paymentStatus,
+        paymentNotes: notes || null,
+        updatedAt: new Date(),
+      };
+      
+      if (verified) {
+        updateData.paymentVerifiedAt = new Date();
+        updateData.status = 'confirmed'; // Auto-confirm booking when payment is verified
+      }
+      
+      const updatedBooking = await storage.updateBooking(bookingId, updateData);
+      
+      if (!updatedBooking) {
+        res.status(404).json({ message: "Booking not found" });
+        return;
+      }
+
+      // Send email notification
+      try {
+        const siteSettings = await storage.getAllSiteSettings();
+        if (verified) {
+          await confirmationService.sendPaymentConfirmationEmail(updatedBooking, siteSettings);
+        } else {
+          await confirmationService.sendPaymentFailedEmail(updatedBooking, siteSettings, notes);
+        }
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the entire request if email fails
+      }
+      
+      res.json({
+        message: verified ? "Payment verified successfully" : "Payment marked as failed",
+        booking: updatedBooking
+      });
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ message: "Failed to verify payment" });
+    }
+  });
+
   // Get booking by confirmation code (public endpoint)
   app.get("/api/bookings/confirmation/:code", async (req, res) => {
     try {
@@ -245,6 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkoutDate: booking.checkoutDate,
         guestCount: booking.guestCount,
         status: booking.status,
+        paymentStatus: booking.paymentStatus,
         finalTotal: booking.finalTotal
       });
     } catch (error) {
