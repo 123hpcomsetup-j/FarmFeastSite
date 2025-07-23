@@ -247,6 +247,10 @@ export class MemStorage implements IStorage {
     return this.bookings.find(b => b.confirmationCode === code);
   }
 
+  async getBookingByConfirmationCode(code: string): Promise<Booking | undefined> {
+    return this.bookings.find(b => b.confirmationCode === code);
+  }
+
   async createBooking(booking: InsertBooking): Promise<Booking> {
     const confirmationCode = `FF${new Date().getFullYear().toString().slice(-2)}${this.nextId.bookings.toString().padStart(4, '0')}`;
     const newBooking: Booking = {

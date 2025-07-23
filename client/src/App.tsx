@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Gallery from "@/pages/gallery";
 import Booking from "@/pages/booking";
+import Payment from "@/pages/payment";
 import BookingConfirmation from "@/pages/booking-confirmation";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsConditions from "@/pages/terms-conditions";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/services" component={Services} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/booking" component={Booking} />
+      <Route path="/payment" component={Payment} />
       <Route path="/booking-confirmation" component={BookingConfirmation} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-conditions" component={TermsConditions} />
