@@ -51,9 +51,12 @@ export default function CustomScripts() {
         container.setAttribute('data-custom-script', scriptConfig.id.toString());
         container.setAttribute('data-script-name', scriptConfig.name);
         
-        // Safely move parsed nodes to container
-        Array.from(doc.body.childNodes).forEach(node => {
-          container.appendChild(node.cloneNode(true));
+        // Safely move parsed nodes to container (also check head nodes for scripts in head)
+        const allNodes = [...Array.from(doc.head.childNodes), ...Array.from(doc.body.childNodes)];
+        allNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE) {
+            container.appendChild(node.cloneNode(true));
+          }
         });
         console.log(`CustomScripts: Parsed HTML for "${scriptConfig.name}":`, container.childNodes.length, "nodes");
         
@@ -94,6 +97,16 @@ export default function CustomScripts() {
               } else {
                 newScript.textContent = element.textContent;
                 console.log(`CustomScripts: Adding inline script to ${scriptConfig.location}:`, element.textContent?.substring(0, 100) + "...");
+                
+                // For Tawk.to scripts, ensure proper execution
+                if (element.textContent?.includes('Tawk_API')) {
+                  newScript.onload = () => {
+                    console.log('✅ CustomScripts: Tawk.to script executed successfully');
+                  };
+                  newScript.onerror = (error) => {
+                    console.error('❌ CustomScripts: Tawk.to script failed to load:', error);
+                  };
+                }
               }
               
               // Insert into correct location
@@ -105,13 +118,28 @@ export default function CustomScripts() {
               
               console.log(`CustomScripts: Script "${scriptConfig.name}" added to ${scriptConfig.location}`);
               
-              // For LiveChat specifically, try to trigger initialization
-              if (scriptConfig.name.toLowerCase().includes('live') && scriptConfig.name.toLowerCase().includes('chat')) {
+              // For Tawk.to and LiveChat, trigger initialization
+              if (scriptConfig.name.toLowerCase().includes('chat')) {
                 setTimeout(() => {
-                  if (typeof window !== 'undefined' && (window as any).__lc) {
-                    console.log('CustomScripts: LiveChat widget loaded successfully!', (window as any).__lc);
+                  if (typeof window !== 'undefined') {
+                    // Check for Tawk.to
+                    if ((window as any).Tawk_API) {
+                      console.log('✅ CustomScripts: Tawk.to widget loaded successfully!');
+                      // Force show the widget if it's hidden
+                      if ((window as any).Tawk_API.showWidget) {
+                        (window as any).Tawk_API.showWidget();
+                      }
+                    }
+                    // Check for LiveChat
+                    if ((window as any).__lc) {
+                      console.log('✅ CustomScripts: LiveChat widget loaded successfully!');
+                    }
+                    // Also check for $_Tawk global variable
+                    if ((window as any).$_Tawk) {
+                      console.log('✅ CustomScripts: Tawk.to core loaded!');
+                    }
                   }
-                }, 1000);
+                }, 3000);
               }
             } else {
               // For non-script elements (like noscript), clone and append
