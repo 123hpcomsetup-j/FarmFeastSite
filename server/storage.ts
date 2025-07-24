@@ -831,8 +831,34 @@ class DatabaseStorage implements IStorage {
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {
-    const [newBooking] = await this.db.insert(bookings).values(booking).returning();
+    // Generate unique confirmation code
+    const confirmationCode = await this.generateUniqueConfirmationCode();
+    const bookingWithCode = {
+      ...booking,
+      confirmationCode,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    const [newBooking] = await this.db.insert(bookings).values(bookingWithCode).returning();
     return newBooking;
+  }
+
+  private async generateUniqueConfirmationCode(): Promise<string> {
+    let code: string;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      // Generate code in format: BK + 6 digit random number
+      const randomNum = Math.floor(100000 + Math.random() * 900000);
+      code = `BK${randomNum}`;
+      
+      // Check if code already exists
+      const existingBooking = await this.getBookingByConfirmationCode(code);
+      isUnique = !existingBooking;
+    }
+    
+    return code!;
   }
 
   async updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined> {
