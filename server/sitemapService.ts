@@ -62,8 +62,50 @@ export class SitemapService {
         lastmod: today,
         changefreq: 'monthly',
         priority: '0.6'
+      },
+      {
+        loc: `${this.baseUrl}/contact`,
+        lastmod: today,
+        changefreq: 'monthly',
+        priority: '0.7'
       }
     ];
+
+    // Add crawler endpoints for enhanced SEO
+    const crawlerPages: SitemapUrl[] = [
+      {
+        loc: `${this.baseUrl}/api/crawler/home`,
+        lastmod: today,
+        changefreq: 'daily' as const,
+        priority: '1.0'
+      },
+      {
+        loc: `${this.baseUrl}/api/crawler/services`,
+        lastmod: today,
+        changefreq: 'weekly' as const,
+        priority: '0.9'
+      },
+      {
+        loc: `${this.baseUrl}/api/crawler/gallery`,
+        lastmod: today,
+        changefreq: 'weekly' as const,
+        priority: '0.8'
+      },
+      {
+        loc: `${this.baseUrl}/api/crawler/booking`,
+        lastmod: today,
+        changefreq: 'monthly' as const,
+        priority: '0.9'
+      },
+      {
+        loc: `${this.baseUrl}/api/crawler/contact`,
+        lastmod: today,
+        changefreq: 'monthly' as const,
+        priority: '0.7'
+      }
+    ];
+
+    staticPages.push(...crawlerPages);
 
     // Adjust priorities based on SEO settings
     staticPages.forEach(page => {
@@ -209,6 +251,13 @@ Allow: /
 # Sitemap
 Sitemap: ${this.baseUrl}/sitemap.xml
 
+# SEO-optimized crawler endpoints for better indexing
+Allow: /api/crawler/home
+Allow: /api/crawler/services
+Allow: /api/crawler/gallery
+Allow: /api/crawler/booking
+Allow: /api/crawler/contact
+
 # Optimize crawl budget
 Crawl-delay: 1
 
@@ -218,9 +267,10 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /uploads/temp/
 
-# Allow important directories
+# Allow important directories and SEO endpoints
 Allow: /uploads/gallery/
-Allow: /assets/`;
+Allow: /assets/
+Allow: /api/crawler/`;
 
     return robotsTxt;
   }
