@@ -112,28 +112,28 @@ export default function AdminDashboard() {
   const stats = [
     {
       title: "Total Bookings",
-      value: bookings?.length || 0,
+      value: Array.isArray(bookings) ? bookings.length : 0,
       icon: Calendar,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Active Services",
-      value: services?.filter((s: any) => s.active)?.length || 0,
+      value: Array.isArray(services) ? services.filter((s: any) => s.active).length : 0,
       icon: Star,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Pending Bookings",
-      value: bookings?.filter((b: any) => b.status === "pending")?.length || 0,
+      value: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "pending").length : 0,
       icon: Users,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
     },
     {
       title: "Total Revenue",
-      value: `₹${bookings?.reduce((sum: number, b: any) => sum + (b.finalTotal || 0), 0).toLocaleString() || 0}`,
+      value: `₹${Array.isArray(bookings) ? bookings.reduce((sum: number, b: any) => sum + (b.finalTotal || 0), 0).toLocaleString() : '0'}`,
       icon: CreditCard,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {bookings?.slice(0, 5).map((booking: any, index: number) => (
+                    {Array.isArray(bookings) && bookings.slice(0, 5).map((booking: any, index: number) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium">{booking.fullName}</p>
