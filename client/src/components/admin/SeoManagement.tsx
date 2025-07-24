@@ -44,6 +44,12 @@ export default function SeoManagement() {
       ogDescription: "",
       ogImage: "",
       canonicalUrl: "",
+      schemaType: "WebPage",
+      schemaData: {},
+      priority: 50,
+      changeFreq: "monthly",
+      noindex: false,
+      nofollow: false,
     },
   });
 
