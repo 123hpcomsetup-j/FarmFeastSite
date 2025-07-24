@@ -142,141 +142,83 @@ export default function SeoHead({
       document.head.appendChild(meta);
     });
 
-    // Add JSON-LD structured data with reviews
-    if (reviewData?.reviewsEnabled && reviewData?.showInSnippets && reviewData.reviewCount && reviewData.reviewCount > 0) {
-      const structuredData = {
+    // Add JSON-LD structured data - fully admin controlled
+    let structuredData: any = {};
+    
+    // Use admin-defined schema data if available
+    if (seoSettings?.schemaData && Object.keys(seoSettings.schemaData).length > 0) {
+      structuredData = {
         "@context": "https://schema.org",
-        "@type": "LodgingBusiness",
-        "name": reviewData.businessName || "Farm Feast Farm House",
+        "@type": seoSettings.schemaType || "WebPage",
+        ...seoSettings.schemaData,
+        // Always include basic page info
+        "name": title,
         "description": description,
         "url": url,
-        "image": image,
-        "telephone": "+91-8897326898",
-        "email": "info@farmfeastfarmhouse.shop",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "SY. No 170/A, Near Cheeryal Kaman, Keesara",
-          "addressLocality": "Rangareddy",
-          "postalCode": "501301",
-          "addressRegion": "Telangana",
-          "addressCountry": "IN"
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": parseFloat((reviewData.averageRating || 0).toString()),
-          "reviewCount": reviewData.reviewCount || 0,
-          "bestRating": parseInt((reviewData.ratingScale || 5).toString()),
-          "worstRating": 1
-        },
-        "review": [
-          {
-            "@type": "Review",
-            "reviewRating": {
-              "@type": "Rating",
-              "ratingValue": 5,
-              "bestRating": 5
-            },
-            "author": {
-              "@type": "Person",
-              "name": "Verified Guest"
-            },
-            "datePublished": "2024-12-01",
-            "reviewBody": "Amazing farmhouse experience! Perfect for family getaways with excellent amenities and beautiful surroundings."
-          },
-          {
-            "@type": "Review",
-            "reviewRating": {
-              "@type": "Rating", 
-              "ratingValue": 5,
-              "bestRating": 5
-            },
-            "author": {
-              "@type": "Person",
-              "name": "Happy Customer"
-            },
-            "datePublished": "2024-11-28",
-            "reviewBody": "Fantastic service and beautiful property. The farm-to-table dining was exceptional. Highly recommended!"
-          }
-        ],
-        "amenityFeature": [
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Swimming Pool"
-          },
-          {
-            "@type": "LocationFeatureSpecification", 
-            "name": "Free Parking"
-          },
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Air Conditioning"
-          },
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Pet Friendly"
-          },
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Free WiFi"
-          }
-        ],
-        "priceRange": "₹₹",
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": 17.5449,
-          "longitude": 78.5718
-        },
-        "hasMap": "https://maps.google.com/",
-        "isAccessibleForFree": false,
-        "checkinTime": "14:00",
-        "checkoutTime": "11:00"
+        "image": image
       };
-
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.setAttribute('data-schema', 'true');
-      script.textContent = JSON.stringify(structuredData, null, 2);
-      document.head.appendChild(script);
     } else {
-      // Basic business schema without reviews
-      const basicStructuredData = {
+      // Dynamic schema based on page type and admin settings
+      const schemaType = seoSettings?.schemaType || 
+        (reviewData?.reviewsEnabled && reviewData?.showInSnippets ? "LodgingBusiness" : "WebPage");
+      
+      structuredData = {
         "@context": "https://schema.org",
-        "@type": "LodgingBusiness", 
-        "name": "Farm Feast Farm House",
+        "@type": schemaType,
+        "name": reviewData?.businessName || title,
         "description": description,
         "url": url,
-        "image": image,
-        "telephone": "+91-8897326898",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "SY. No 170/A, Near Cheeryal Kaman, Keesara",
-          "addressLocality": "Rangareddy", 
-          "postalCode": "501301",
-          "addressCountry": "IN"
-        },
-        "amenityFeature": [
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Swimming Pool"
-          },
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Parking"
-          },
-          {
-            "@type": "LocationFeatureSpecification",
-            "name": "Air Conditioning"
-          }
-        ],
-        "priceRange": "₹₹"
+        "image": image
       };
 
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.setAttribute('data-schema', 'true');
-      script.textContent = JSON.stringify(basicStructuredData, null, 2);
-      document.head.appendChild(script);
+      // Add business-specific data for LodgingBusiness
+      if (schemaType === "LodgingBusiness") {
+        structuredData = {
+          ...structuredData,
+          "telephone": "+91-8897326898",
+          "email": "info@farmfeastfarmhouse.shop",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "SY. No 170/4, Keesara, Medchal-Malkajgiri",
+            "addressLocality": "Keesara",
+            "postalCode": "501301",
+            "addressRegion": "Telangana",
+            "addressCountry": "IN"
+          },
+          "amenityFeature": [
+            { "@type": "LocationFeatureSpecification", "name": "Swimming Pool" },
+            { "@type": "LocationFeatureSpecification", "name": "Free Parking" },
+            { "@type": "LocationFeatureSpecification", "name": "Air Conditioning" },
+            { "@type": "LocationFeatureSpecification", "name": "Pet Friendly" },
+            { "@type": "LocationFeatureSpecification", "name": "Free WiFi" }
+          ],
+          "priceRange": "₹₹",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 17.5623,
+            "longitude": 78.6897
+          }
+        };
+
+        // Add review data if enabled and available
+        if (reviewData?.reviewsEnabled && reviewData?.showInSnippets && reviewData.reviewCount && reviewData.reviewCount > 0) {
+          structuredData.aggregateRating = {
+            "@type": "AggregateRating",
+            "ratingValue": parseFloat((reviewData.averageRating || 0).toString()),
+            "reviewCount": reviewData.reviewCount || 0,
+            "bestRating": parseInt((reviewData.ratingScale || 5).toString()),
+            "worstRating": 1
+          };
+        }
+      }
     }
+
+    // Create and append the structured data script
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-schema', 'true');
+    script.textContent = JSON.stringify(structuredData, null, 2);
+    document.head.appendChild(script);
 
   }, [title, description, image, url, type, reviewData, seoSettings, keywords, robots]);
 

@@ -628,6 +628,79 @@ export default function UnifiedSeoManagement() {
                         )}
                       />
                     </div>
+
+                    {/* Schema.org Structured Data */}
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold">Schema.org Structured Data</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="schemaType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Schema Type</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select schema type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="WebPage">Web Page</SelectItem>
+                                  <SelectItem value="LodgingBusiness">Lodging Business</SelectItem>
+                                  <SelectItem value="LocalBusiness">Local Business</SelectItem>
+                                  <SelectItem value="Organization">Organization</SelectItem>
+                                  <SelectItem value="Place">Place</SelectItem>
+                                  <SelectItem value="Service">Service</SelectItem>
+                                  <SelectItem value="Event">Event</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormDescription>
+                              Schema type for structured data markup
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="schemaData"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Custom Schema Data (JSON)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                {...field} 
+                                placeholder={`{
+  "telephone": "+91-8897326898",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Your Address",
+    "addressLocality": "Keesara",
+    "postalCode": "501301"
+  }
+}`}
+                                rows={8}
+                                value={typeof field.value === 'object' ? JSON.stringify(field.value, null, 2) : field.value || ""}
+                                onChange={(e) => {
+                                  try {
+                                    const parsed = JSON.parse(e.target.value || "{}");
+                                    field.onChange(parsed);
+                                  } catch {
+                                    field.onChange(e.target.value);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Custom JSON-LD structured data. Leave empty to use defaults based on schema type.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </TabsContent>
                 </Tabs>
 
