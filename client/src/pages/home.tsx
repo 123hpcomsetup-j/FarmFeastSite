@@ -1,6 +1,6 @@
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
-import HeroSection from "@/components/hero-section";
+import FastHeroSection from "@/components/FastHeroSection";
 import AmenitiesSection from "@/components/amenities-section";
 import ServicesSection from "@/components/services-section";
 import GallerySection from "@/components/gallery-section";
@@ -17,9 +17,9 @@ export default function Home() {
         description="Experience luxury farmhouse rental with modern amenities, pet-friendly accommodations, and farm-to-table dining. Book your perfect getaway today."
         type="website"
       />
-      <Navbar />
+      <FastNavbar />
       <main>
-        <HeroSection />
+        <FastHeroSection />
         <AmenitiesSection />
         <ServicesSection />
         <GallerySection />
