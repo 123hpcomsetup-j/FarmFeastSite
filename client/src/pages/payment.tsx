@@ -37,35 +37,31 @@ export default function Payment() {
   const confirmationCode = new URLSearchParams(window.location.search).get("booking");
 
   // Fetch booking details
-  const { data: booking, isLoading } = useQuery({
+  const { data: booking, isLoading } = useQuery<BookingDetails>({
     queryKey: ["/api/bookings", confirmationCode],
-    queryFn: () => apiRequest(`/api/bookings/${confirmationCode}`),
     enabled: !!confirmationCode,
   });
 
   // Fetch UPI settings
   const { data: upiSettings } = useQuery({
     queryKey: ["/api/settings", "upi_id"],
-    queryFn: () => apiRequest("/api/settings/upi_id"),
   });
 
   // Submit UTR mutation
   const submitUtrMutation = useMutation({
     mutationFn: async (data: { utrNumber: string }) => {
-      return apiRequest(`/api/bookings/${booking.id}/payment`, {
-        method: "PUT",
-        body: JSON.stringify({
-          utrNumber: data.utrNumber,
-          paymentStatus: "pending_verification"
-        }),
+      return apiRequest("PUT", `/api/bookings/${booking?.id}/payment`, {
+        utrNumber: data.utrNumber,
+        paymentStatus: "pending_verification"
       });
     },
     onSuccess: () => {
-      setPaymentStep("confirmation");
       toast({
         title: "Payment details submitted",
         description: "Your UTR number has been recorded. We'll verify and confirm your booking soon.",
       });
+      // Redirect to success page
+      setLocation(`/payment-success?booking=${booking?.confirmationCode}`);
     },
     onError: () => {
       toast({
@@ -77,13 +73,12 @@ export default function Payment() {
   });
 
   const copyUpiId = () => {
-    if (upiSettings?.value) {
-      navigator.clipboard.writeText(upiSettings.value);
-      toast({
-        title: "UPI ID copied",
-        description: "UPI ID has been copied to clipboard",
-      });
-    }
+    const upiId = upiSettings?.value || "farmfeast@ybl";
+    navigator.clipboard.writeText(upiId);
+    toast({
+      title: "UPI ID copied",
+      description: "UPI ID has been copied to clipboard",
+    });
   };
 
   const handleUtrSubmit = (e: React.FormEvent) => {
@@ -147,7 +142,7 @@ export default function Payment() {
             <CardTitle className="flex items-center justify-between">
               <span>Booking Summary</span>
               <Badge variant="outline">
-                {booking.confirmationCode}
+                {booking?.confirmationCode}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -155,19 +150,19 @@ export default function Payment() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="font-medium">Guest Name</p>
-                <p className="text-gray-600">{booking.fullName}</p>
+                <p className="text-gray-600">{booking?.fullName}</p>
               </div>
               <div>
                 <p className="font-medium">Total Amount</p>
-                <p className="text-2xl font-bold text-green-600">₹{booking.finalTotal.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-green-600">₹{booking?.finalTotal?.toLocaleString()}</p>
               </div>
               <div>
                 <p className="font-medium">Check-in</p>
-                <p className="text-gray-600">{new Date(booking.checkinDate).toLocaleDateString()}</p>
+                <p className="text-gray-600">{booking?.checkinDate ? new Date(booking.checkinDate).toLocaleDateString() : ''}</p>
               </div>
               <div>
                 <p className="font-medium">Check-out</p>
-                <p className="text-gray-600">{new Date(booking.checkoutDate).toLocaleDateString()}</p>
+                <p className="text-gray-600">{booking?.checkoutDate ? new Date(booking.checkoutDate).toLocaleDateString() : ''}</p>
               </div>
             </div>
           </CardContent>
@@ -187,7 +182,7 @@ export default function Payment() {
                 <QrCode className="h-16 w-16 mx-auto mb-4 text-blue-600" />
                 <h3 className="text-lg font-semibold mb-2">Scan QR Code or Use UPI ID</h3>
                 <p className="text-gray-600 text-sm">
-                  Pay ₹{booking.finalTotal.toLocaleString()} using any UPI app
+                  Pay ₹{booking?.finalTotal?.toLocaleString()} using any UPI app
                 </p>
               </div>
 
@@ -214,8 +209,8 @@ export default function Payment() {
                   <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
                     <li>Open your UPI app (PhonePe, GPay, Paytm, etc.)</li>
                     <li>Scan the QR code or enter the UPI ID: <strong>{upiSettings?.value || "farmfeast@ybl"}</strong></li>
-                    <li>Enter amount: <strong>₹{booking.finalTotal.toLocaleString()}</strong></li>
-                    <li>Add reference: <strong>{booking.confirmationCode}</strong></li>
+                    <li>Enter amount: <strong>₹{booking?.finalTotal?.toLocaleString()}</strong></li>
+                    <li>Add reference: <strong>{booking?.confirmationCode}</strong></li>
                     <li>Complete the payment</li>
                     <li>Note down the UTR/Transaction ID</li>
                   </ol>
@@ -263,7 +258,7 @@ export default function Payment() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
                     <strong>Important:</strong> Please ensure you've made the payment of 
-                    <strong> ₹{booking.finalTotal.toLocaleString()}</strong> to UPI ID 
+                    <strong> ₹{booking?.finalTotal?.toLocaleString()}</strong> to UPI ID 
                     <strong> {upiSettings?.value || "farmfeast@ybl"}</strong> before submitting.
                   </p>
                 </div>
@@ -311,7 +306,7 @@ export default function Payment() {
 
               <div className="space-y-3">
                 <p className="text-sm text-gray-600">
-                  Booking Reference: <strong>{booking.confirmationCode}</strong>
+                  Booking Reference: <strong>{booking?.confirmationCode}</strong>
                 </p>
                 
                 <div className="flex gap-3">
@@ -319,7 +314,7 @@ export default function Payment() {
                     Back to Home
                   </Button>
                   <Button 
-                    onClick={() => setLocation(`/booking-confirmation?code=${booking.confirmationCode}`)}
+                    onClick={() => setLocation(`/booking-confirmation?code=${booking?.confirmationCode}`)}
                     className="flex-1"
                   >
                     View Booking
