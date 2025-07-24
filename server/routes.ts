@@ -88,6 +88,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Custom scripts public route
+  app.get("/api/custom-scripts", async (req, res) => {
+    try {
+      const scripts = await storage.getActiveCustomScripts();
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching active custom scripts:", error);
+      res.status(500).json({ message: "Failed to fetch custom scripts" });
+    }
+  });
+
   // Coupon validation
   app.post("/api/coupons/validate", async (req, res) => {
     try {

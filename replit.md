@@ -187,6 +187,15 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Schema Enhancement**: Made filename field optional for URL-based images while maintaining compatibility
 - **API Endpoints**: Added dedicated `/api/admin/gallery/url` endpoint for URL-based image creation
 
+### Custom Scripts Implementation Fix (July 2025)
+- **Missing Script Execution**: Fixed critical issue where custom scripts were managed in admin panel but not executing on website
+- **Public API Endpoint**: Added `/api/custom-scripts` endpoint to fetch active scripts for public website
+- **Script Injection Component**: Created CustomScripts component that safely parses and injects scripts into correct DOM locations
+- **Complex HTML Support**: Enhanced script parser to handle complex widgets like LiveChat with multiple HTML elements and comments
+- **Location-Based Injection**: Scripts properly injected into head, body start, or body end based on admin configuration
+- **Error Handling**: Added comprehensive error handling and logging for failed script execution
+- **Real-time Loading**: Scripts load automatically when page loads and update when admin makes changes
+
 ## GDPR & Legal Compliance
 
 ### Comprehensive Privacy Framework
