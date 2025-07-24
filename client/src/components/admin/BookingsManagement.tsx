@@ -15,7 +15,7 @@ export default function BookingsManagement() {
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
-  const { data: bookings, isLoading } = useQuery({
+  const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["/api/admin/bookings"],
     queryFn: getAdminQueryFn,
   });
@@ -66,7 +66,7 @@ export default function BookingsManagement() {
   };
 
   const exportBookings = () => {
-    if (!bookings) return;
+    if (!bookings || !Array.isArray(bookings) || bookings.length === 0) return;
     
     const csvContent = [
       ["ID", "Name", "Contact", "Check-in", "Check-out", "Guests", "Total", "Status"].join(","),
@@ -139,7 +139,7 @@ export default function BookingsManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings?.map((booking: any) => (
+              {Array.isArray(bookings) ? bookings.map((booking: any) => (
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">#{booking.id}</TableCell>
                   <TableCell>{booking.fullName}</TableCell>
