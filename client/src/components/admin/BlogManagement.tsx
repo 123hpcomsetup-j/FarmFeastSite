@@ -165,8 +165,8 @@ export default function BlogManagement() {
       tags: post.tags || [],
       metaTitle: post.metaTitle || "",
       metaDescription: post.metaDescription || "",
-      readTime: post.readTime,
-      featured: post.featured,
+      readTime: post.readTime ?? 5,
+      featured: post.featured ?? false,
     });
     setIsDialogOpen(true);
   };
@@ -468,8 +468,8 @@ export default function BlogManagement() {
           <Card key={post.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <Badge className={getStatusColor(post.status)}>
-                  {post.status}
+                <Badge className={getStatusColor(post.status ?? "draft")}>
+                  {post.status ?? "draft"}
                 </Badge>
                 {post.featured && (
                   <Badge variant="outline" className="text-yellow-600 border-yellow-600">
@@ -487,7 +487,7 @@ export default function BlogManagement() {
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {new Date(post.createdAt).toLocaleDateString()}
+                  {new Date(post.createdAt ?? new Date()).toLocaleDateString()}
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />

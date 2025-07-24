@@ -18,8 +18,11 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
   
-  // Automatically add JWT token for admin routes
-  if (url.includes("/api/admin/")) {
+  // Automatically add JWT token for admin routes and protected endpoints
+  if (url.includes("/api/admin/") || 
+      (method !== "GET" && url.includes("/api/blog-posts")) ||
+      (method !== "GET" && url.includes("/api/services")) ||
+      (method !== "GET" && url.includes("/api/coupons"))) {
     const token = localStorage.getItem("admin_token");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
