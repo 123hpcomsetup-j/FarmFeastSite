@@ -65,7 +65,7 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// SEO settings table
+// SEO settings table with integrated review management
 export const seoSettings = pgTable("seo_settings", {
   id: serial("id").primaryKey(),
   page: text("page").notNull().unique(), // home, services, gallery, booking, privacy-policy, terms-conditions, etc.
@@ -84,6 +84,16 @@ export const seoSettings = pgTable("seo_settings", {
   nofollow: boolean("nofollow").default(false),
   score: integer("score").default(0),
   ranking: integer("ranking").default(0),
+  // Integrated review fields for dynamic SEO optimization
+  reviewCount: integer("review_count").default(0),
+  averageRating: varchar("average_rating").default("0.0"),
+  businessName: text("business_name").default("Farm Feast Farm House"),
+  ratingScale: text("rating_scale").default("5"),
+  reviewsEnabled: boolean("reviews_enabled").default(true),
+  showInSnippets: boolean("show_in_snippets").default(true),
+  reviewTitle: text("review_title"), // Dynamic review title for SEO
+  reviewDescription: text("review_description"), // Dynamic review description
+  reviewKeywords: text("review_keywords"), // Dynamic review keywords
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -202,6 +212,9 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 
 export const insertSeoSettingsSchema = createInsertSchema(seoSettings).omit({
   id: true,
+  updatedAt: true,
+  score: true,
+  ranking: true,
 });
 
 export const insertReviewSettingsSchema = createInsertSchema(reviewSettings).omit({

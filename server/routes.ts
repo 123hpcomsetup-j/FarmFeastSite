@@ -733,48 +733,26 @@ Farm Feast Farm House Team
     }
   });
 
-  // Review settings
+  // Unified review settings from SEO settings
   app.get("/api/reviews/seo", async (req, res) => {
     try {
-      const settings = await storage.getReviewSettings();
-      res.json(settings || { enabled: false });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch review settings" });
-    }
-  });
-
-  app.get("/api/admin/reviews/settings", requireAdmin, async (req, res) => {
-    try {
-      const settings = await storage.getReviewSettings();
-      res.json(settings || {
-        reviewCount: 0,
-        averageRating: "0.0",
-        businessName: "Farm Feast Farm House",
-        ratingScale: "5",
-        reviewsEnabled: true,
-        showInSnippets: true
+      // Get review data from home page SEO settings (primary business data)
+      const homeSettings = await storage.getSeoSettingsByPage("home");
+      if (!homeSettings || !homeSettings.reviewsEnabled || !homeSettings.showInSnippets) {
+        res.json({ enabled: false });
+        return;
+      }
+      
+      res.json({
+        enabled: true,
+        reviewCount: homeSettings.reviewCount || 0,
+        averageRating: parseFloat(homeSettings.averageRating || "0.0"),
+        businessName: homeSettings.businessName || "Farm Feast Farm House",
+        ratingScale: parseInt(homeSettings.ratingScale || "5")
       });
     } catch (error) {
-      console.error("Error fetching review settings:", error);
-      res.status(500).json({ message: "Failed to fetch review settings" });
-    }
-  });
-
-  app.put("/api/admin/reviews/settings", requireAdmin, async (req, res) => {
-    try {
-      const result = insertReviewSettingsSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid review data", 
-          errors: result.error.issues 
-        });
-      }
-
-      const settings = await storage.upsertReviewSettings(result.data);
-      res.json(settings);
-    } catch (error) {
-      console.error("Error updating review settings:", error);
-      res.status(500).json({ message: "Failed to update review settings" });
+      console.error("Error fetching review SEO data:", error);
+      res.status(500).json({ error: "Failed to fetch review data" });
     }
   });
 
