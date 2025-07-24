@@ -239,3 +239,26 @@ export type Amenity = typeof amenities.$inferSelect;
 export type InsertAmenity = z.infer<typeof insertAmenitySchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+// Homepage Images table
+export const homepageImages = pgTable("homepage_images", {
+  id: serial("id").primaryKey(),
+  section: varchar("section", { length: 50 }).notNull(), // hero, amenities, gallery, etc.
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  imageUrl: text("image_url").notNull(),
+  altText: varchar("alt_text", { length: 200 }),
+  order: integer("order").default(0),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHomepageImageSchema = createInsertSchema(homepageImages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertHomepageImage = z.infer<typeof insertHomepageImageSchema>;
+export type HomepageImage = typeof homepageImages.$inferSelect;

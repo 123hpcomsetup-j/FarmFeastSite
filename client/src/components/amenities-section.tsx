@@ -1,4 +1,59 @@
 import { Car, Snowflake, Dog } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { HomepageImage } from "@shared/schema";
+
+function AmenitiesImages() {
+  const { data: amenityImages = [] } = useQuery<HomepageImage[]>({
+    queryKey: ["/api/homepage-images?section=amenities"],
+  });
+
+  // Default images if none configured
+  const defaultImages = [
+    {
+      imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      altText: "Luxurious swimming pool with clear blue water and deck area",
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      altText: "Spacious air-conditioned bedroom with modern furnishing",
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      altText: "Outdoor BBQ setup with grilling equipment and seating area",
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      altText: "Large parking area with vehicles and green surroundings",
+    },
+  ];
+
+  const displayImages = amenityImages.length > 0 ? amenityImages : defaultImages;
+
+  return (
+    <div className="grid md:grid-cols-2 gap-8 mt-16">
+      <div className="space-y-6">
+        {displayImages.slice(0, 2).map((image, index) => (
+          <img
+            key={index}
+            src={image.imageUrl}
+            alt={image.altText || `Amenity image ${index + 1}`}
+            className={`rounded-xl shadow-lg w-full object-cover ${index === 0 ? 'h-64' : 'h-48'}`}
+          />
+        ))}
+      </div>
+      <div className="space-y-6">
+        {displayImages.slice(2, 4).map((image, index) => (
+          <img
+            key={index + 2}
+            src={image.imageUrl}
+            alt={image.altText || `Amenity image ${index + 3}`}
+            className={`rounded-xl shadow-lg w-full object-cover ${index === 1 ? 'h-64' : 'h-48'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function AmenitiesSection() {
   const amenities = [
@@ -82,32 +137,7 @@ export default function AmenitiesSection() {
           </div>
           
           {/* Amenities showcase images */}
-          <div className="grid md:grid-cols-2 gap-8 mt-16">
-            <div className="space-y-6">
-              <img
-                src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300"
-                alt="Luxurious swimming pool with clear blue water and deck area"
-                className="rounded-xl shadow-lg w-full h-64 object-cover"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300"
-                alt="Spacious air-conditioned bedroom with modern furnishing"
-                className="rounded-xl shadow-lg w-full h-48 object-cover"
-              />
-            </div>
-            <div className="space-y-6">
-              <img
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300"
-                alt="Outdoor BBQ setup with grilling equipment and seating area"
-                className="rounded-xl shadow-lg w-full h-48 object-cover"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300"
-                alt="Large parking area with vehicles and green surroundings"
-                className="rounded-xl shadow-lg w-full h-64 object-cover"
-              />
-            </div>
-          </div>
+          <AmenitiesImages />
         </div>
       </section>
 
