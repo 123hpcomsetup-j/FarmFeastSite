@@ -16,6 +16,7 @@ import BookingConfirmationManagement from "@/components/admin/BookingConfirmatio
 import PaymentManagement from "@/components/admin/PaymentManagement";
 import SitemapManagement from "@/components/admin/SitemapManagement";
 import SiteSettingsManagement from "@/components/admin/SiteSettingsManagement";
+import HomepageImagesManagement from "@/components/admin/HomepageImagesManagement";
 import { 
   Calendar, 
   Settings, 
@@ -43,6 +44,7 @@ const menuItems = [
   { id: "services", label: "Services", icon: Star },
   { id: "coupons", label: "Coupons", icon: TrendingUp },
   { id: "gallery", label: "Gallery", icon: ImageIcon },
+  { id: "homepage-images", label: "Homepage Images", icon: ImageIcon },
   { id: "amenities", label: "Amenities", icon: Settings },
   { id: "blog", label: "Blog Posts", icon: FileText },
   { id: "seo", label: "SEO", icon: Search },
@@ -248,6 +250,8 @@ export default function AdminDashboard() {
         return <CouponsManagement />;
       case "gallery":
         return <GalleryManagement />;
+      case "homepage-images":
+        return <HomepageImagesManagement />;
       case "amenities":
         return <AmenitiesManagement />;
       case "blog":

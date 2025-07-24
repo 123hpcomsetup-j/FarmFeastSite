@@ -1,8 +1,16 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Calendar, MessageCircle, MapPin, Star } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { HomepageImage } from "@shared/schema";
 
 export default function HeroSection() {
+  const { data: heroImages = [] } = useQuery<HomepageImage[]>({
+    queryKey: ["/api/homepage-images?section=hero"],
+  });
+
+  const heroImage = heroImages[0]; // Use the first hero image
+
   return (
     <section data-tour="hero" className="hero-gradient py-12 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,8 +61,8 @@ export default function HeroSection() {
           
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-              alt="Beautiful farmhouse exterior with green landscaping"
+              src={heroImage?.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"}
+              alt={heroImage?.altText || "Beautiful farmhouse exterior with green landscaping"}
               className="rounded-2xl shadow-2xl w-full h-96 object-cover"
             />
             

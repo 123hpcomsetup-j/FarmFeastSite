@@ -9,6 +9,7 @@ import {
   siteSettings,
   amenities,
   blogPosts,
+  homepageImages,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -28,7 +29,9 @@ import {
   type Amenity,
   type InsertAmenity,
   type BlogPost,
-  type InsertBlogPost
+  type InsertBlogPost,
+  type HomepageImage,
+  type InsertHomepageImage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -92,6 +95,13 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
+
+  // Homepage Images
+  getAllHomepageImages(): Promise<HomepageImage[]>;
+  getHomepageImagesBySection(section: string): Promise<HomepageImage[]>;
+  createHomepageImage(image: InsertHomepageImage): Promise<HomepageImage>;
+  updateHomepageImage(id: number, image: Partial<InsertHomepageImage>): Promise<HomepageImage | undefined>;
+  deleteHomepageImage(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -397,6 +407,23 @@ export class MemStorage implements IStorage {
     }
   ];
 
+  private homepageImages: HomepageImage[] = [
+    // Hero Section Images
+    { id: 1, section: "hero", title: "Hero Background", description: "Main hero section background image", imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600", altText: "Beautiful farmhouse exterior with green surroundings", order: 1, active: true, createdAt: new Date(), updatedAt: new Date() },
+    // Amenities Section Images
+    { id: 2, section: "amenities", title: "Swimming Pool", description: "Luxurious swimming pool image", imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300", altText: "Luxurious swimming pool with clear blue water and deck area", order: 1, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 3, section: "amenities", title: "Bedroom", description: "Spacious air-conditioned bedroom", imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300", altText: "Spacious air-conditioned bedroom with modern furnishing", order: 2, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 4, section: "amenities", title: "BBQ Setup", description: "Outdoor BBQ area", imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300", altText: "Outdoor BBQ setup with grilling equipment and seating area", order: 3, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 5, section: "amenities", title: "Parking Area", description: "Large parking space", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300", altText: "Large parking area with vehicles and green surroundings", order: 4, active: true, createdAt: new Date(), updatedAt: new Date() },
+    // Gallery Section Images
+    { id: 6, section: "gallery", title: "Event Celebration", description: "Outdoor party setup", imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Event celebration with outdoor party setup and happy guests", order: 1, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 7, section: "gallery", title: "Wedding Ceremony", description: "Beautiful wedding setup", imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Outdoor wedding ceremony with beautiful decorations and seating", order: 2, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 8, section: "gallery", title: "Birthday Party", description: "Colorful birthday celebration", imageUrl: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Birthday party celebration with colorful decorations and cake", order: 3, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 9, section: "gallery", title: "Luxury Bedroom", description: "Comfortable accommodation", imageUrl: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Luxury bedroom with comfortable bedding and modern amenities", order: 4, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 10, section: "gallery", title: "BBQ Experience", description: "Outdoor dining setup", imageUrl: "https://images.unsplash.com/photo-1565301660306-29e08751cc53?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Outdoor BBQ area with grilling equipment and dining setup", order: 5, active: true, createdAt: new Date(), updatedAt: new Date() },
+    { id: 11, section: "gallery", title: "Family Gathering", description: "People enjoying outdoor time", imageUrl: "https://images.unsplash.com/photo-1529636798458-92182e662485?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400", altText: "Family gathering with people enjoying time together outdoors", order: 6, active: true, createdAt: new Date(), updatedAt: new Date() }
+  ];
+
   private nextId = {
     bookings: 2,
     services: 7,
@@ -407,7 +434,8 @@ export class MemStorage implements IStorage {
     galleryImages: 4,
     siteSettings: 7,
     amenities: 5,
-    blogPosts: 2
+    blogPosts: 2,
+    homepageImages: 12
   };
 
   // Booking methods
@@ -741,6 +769,44 @@ export class MemStorage implements IStorage {
     const index = this.blogPosts.findIndex(p => p.id === id);
     if (index === -1) return false;
     this.blogPosts.splice(index, 1);
+    return true;
+  }
+
+  // Homepage Images methods
+  async getAllHomepageImages(): Promise<HomepageImage[]> {
+    return [...this.homepageImages];
+  }
+
+  async getHomepageImagesBySection(section: string): Promise<HomepageImage[]> {
+    return this.homepageImages.filter(img => img.section === section && img.active);
+  }
+
+  async createHomepageImage(image: InsertHomepageImage): Promise<HomepageImage> {
+    const newImage: HomepageImage = { 
+      ...image, 
+      id: this.nextId.homepageImages++,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.homepageImages.push(newImage);
+    return newImage;
+  }
+
+  async updateHomepageImage(id: number, image: Partial<InsertHomepageImage>): Promise<HomepageImage | undefined> {
+    const index = this.homepageImages.findIndex(img => img.id === id);
+    if (index === -1) return undefined;
+    this.homepageImages[index] = { 
+      ...this.homepageImages[index], 
+      ...image, 
+      updatedAt: new Date() 
+    };
+    return this.homepageImages[index];
+  }
+
+  async deleteHomepageImage(id: number): Promise<boolean> {
+    const index = this.homepageImages.findIndex(img => img.id === id);
+    if (index === -1) return false;
+    this.homepageImages.splice(index, 1);
     return true;
   }
 }

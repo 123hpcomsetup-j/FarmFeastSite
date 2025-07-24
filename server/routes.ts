@@ -17,7 +17,8 @@ import {
   insertCouponSchema, 
   insertAmenitySchema, 
   insertGalleryImageSchema,
-  insertBlogPostSchema
+  insertBlogPostSchema,
+  insertHomepageImageSchema
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -1115,6 +1116,83 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error regenerating sitemap:", error);
       res.status(500).json({ message: "Failed to regenerate sitemap" });
+    }
+  });
+
+  // Homepage Images routes
+  app.get("/api/homepage-images", async (req, res) => {
+    try {
+      const { section } = req.query;
+      let images;
+      
+      if (section) {
+        images = await storage.getHomepageImagesBySection(section as string);
+      } else {
+        images = await storage.getAllHomepageImages();
+      }
+      
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching homepage images:", error);
+      res.status(500).json({ message: "Failed to fetch homepage images" });
+    }
+  });
+
+  app.post("/api/homepage-images", requireAdmin, async (req, res) => {
+    try {
+      const result = insertHomepageImageSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid homepage image data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const image = await storage.createHomepageImage(result.data);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error("Error creating homepage image:", error);
+      res.status(500).json({ message: "Failed to create homepage image" });
+    }
+  });
+
+  app.put("/api/homepage-images/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertHomepageImageSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid homepage image data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const image = await storage.updateHomepageImage(id, result.data);
+      if (!image) {
+        return res.status(404).json({ message: "Homepage image not found" });
+      }
+
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating homepage image:", error);
+      res.status(500).json({ message: "Failed to update homepage image" });
+    }
+  });
+
+  app.delete("/api/homepage-images/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteHomepageImage(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Homepage image not found" });
+      }
+
+      res.json({ message: "Homepage image deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting homepage image:", error);
+      res.status(500).json({ message: "Failed to delete homepage image" });
     }
   });
 
