@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Eye, Download, RefreshCw } from "lucide-react";
+import { Eye, Download, RefreshCw, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function BookingsManagement() {
   const { toast } = useToast();
@@ -35,6 +36,26 @@ export default function BookingsManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to update booking status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/bookings/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+      toast({
+        title: "Success",
+        description: "Booking deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete booking",
         variant: "destructive",
       });
     },
@@ -175,6 +196,35 @@ export default function BookingsManagement() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Booking</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete booking #{booking.id} for {booking.fullName}? 
+                                This action cannot be undone and will permanently remove all booking data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteBookingMutation.mutate(booking.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Booking
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>

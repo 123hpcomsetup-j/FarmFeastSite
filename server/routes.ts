@@ -436,6 +436,22 @@ Farm Feast Farm House Team
     }
   });
 
+  app.delete("/api/admin/bookings/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBooking(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json({ message: "Booking deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      res.status(500).json({ message: "Failed to delete booking" });
+    }
+  });
+
   // Services management (admin)
   app.get("/api/admin/services", requireAdmin, async (req, res) => {
     try {
