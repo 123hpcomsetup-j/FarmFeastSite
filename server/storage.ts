@@ -864,7 +864,7 @@ class DatabaseStorage implements IStorage {
 
   // Services
   async getAllServices(): Promise<Service[]> {
-    return await this.db.select().from(services).orderBy(services.order, services.id);
+    return await this.db.select().from(services).orderBy(services.id);
   }
 
   async createService(service: InsertService): Promise<Service> {
@@ -972,7 +972,7 @@ class DatabaseStorage implements IStorage {
 
   // Gallery Images
   async getAllGalleryImages(): Promise<GalleryImage[]> {
-    return await this.db.select().from(galleryImages).orderBy(galleryImages.order, galleryImages.id);
+    return await this.db.select().from(galleryImages).orderBy(galleryImages.id);
   }
 
   async getGalleryImagesByCategory(category: string): Promise<GalleryImage[]> {
@@ -980,7 +980,7 @@ class DatabaseStorage implements IStorage {
       .select()
       .from(galleryImages)
       .where(and(eq(galleryImages.category, category), eq(galleryImages.active, true)))
-      .orderBy(galleryImages.order);
+      .orderBy(galleryImages.id);
   }
 
   async createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage> {
@@ -1028,7 +1028,7 @@ class DatabaseStorage implements IStorage {
 
   // Amenities
   async getAllAmenities(): Promise<Amenity[]> {
-    return await this.db.select().from(amenities).orderBy(amenities.order);
+    return await this.db.select().from(amenities).orderBy(amenities.id);
   }
 
   async createAmenity(amenity: InsertAmenity): Promise<Amenity> {
