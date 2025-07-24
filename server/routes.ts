@@ -190,6 +190,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin booking confirmation endpoint
+  app.post("/api/bookings/:id/confirm", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.updateBooking(bookingId, { status: "confirmed" });
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Send confirmation email (console log for now - replace with actual email service)
+      console.log(`
+═══════════════════════════════════════════════════════════════
+📧 BOOKING CONFIRMATION EMAIL SENT
+═══════════════════════════════════════════════════════════════
+To: ${booking.email || booking.contactNumber}
+Subject: 🎉 Booking Confirmed - ${booking.confirmationCode}
+
+Dear ${booking.fullName},
+
+Great news! Your booking has been confirmed by our admin team.
+
+📋 BOOKING DETAILS:
+━━━━━━━━━━━━━━━━━━━━━
+• Confirmation Code: ${booking.confirmationCode}
+• Guest Name: ${booking.fullName}
+• Check-in Date: ${booking.checkinDate}
+• Check-out Date: ${booking.checkoutDate}
+• Number of Guests: ${booking.guestCount}
+• Total Amount: ₹${booking.finalTotal?.toLocaleString()}
+
+Your booking is now confirmed and ready! We look forward to hosting you.
+
+Best regards,
+Farm Feast Farm House Team
+═══════════════════════════════════════════════════════════════
+      `);
+      
+      res.json({
+        message: "Booking confirmed successfully",
+        booking
+      });
+    } catch (error) {
+      console.error("Error confirming booking:", error);
+      res.status(500).json({ message: "Failed to confirm booking" });
+    }
+  });
+
+  // Admin cancel booking endpoint
+  app.post("/api/bookings/:id/cancel", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      const booking = await storage.updateBooking(bookingId, { 
+        status: "cancelled",
+        specialRequests: reason 
+      });
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json({
+        message: "Booking cancelled successfully",
+        booking
+      });
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
+  // Admin get all bookings endpoint
+  app.get("/api/admin/bookings", async (req, res) => {
+    try {
+      const bookings = await storage.getAllBookings();
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
 
 
   // Admin login

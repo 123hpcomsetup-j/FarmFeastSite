@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface BookingDetails {
 }
 
 export default function BookingConfirmation() {
+  const [, setLocation] = useLocation();
   const [confirmationCode, setConfirmationCode] = useState("");
   const [searchAttempted, setSearchAttempted] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -43,8 +45,8 @@ export default function BookingConfirmation() {
   }, []);
 
   const { data: booking, isLoading, error, refetch } = useQuery<BookingDetails>({
-    queryKey: ["/api/bookings/confirmation", confirmationCode],
-    enabled: false, // Don't auto-fetch
+    queryKey: ["/api/bookings", confirmationCode],
+    enabled: searchAttempted && confirmationCode.length >= 6,
   });
 
   const handleSearch = () => {
@@ -292,7 +294,7 @@ export default function BookingConfirmation() {
                     Complete your payment to confirm your booking. Your reservation will be confirmed once payment is verified.
                   </p>
                   <Button 
-                    onClick={() => setShowPayment(true)}
+                    onClick={() => setLocation(`/payment?booking=${booking.confirmationCode}`)}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
                     Proceed to Payment
