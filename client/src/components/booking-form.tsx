@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ const getServiceEmoji = (name: string) => {
 export default function BookingForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
   const [formProgress, setFormProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -169,26 +171,13 @@ export default function BookingForm() {
         description: `Your confirmation code is: ${booking.confirmationCode}`,
       });
       
-      // Show confirmation dialog with booking details
-      const confirmationMessage = `
-        ✅ Booking Created Successfully!
-        
-        Confirmation Code: ${booking.confirmationCode}
-        Name: ${booking.fullName}
-        Check-in: ${booking.checkinDate}
-        Total: ₹${booking.finalTotal?.toLocaleString()}
-        
-        Next Step: Complete Payment
-        Save your confirmation code!
-      `;
-      
-      if (confirm(confirmationMessage + "\n\nWould you like to proceed to payment now?")) {
-        window.location.href = `/payment?booking=${booking.confirmationCode}`;
-      }
-      
+      // Reset form and navigate to booking confirmation page
       form.reset();
       setCouponValidation(null);
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      
+      // Redirect to booking confirmation page with the booking data
+      setLocation(`/booking-confirmation?booking=${booking.confirmationCode}`);
     },
     onError: (error: any) => {
       toast({

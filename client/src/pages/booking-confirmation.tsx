@@ -30,7 +30,7 @@ export default function BookingConfirmation() {
   // Check URL parameters for auto-fill and payment flag
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const codeParam = urlParams.get('code');
+    const codeParam = urlParams.get('booking') || urlParams.get('code'); // Support both formats
     const paymentParam = urlParams.get('payment');
     
     if (codeParam) {
