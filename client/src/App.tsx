@@ -12,6 +12,7 @@ import ResourcePreloader from "@/components/ResourcePreloader";
 import PreloadFonts from "@/components/PreloadFonts";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import CriticalResourceLoader from "@/components/CriticalResourceLoader";
+import CriticalCSSOptimizer from "@/components/CriticalCSSOptimizer";
 
 // Import critical pages normally, lazy load secondary pages
 import Home from "@/pages/home";
@@ -148,6 +149,7 @@ function App() {
         <TourProvider>
           <SeoHead />
           <CriticalResourceLoader />
+          <CriticalCSSOptimizer />
           <PreloadFonts />
           <ResourcePreloader />
           <ServiceWorkerRegistration />
