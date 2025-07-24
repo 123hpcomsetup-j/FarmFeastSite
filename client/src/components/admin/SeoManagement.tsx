@@ -57,8 +57,10 @@ export default function SeoManagement() {
     mutationFn: async (data: SeoForm) => {
       return apiRequest("POST", "/api/admin/seo", data);
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/seo"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/seo", data.page] });
+      queryClient.invalidateQueries({ queryKey: ["/api/seo"] });
       toast({ title: "Success", description: "SEO settings created successfully" });
       setShowForm(false);
       form.reset();
@@ -76,8 +78,10 @@ export default function SeoManagement() {
     mutationFn: async ({ id, data }: { id: number; data: SeoForm }) => {
       return apiRequest("PUT", `/api/admin/seo/${id}`, data);
     },
-    onSuccess: () => {
+    onSuccess: (updatedData: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/seo"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/seo", updatedData.page] });
+      queryClient.invalidateQueries({ queryKey: ["/api/seo"] });
       toast({ title: "Success", description: "SEO settings updated successfully" });
       setEditingPage(null);
       setShowForm(false);
@@ -135,7 +139,7 @@ export default function SeoManagement() {
         name: "Meta description (120-160 chars)"
       },
       { 
-        condition: page.keywords && page.keywords.split(',').filter(k => k.trim()).length >= 3, 
+        condition: page.keywords && page.keywords.split(',').filter((k: string) => k.trim()).length >= 3, 
         points: 15,
         name: "Keywords (min 3)"
       },

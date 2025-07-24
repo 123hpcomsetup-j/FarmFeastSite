@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 
 interface SeoHeadProps {
   title?: string;
@@ -17,19 +18,63 @@ interface ReviewData {
   ratingScale?: number;
 }
 
+interface SeoSettings {
+  id: number;
+  page: string;
+  title: string;
+  description: string;
+  keywords: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  canonicalUrl: string;
+  schemaType: string;
+  schemaData: Record<string, any>;
+  priority: number;
+  changeFreq: string;
+  noindex: boolean;
+  nofollow: boolean;
+}
+
 export default function SeoHead({ 
-  title = "Farm Feast Farm House - Luxury Farmhouse Rental",
-  description = "Experience luxury at Farm Feast Farm House. Book your perfect getaway with premium amenities and beautiful natural surroundings.",
-  image = "/api/placeholder/1200/630",
+  title: propTitle,
+  description: propDescription,
+  image: propImage,
   url = typeof window !== 'undefined' ? window.location.href : '',
   type = "website"
 }: SeoHeadProps) {
+  
+  const [location] = useLocation();
+  
+  // Get current page name from route
+  const getCurrentPageName = () => {
+    if (location === '/') return 'home';
+    return location.replace('/', '').split('/')[0] || 'home';
+  };
+
+  const currentPage = getCurrentPageName();
+  
+  // Fetch SEO settings for current page
+  const { data: seoSettings } = useQuery<SeoSettings>({
+    queryKey: ["/api/seo", currentPage],
+    staleTime: 0, // No cache for real-time updates
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
   
   // Fetch review data for SEO
   const { data: reviewData } = useQuery<ReviewData>({
     queryKey: ["/api/reviews/seo"],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Use SEO settings from database if available, otherwise fall back to props
+  const title = seoSettings?.title || propTitle || "Farm Feast Farm House - Luxury Farmhouse Rental";
+  const description = seoSettings?.description || propDescription || "Experience luxury at Farm Feast Farm House. Book your perfect getaway with premium amenities and beautiful natural surroundings.";
+  const image = seoSettings?.ogImage || propImage || "/api/placeholder/1200/630";
+  const keywords = seoSettings?.keywords || 'farmhouse rental, luxury accommodation, farm stay, vacation rental, peaceful getaway, family vacation';
+  const robots = seoSettings?.noindex ? 'noindex' : 'index, follow';
 
   useEffect(() => {
     // Update document title
@@ -46,7 +91,8 @@ export default function SeoHead({
     // Basic meta tags
     const metaTags = [
       { name: 'description', content: description },
-      { name: 'keywords', content: 'farmhouse rental, luxury accommodation, farm stay, vacation rental, peaceful getaway, family vacation' },
+      { name: 'keywords', content: keywords },
+      { name: 'robots', content: robots },
       
       // Open Graph tags
       { property: 'og:title', content: title },
@@ -63,10 +109,18 @@ export default function SeoHead({
       { name: 'twitter:image', content: image },
       
       // Additional SEO tags
-      { name: 'robots', content: 'index, follow' },
-      { name: 'googlebot', content: 'index, follow' },
+      { name: 'googlebot', content: robots },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
     ];
+
+    // Add canonical URL if available
+    if (seoSettings?.canonicalUrl) {
+      const canonicalLink = document.createElement('link');
+      canonicalLink.rel = 'canonical';
+      canonicalLink.href = seoSettings.canonicalUrl;
+      canonicalLink.setAttribute('data-seo', 'true');
+      document.head.appendChild(canonicalLink);
+    }
 
     // Add review-specific meta tags if available
     if (reviewData?.enabled && reviewData.reviewCount && reviewData.reviewCount > 0) {
@@ -222,7 +276,7 @@ export default function SeoHead({
       document.head.appendChild(script);
     }
 
-  }, [title, description, image, url, type, reviewData]);
+  }, [title, description, image, url, type, reviewData, seoSettings, keywords, robots]);
 
   return null; // This component doesn't render anything visible
 }
