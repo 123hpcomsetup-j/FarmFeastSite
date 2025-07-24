@@ -25,6 +25,12 @@ export default function HeroSection() {
   const pricePerGuest = getSettingValue('price_per_guest', '₹1,150');
   const capacity = getSettingValue('capacity', '50+');
   const supportHours = getSettingValue('support_hours', '24/7');
+  
+  // Get dynamic hero content from site settings with fallbacks
+  const heroTitleLine1 = getSettingValue('hero_title_line1', 'Your Perfect');
+  const heroTitleLine2 = getSettingValue('hero_title_line2', 'Getaway');
+  const heroLocation = getSettingValue('hero_location', 'Near Hyderabad');
+  const heroDescription = getSettingValue('hero_description', 'Escape the city buzz and relax in nature at Farm Feast Farm House. Premium farmhouse with swimming pool, luxury amenities, and professional services.');
 
   return (
     <section data-tour="hero" className="hero-gradient py-12 lg:py-20">
@@ -33,12 +39,12 @@ export default function HeroSection() {
           <div className="space-y-6">
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                Your Perfect
-                <span className="text-primary"> Getaway</span>
-                <br />Near Hyderabad
+                {heroTitleLine1}
+                <span className="text-primary"> {heroTitleLine2}</span>
+                <br />{heroLocation}
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Escape the city buzz and relax in nature at Farm Feast Farm House. Premium farmhouse with swimming pool, luxury amenities, and professional services.
+                {heroDescription}
               </p>
             </div>
             
