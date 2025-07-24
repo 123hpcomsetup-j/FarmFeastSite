@@ -171,6 +171,14 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Brand Enhancement**: Improved logo area with tagline and hover animations for better brand recognition
 - **Contact Integration**: Enhanced phone number display with better formatting and responsive visibility
 
+### Gallery Integration for Main Pages (July 2025)
+- **Unified Image Management**: Main page images now fetch from gallery section instead of separate homepage images table
+- **Category-Based Display**: Hero section uses exterior images, amenities section displays mixed categories
+- **Dynamic Content**: All homepage sections now use actual gallery images uploaded through admin panel
+- **Consistent Image Sources**: Gallery section, hero section, and amenities section all use the same image repository
+- **Fallback Images**: Default images still available if no gallery images are configured
+- **Admin Simplification**: Admins can manage all site images from single gallery interface
+
 ## GDPR & Legal Compliance
 
 ### Comprehensive Privacy Framework

@@ -1,44 +1,50 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import type { HomepageImage } from "@shared/schema";
+import type { GalleryImage } from "@shared/schema";
 
 export default function GallerySection() {
-  const { data: galleryImages = [] } = useQuery<HomepageImage[]>({
-    queryKey: ["/api/homepage-images?section=gallery"],
+  const { data: allGalleryImages = [] } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery"],
   });
+
+  // Take up to 6 images from different categories for variety
+  const galleryImages = allGalleryImages
+    .filter(img => img.active)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .slice(0, 6);
 
   // Fallback to default images if no gallery images are configured
   const defaultImages = [
     {
-      imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Event celebration with outdoor party setup and happy guests",
-      title: "Event Celebration",
+      url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Event celebration with outdoor party setup and happy guests",
+      category: "events",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Outdoor wedding ceremony with beautiful decorations and seating",
-      title: "Wedding Ceremony",
+      url: "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Outdoor wedding ceremony with beautiful decorations and seating",
+      category: "events",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Birthday party celebration with colorful decorations and cake",
-      title: "Birthday Party",
+      url: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Birthday party celebration with colorful decorations and cake",
+      category: "events",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Luxury bedroom with comfortable bedding and modern amenities",
-      title: "Luxury Bedroom",
+      url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Luxury bedroom with comfortable bedding and modern amenities",
+      category: "rooms",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1565301660306-29e08751cc53?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Outdoor BBQ area with grilling equipment and dining setup",
-      title: "BBQ Experience",
+      url: "https://images.unsplash.com/photo-1565301660306-29e08751cc53?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Outdoor BBQ area with grilling equipment and dining setup",
+      category: "amenities",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1529636798458-92182e662485?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
-      altText: "Family gathering with people enjoying time together outdoors",
-      title: "Family Gathering",
+      url: "https://images.unsplash.com/photo-1529636798458-92182e662485?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400",
+      alt: "Family gathering with people enjoying time together outdoors",
+      category: "exterior",
     },
   ];
 
@@ -60,8 +66,8 @@ export default function GallerySection() {
           {displayImages.map((image, index) => (
             <img
               key={index}
-              src={image.imageUrl}
-              alt={image.altText || image.title}
+              src={image.url}
+              alt={image.alt}
               className="gallery-image rounded-xl shadow-lg w-full h-64 object-cover cursor-pointer hover:shadow-xl transition-all duration-300"
             />
           ))}
