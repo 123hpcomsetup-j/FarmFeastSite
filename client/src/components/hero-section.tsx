@@ -2,15 +2,29 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Calendar, MessageCircle, MapPin, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { GalleryImage } from "@shared/schema";
+import type { GalleryImage, SiteSettings } from "@shared/schema";
 
 export default function HeroSection() {
   const { data: galleryImages = [] } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery"],
   });
 
+  const { data: siteSettings = [] } = useQuery<SiteSettings[]>({
+    queryKey: ["/api/settings"],
+  });
+
   // Use exterior images for hero section, fallback to any available image
   const heroImage = galleryImages.find(img => img.category === 'exterior') || galleryImages[0];
+
+  // Get dynamic stats from site settings with fallbacks
+  const getSettingValue = (key: string, fallback: string) => {
+    const setting = siteSettings.find(s => s.key === key);
+    return setting?.value || fallback;
+  };
+
+  const pricePerGuest = getSettingValue('price_per_guest', '₹1,150');
+  const capacity = getSettingValue('capacity', '50+');
+  const supportHours = getSettingValue('support_hours', '24/7');
 
   return (
     <section data-tour="hero" className="hero-gradient py-12 lg:py-20">
@@ -67,19 +81,19 @@ export default function HeroSection() {
               className="rounded-2xl shadow-2xl w-full h-96 object-cover"
             />
             
-            {/* Quick stats overlay */}
+            {/* Quick stats overlay - Dynamic from admin settings */}
             <div className="absolute -bottom-6 left-6 right-6 bg-card rounded-xl shadow-lg p-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-primary">₹1,150</div>
+                  <div className="text-2xl font-bold text-primary">{pricePerGuest}</div>
                   <div className="text-sm text-muted-foreground">Per Guest</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-primary">50+</div>
+                  <div className="text-2xl font-bold text-primary">{capacity}</div>
                   <div className="text-sm text-muted-foreground">Capacity</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-primary">24/7</div>
+                  <div className="text-2xl font-bold text-primary">{supportHours}</div>
                   <div className="text-sm text-muted-foreground">Support</div>
                 </div>
               </div>

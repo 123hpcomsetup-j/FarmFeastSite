@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
-import { Plus, Edit, RefreshCw, Settings, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Plus, Edit, RefreshCw, Settings, Phone, Mail, MapPin, Clock, DollarSign, Users, Headphones } from "lucide-react";
 
 type SiteSettingsForm = z.infer<typeof insertSiteSettingsSchema>;
 
@@ -117,6 +117,11 @@ export default function SiteSettingsManagement() {
     { key: "social_facebook", placeholder: "https://facebook.com/farmfeastfarmhouse", icon: Settings },
     { key: "social_instagram", placeholder: "https://instagram.com/farmfeastfarmhouse", icon: Settings },
     { key: "social_twitter", placeholder: "https://twitter.com/farmfeastfarmhouse", icon: Settings },
+    
+    // Homepage Statistics (Hero Section)
+    { key: "price_per_guest", placeholder: "₹1,150", icon: DollarSign },
+    { key: "capacity", placeholder: "50+", icon: Users },
+    { key: "support_hours", placeholder: "24/7", icon: Headphones },
   ];
 
   const getIcon = (key: string) => {
