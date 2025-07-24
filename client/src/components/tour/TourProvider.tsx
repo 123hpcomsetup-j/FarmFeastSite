@@ -38,7 +38,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'bottom',
+    position: 'bottom' as const,
   },
   {
     selector: '[data-tour="services"]',
@@ -56,7 +56,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'bottom',
+    position: 'bottom' as const,
   },
   {
     selector: '[data-tour="gallery"]',
@@ -75,7 +75,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'bottom',
+    position: 'bottom' as const,
   },
   {
     selector: '[data-tour="booking-button"]',
@@ -94,7 +94,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'bottom',
+    position: 'bottom' as const,
   },
   {
     selector: '[data-tour="amenities"]',
@@ -113,7 +113,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'top',
+    position: 'top' as const,
   },
   {
     selector: '[data-tour="contact"]',
@@ -131,7 +131,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'top',
+    position: 'top' as const,
   },
   {
     selector: '[data-tour="navigation"]',
@@ -149,7 +149,7 @@ const tourSteps = [
         </div>
       </div>
     ),
-    position: 'bottom',
+    position: 'bottom' as const,
   },
 ];
 
@@ -366,8 +366,6 @@ const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     <TourContext.Provider value={contextValue}>
       <ReactTourProvider
         steps={tourSteps}
-        isOpen={isTourOpen}
-        onRequestClose={() => setIsTourOpen(false)}
         showCloseButton={false}
         showNavigation={false}
         showBadge={false}
