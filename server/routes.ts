@@ -19,7 +19,8 @@ import {
   insertGalleryImageSchema,
   insertBlogPostSchema,
   insertHomepageImageSchema,
-  insertCustomScriptSchema
+  insertCustomScriptSchema,
+  insertContactMessageSchema
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -1422,6 +1423,35 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error fetching active custom scripts:", error);
       res.status(500).json({ message: "Failed to fetch custom scripts" });
+    }
+  });
+
+  // Contact form submission endpoint
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const result = insertContactMessageSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid contact form data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const contactMessage = await storage.createContactMessage(result.data);
+      
+      // Send notification email to admin (optional)
+      try {
+        // Note: Email service for contact notifications would be implemented here
+        console.log("Contact message received:", contactMessage);
+      } catch (emailError) {
+        console.error("Failed to send contact notification email:", emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.status(201).json({ message: "Message sent successfully", id: contactMessage.id });
+    } catch (error) {
+      console.error("Error submitting contact form:", error);
+      res.status(500).json({ message: "Failed to send message" });
     }
   });
 

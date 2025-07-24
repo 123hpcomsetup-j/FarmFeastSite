@@ -11,6 +11,7 @@ import {
   blogPosts,
   homepageImages,
   customScripts,
+  contactMessages,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -34,7 +35,9 @@ import {
   type HomepageImage,
   type InsertHomepageImage,
   type CustomScript,
-  type InsertCustomScript
+  type InsertCustomScript,
+  type ContactMessage,
+  type InsertContactMessage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -117,6 +120,14 @@ export interface IStorage {
   updateCustomScript(id: number, script: Partial<InsertCustomScript>): Promise<CustomScript | undefined>;
   deleteCustomScript(id: number): Promise<boolean>;
   getActiveCustomScripts(): Promise<CustomScript[]>;
+  
+  // Contact Messages
+  getAllContactMessages(): Promise<ContactMessage[]>;
+  getContactMessageById(id: number): Promise<ContactMessage | undefined>;
+  createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+  updateContactMessage(id: number, message: Partial<ContactMessage>): Promise<ContactMessage | undefined>;
+  deleteContactMessage(id: number): Promise<boolean>;
+  markContactMessageAsRead(id: number): Promise<boolean>;
 }
 
 // Database Storage Implementation
@@ -518,6 +529,44 @@ class DatabaseStorage implements IStorage {
       .from(customScripts)
       .where(eq(customScripts.isActive, true))
       .orderBy(customScripts.createdAt);
+  }
+
+  // Contact Messages
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    return await this.db.select().from(contactMessages).orderBy(contactMessages.createdAt);
+  }
+
+  async getContactMessageById(id: number): Promise<ContactMessage | undefined> {
+    const [message] = await this.db.select().from(contactMessages).where(eq(contactMessages.id, id));
+    return message;
+  }
+
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    const [newMessage] = await this.db.insert(contactMessages).values(message).returning();
+    return newMessage;
+  }
+
+  async updateContactMessage(id: number, message: Partial<ContactMessage>): Promise<ContactMessage | undefined> {
+    const [updatedMessage] = await this.db
+      .update(contactMessages)
+      .set({ ...message, updatedAt: new Date() })
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return updatedMessage;
+  }
+
+  async deleteContactMessage(id: number): Promise<boolean> {
+    const result = await this.db.delete(contactMessages).where(eq(contactMessages.id, id));
+    return result.rowCount > 0;
+  }
+
+  async markContactMessageAsRead(id: number): Promise<boolean> {
+    const [updated] = await this.db
+      .update(contactMessages)
+      .set({ status: "read", updatedAt: new Date() })
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return !!updated;
   }
 }
 
