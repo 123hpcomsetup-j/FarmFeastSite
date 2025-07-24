@@ -3,6 +3,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useCookiePreferences } from "@/components/CookieConsent";
 import { Shield, BarChart3, Heart, Settings, Cookie } from "lucide-react";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/Footer";
 
 export default function CookiePolicy() {
   const cookiePreferences = useCookiePreferences();
@@ -14,7 +16,8 @@ export default function CookiePolicy() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
           <CardHeader>
@@ -245,6 +248,7 @@ export default function CookiePolicy() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/Footer";
 
 export default function TermsConditions() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
           <CardHeader>
@@ -245,6 +248,7 @@ export default function TermsConditions() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }
