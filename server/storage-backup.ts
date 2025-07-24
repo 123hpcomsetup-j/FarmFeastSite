@@ -33,6 +33,7 @@ import {
   type HomepageImage,
   type InsertHomepageImage
 } from "@shared/schema";
+import bcrypt from 'bcrypt';
 
 export interface IStorage {
   // Bookings
@@ -105,6 +106,28 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  constructor() {
+    this.initializeAdminUser();
+  }
+
+  private async initializeAdminUser(): Promise<void> {
+    const username = process.env.ADMIN_USERNAME;
+    const password = process.env.ADMIN_PASSWORD;
+    
+    if (username && password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      this.adminUsers.push({
+        id: 1,
+        username,
+        password: hashedPassword,
+        role: "admin",
+        createdAt: new Date()
+      });
+    } else {
+      console.warn('Admin credentials not found in environment variables. Admin login will not be available.');
+    }
+  }
+
   private bookings: Booking[] = [
     {
       id: 1,
@@ -153,9 +176,7 @@ export class MemStorage implements IStorage {
     { id: 2, code: "SAVE500", type: "fixed", value: 500, minAmount: 3000, maxDiscount: null, active: true, expiryDate: "2024-12-25" }
   ];
 
-  private adminUsers: AdminUser[] = [
-    { id: 1, username: "Admin12", password: "$2b$10$v7yL4thgGlrAmKVgZZ6ww.VOOZfcSj9CpXrmwzBSzTL8LF0YTPjji", role: "admin", createdAt: new Date() }
-  ];
+  private adminUsers: AdminUser[] = [];
 
   private seoSettings: SeoSettings[] = [
     { 

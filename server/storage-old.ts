@@ -100,13 +100,20 @@ export class DatabaseStorage implements IStorage {
       const existingServices = await db.select().from(services);
       if (existingServices.length > 0) return;
 
-      // Initialize default admin user
-      const hashedPassword = await bcrypt.hash("test@1234", 10);
-      await db.insert(adminUsers).values({
-        username: "Admin12",
-        password: hashedPassword,
-        role: "admin"
-      }).onConflictDoNothing();
+      // Initialize default admin user from environment variables
+      const adminUsername = process.env.ADMIN_USERNAME;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      
+      if (adminUsername && adminPassword) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        await db.insert(adminUsers).values({
+          username: adminUsername,
+          password: hashedPassword,
+          role: "admin"
+        }).onConflictDoNothing();
+      } else {
+        console.warn('Admin credentials not found in environment variables. Admin login will not be available.');
+      }
 
       // Initialize default services
       const defaultServices: InsertService[] = [
