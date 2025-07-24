@@ -913,6 +913,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sitemap routes
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      let sitemap = await customSitemapService.generateSitemap();
+      
+      res.set({
+        'Content-Type': 'application/xml',
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      });
+      
+      res.send(sitemap);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  app.get("/robots.txt", async (req, res) => {
+    try {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      const robotsTxt = await customSitemapService.generateRobotsTxt();
+      
+      res.set({
+        'Content-Type': 'text/plain',
+        'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+      });
+      
+      res.send(robotsTxt);
+    } catch (error) {
+      console.error("Error generating robots.txt:", error);
+      res.status(500).send("Error generating robots.txt");
+    }
+  });
+
+  app.post("/api/admin/sitemap/regenerate", requireAdmin, async (req, res) => {
+    try {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { SitemapService } = await import("./sitemapService");
+      const customSitemapService = new SitemapService(baseUrl);
+      const sitemap = await customSitemapService.generateSitemap();
+      
+      // Count URLs in the sitemap
+      const urlCount = (sitemap.match(/<url>/g) || []).length;
+      
+      res.json({
+        message: "Sitemap regenerated successfully",
+        urls: urlCount,
+        lastGenerated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error regenerating sitemap:", error);
+      res.status(500).json({ message: "Failed to regenerate sitemap" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
