@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertSeoSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, RefreshCw, Search, CheckCircle, AlertCircle, XCircle, Star } from "lucide-react";
@@ -27,11 +27,7 @@ export default function UnifiedSeoManagement() {
 
   const { data: seoPages = [], isLoading } = useQuery({
     queryKey: ["/api/admin/seo"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<SeoForm>({

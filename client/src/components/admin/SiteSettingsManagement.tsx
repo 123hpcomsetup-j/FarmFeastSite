@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, RefreshCw, Settings, Phone, Mail, MapPin, Clock, DollarSign, Users, Headphones } from "lucide-react";
@@ -24,6 +24,7 @@ export default function SiteSettingsManagement() {
 
   const { data: settings = [], isLoading } = useQuery({
     queryKey: ["/api/admin/site-settings"],
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<SiteSettingsForm>({
