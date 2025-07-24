@@ -75,24 +75,14 @@ export default function AdminDashboard() {
     }
   }, [setLocation]);
 
-  const { data: bookings } = useQuery({
+  const { data: bookings = [] } = useQuery({
     queryKey: ["/api/admin/bookings"],
     enabled: !!adminUser,
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
   });
 
-  const { data: services } = useQuery({
+  const { data: services = [] } = useQuery({
     queryKey: ["/api/admin/services"],
     enabled: !!adminUser,
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
   });
 
   const handleLogout = () => {
