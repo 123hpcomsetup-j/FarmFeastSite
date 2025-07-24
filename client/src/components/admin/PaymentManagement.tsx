@@ -80,6 +80,8 @@ export default function PaymentManagement() {
         return 'bg-green-100 text-green-800 border-green-300';
       case 'paid':
         return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'pending_verification':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
       case 'failed':
         return 'bg-red-100 text-red-800 border-red-300';
       case 'pending':
@@ -115,7 +117,7 @@ export default function PaymentManagement() {
 
   // Separate bookings by payment status
   const pendingPayments = filteredBookings.filter(b => b.paymentStatus === 'pending');
-  const paidBookings = filteredBookings.filter(b => b.paymentStatus === 'paid');
+  const paidBookings = filteredBookings.filter(b => b.paymentStatus === 'paid' || b.paymentStatus === 'pending_verification');
   const verifiedPayments = filteredBookings.filter(b => b.paymentStatus === 'verified');
   const failedPayments = filteredBookings.filter(b => b.paymentStatus === 'failed');
 
@@ -313,8 +315,8 @@ export default function PaymentManagement() {
                   </div>
                   <div>
                     <span className="font-medium">Payment Status:</span>
-                    <Badge className={getPaymentStatusColor(selectedBooking.paymentStatus)}>
-                      {selectedBooking.paymentStatus}
+                    <Badge className={getPaymentStatusColor(selectedBooking.paymentStatus || 'pending')}>
+                      {selectedBooking.paymentStatus || 'pending'}
                     </Badge>
                   </div>
                   {selectedBooking.paymentNotes && (
@@ -454,11 +456,11 @@ function PaymentTable({
                 
                 <TableCell>
                   <div className="space-y-1">
-                    <Badge className={getPaymentStatusColor(booking.paymentStatus)}>
-                      {booking.paymentStatus}
+                    <Badge className={getPaymentStatusColor(booking.paymentStatus || 'pending')}>
+                      {booking.paymentStatus || 'pending'}
                     </Badge>
-                    <Badge className={getBookingStatusColor(booking.status)}>
-                      {booking.status}
+                    <Badge className={getBookingStatusColor(booking.status || 'pending')}>
+                      {booking.status || 'pending'}
                     </Badge>
                   </div>
                 </TableCell>

@@ -581,6 +581,54 @@ Farm Feast Farm House Team
     }
   });
 
+  // Admin: Verify payment endpoint
+  app.post("/api/admin/bookings/:id/verify-payment", requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { verified, notes } = req.body;
+      
+      const paymentStatus = verified ? 'verified' : 'failed';
+      const updateData = {
+        paymentStatus,
+        paymentNotes: notes || null,
+        updatedAt: new Date(),
+        ...(verified && { 
+          paymentVerifiedAt: new Date(),
+          status: 'confirmed' // Auto-confirm booking when payment is verified
+        })
+      };
+      
+      const updatedBooking = await storage.updateBooking(bookingId, updateData);
+      
+      if (!updatedBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Send email notification
+      try {
+        const siteSettings = await storage.getAllSiteSettings();
+        if (verified) {
+          await sendEmail(
+            updatedBooking.email,
+            "Payment Confirmed - Farm Feast Farm House",
+            generateAdminPaymentConfirmationEmail(updatedBooking, siteSettings)
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the entire request if email fails
+      }
+      
+      res.json({
+        message: verified ? "Payment verified successfully" : "Payment marked as failed",
+        booking: updatedBooking
+      });
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ message: "Failed to verify payment" });
+    }
+  });
+
   app.delete("/api/admin/bookings/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
