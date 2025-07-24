@@ -86,7 +86,9 @@ export default function Contact() {
     phone: getSettingValue("contact_phone") || "+91 9876543210",
     email: getSettingValue("contact_email") || "info@farmfeastfarmhouse.com",
     whatsapp: getSettingValue("whatsapp_number") || "+91 9876543210",
-    mapEmbedUrl: getSettingValue("google_maps_embed_url") || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.2!2d79.0882!3d21.1458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDA4JzQ0LjkiTiA3OcKwMDUnMTcuNSJF!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
+    mapEmbedUrl: getSettingValue("google_maps_embed_url") || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.2!2d79.0882!3d21.1458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDA4JzQ0LjkiTiA3OcKwMDUnMTcuNSJF!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin",
+    mapPlaceUrl: getSettingValue("google_maps_place_url") || "https://www.google.com/maps/place/Farm+Feast+FarmHouse",
+    mapDirectionsUrl: getSettingValue("google_maps_directions_url") || "https://www.google.com/maps/dir//Farm+Feast+FarmHouse"
   };
 
   if (isSubmitted) {
@@ -149,7 +151,36 @@ export default function Contact() {
                   <MapPin className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold text-gray-900">Address</h3>
-                    <p className="text-gray-600">{contactInfo.address}</p>
+                    <p className="text-gray-600">
+                      <a 
+                        href={contactInfo.mapPlaceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-green-600 transition-colors cursor-pointer"
+                      >
+                        {contactInfo.address}
+                      </a>
+                    </p>
+                    <div className="mt-2 space-x-4">
+                      <a 
+                        href={contactInfo.mapDirectionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-sm text-green-600 hover:text-green-700 transition-colors"
+                      >
+                        <MapPin className="h-4 w-4 mr-1" />
+                        Get Directions
+                      </a>
+                      <a 
+                        href={contactInfo.mapPlaceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-sm text-green-600 hover:text-green-700 transition-colors"
+                      >
+                        <MapPin className="h-4 w-4 mr-1" />
+                        View on Map
+                      </a>
+                    </div>
                   </div>
                 </div>
 
@@ -200,20 +231,78 @@ export default function Contact() {
             {/* Map Section */}
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl text-gray-900">Find Us</CardTitle>
+                <CardTitle className="text-2xl text-gray-900 flex items-center justify-between">
+                  Find Us
+                  <a 
+                    href={contactInfo.mapPlaceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-green-600 hover:text-green-700 transition-colors"
+                  >
+                    Open in Google Maps
+                  </a>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video rounded-lg overflow-hidden">
-                  <iframe
-                    src={contactInfo.mapEmbedUrl}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Farm Feast Farm House Location"
-                  ></iframe>
+                <div className="aspect-video rounded-lg overflow-hidden relative group">
+                  {contactInfo.mapEmbedUrl ? (
+                    <iframe
+                      src={contactInfo.mapEmbedUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Farm Feast Farm House Location"
+                      className="rounded-lg"
+                    ></iframe>
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-4">Map not available</p>
+                        <Button asChild>
+                          <a 
+                            href={contactInfo.mapPlaceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View on Google Maps
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Overlay for better interaction */}
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors rounded-lg pointer-events-none"></div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="mt-4 flex gap-4">
+                  <Button variant="outline" asChild className="flex-1">
+                    <a 
+                      href={contactInfo.mapDirectionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Get Directions
+                    </a>
+                  </Button>
+                  <Button asChild className="flex-1">
+                    <a 
+                      href={contactInfo.mapPlaceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      View on Maps
+                    </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
