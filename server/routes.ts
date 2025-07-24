@@ -675,6 +675,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAllSiteSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching site settings:", error);
+      res.status(500).json({ message: "Failed to fetch site settings" });
+    }
+  });
+
+  app.post("/api/admin/site-settings", requireAdmin, async (req, res) => {
+    try {
+      const result = insertSiteSettingsSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid settings data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const setting = await storage.upsertSiteSettings(result.data);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error creating site settings:", error);
+      res.status(500).json({ message: "Failed to create site settings" });
+    }
+  });
+
+  app.put("/api/admin/site-settings/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertSiteSettingsSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid settings data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const setting = await storage.updateSiteSettings(id, result.data);
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating site settings:", error);
+      res.status(500).json({ message: "Failed to update site settings" });
+    }
+  });
+
   app.post("/api/admin/settings", requireAdmin, async (req, res) => {
     try {
       const result = insertSiteSettingsSchema.safeParse(req.body);
