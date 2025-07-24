@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/Footer";
 
 // Contact form schema
 const contactFormSchema = z.object({
@@ -89,7 +91,9 @@ export default function Contact() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <Card className="shadow-xl">
             <CardContent className="p-12">
@@ -112,13 +116,17 @@ export default function Contact() {
             </CardContent>
           </Card>
         </div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
+        <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -365,7 +373,9 @@ export default function Contact() {
             </Card>
           </div>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }
