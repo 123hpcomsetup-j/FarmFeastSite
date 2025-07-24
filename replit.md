@@ -146,6 +146,15 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Enhanced authentication**: Ensured all admin routes use proper JWT authentication middleware
 - **Verified functionality**: All site settings CRUD operations now working correctly with proper error handling
 
+### Email Flow Correction and External Booking Creation (January 2025)
+- **Fixed Email Sequence**: Corrected booking email flow to match business process - now sends "booking received + payment required" email instead of immediate confirmation
+- **Stage-Based Email Templates**: Created separate email templates for different stages (booking received, payment received, final confirmation)
+- **UTR Submission Tracking**: Enhanced admin panel to display UTR numbers and payment status with proper badges (Verified/Pending/Failed/Not Set)  
+- **Payment Received Emails**: When customers submit UTR numbers, they now receive a "payment received, verification in progress" email
+- **External Booking Creation**: Added admin capability to create bookings on behalf of customers that trigger the same email workflow
+- **Custom Scripts Management**: Implemented full CRUD system for managing chatbot widgets, analytics codes, and tracking scripts with placement options (head, body start, body end)
+- **Admin Dashboard Integration**: Added Custom Scripts tab to admin navigation with complete management interface
+
 ## GDPR & Legal Compliance
 
 ### Comprehensive Privacy Framework

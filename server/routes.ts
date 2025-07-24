@@ -6,7 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { sendEmail, generateConfirmationEmail, generateCancellationEmail } from "./emailService";
+import { sendEmail, generateConfirmationEmail, generateCancellationEmail, generateBookingReceivedEmail, generatePaymentReceivedEmail } from "./emailService";
 import { 
   insertBookingSchema, 
   adminLoginSchema, 
@@ -54,6 +54,12 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin middleware (define first)
+  const requireAdmin = (req: any, res: any, next: any) => {
+    // Simple admin check - in production, use proper JWT
+    next();
+  };
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   
@@ -152,19 +158,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update booking payment
+  // Update booking payment (when customer submits UTR)
   app.put("/api/bookings/:id/payment", async (req, res) => {
     try {
       const { id } = req.params;
       const { paymentStatus, utrNumber } = req.body;
       
       const booking = await storage.updateBooking(parseInt(id), {
-        paymentStatus,
+        paymentStatus: paymentStatus || 'pending',
         upiTransactionId: utrNumber
       });
       
       if (!booking) {
         return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Send payment received email when UTR is submitted
+      if (booking.email && utrNumber) {
+        try {
+          const emailHtml = generatePaymentReceivedEmail(booking);
+          await sendEmail({
+            to: booking.email,
+            subject: `💰 Payment Received - ${booking.confirmationCode}`,
+            html: emailHtml
+          });
+          console.log(`✅ Payment received email sent to ${booking.email}`);
+        } catch (emailError) {
+          console.error(`❌ Failed to send payment received email to ${booking.email}:`, emailError);
+        }
       }
       
       res.json(booking);
@@ -187,16 +208,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const booking = await storage.createBooking(result.data);
       
-      // Send booking confirmation email to customer
+      // Send booking received email to customer (not confirmed yet, payment needed)
       if (booking.email) {
         try {
-          const emailHtml = generateConfirmationEmail(booking);
+          const emailHtml = generateBookingReceivedEmail(booking);
           await sendEmail({
             to: booking.email,
-            subject: `📧 Booking Received - ${booking.confirmationCode}`,
+            subject: `📧 Booking Received - Payment Required - ${booking.confirmationCode}`,
             html: emailHtml
           });
-          console.log(`✅ Booking confirmation email sent to ${booking.email}`);
+          console.log(`✅ Booking received email sent to ${booking.email}`);
         } catch (emailError) {
           console.error(`❌ Failed to send booking email to ${booking.email}:`, emailError);
         }
@@ -205,6 +226,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(booking);
     } catch (error) {
       console.error("Error creating booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
+    }
+  });
+
+  // Admin create external booking
+  app.post("/api/admin/bookings", requireAdmin, async (req, res) => {
+    try {
+      const result = insertBookingSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid booking data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const booking = await storage.createBooking(result.data);
+      
+      // Send booking received email to customer (same flow as regular bookings)
+      if (booking.email) {
+        try {
+          const emailHtml = generateBookingReceivedEmail(booking);
+          await sendEmail({
+            to: booking.email,
+            subject: `📧 Booking Received - Payment Required - ${booking.confirmationCode}`,
+            html: emailHtml
+          });
+          console.log(`✅ Admin created booking - email sent to ${booking.email}`);
+        } catch (emailError) {
+          console.error(`❌ Failed to send booking email to ${booking.email}:`, emailError);
+        }
+      }
+      
+      res.status(201).json(booking);
+    } catch (error) {
+      console.error("Error creating admin booking:", error);
       res.status(500).json({ message: "Failed to create booking" });
     }
   });
@@ -282,6 +338,8 @@ Farm Feast Farm House Team
     }
   });
 
+
+
   // Admin get all bookings endpoint
   app.get("/api/admin/bookings", async (req, res) => {
     try {
@@ -292,8 +350,6 @@ Farm Feast Farm House Team
       res.status(500).json({ message: "Failed to fetch bookings" });
     }
   });
-
-
 
   // Admin login
   app.post("/api/admin/login", async (req, res) => {
@@ -326,11 +382,7 @@ Farm Feast Farm House Team
     }
   });
 
-  // Admin routes (protected)
-  const requireAdmin = (req: any, res: any, next: any) => {
-    // Simple admin check - in production, use proper JWT
-    next();
-  };
+  // Admin routes (protected) - middleware already defined above
 
   // Blog Posts routes
   app.get("/api/blog-posts", async (req, res) => {
