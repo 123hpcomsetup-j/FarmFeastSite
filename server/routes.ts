@@ -915,6 +915,176 @@ Farm Feast Farm House Team
     }
   });
 
+  // SEO HTML meta tags endpoint for crawlers (works in development too)
+  app.get("/api/crawler/:page", async (req, res) => {
+    try {
+      const { page } = req.params;
+      const fullUrl = `${req.protocol}://${req.get('host')}/${page === 'home' ? '' : page}`;
+      
+      // Fetch SEO settings
+      let seoSettings = await storage.getSeoSettingsByPage(page);
+      
+      // Fall back to template if no custom settings
+      if (!seoSettings && seoTemplates[page as keyof typeof seoTemplates]) {
+        const template = seoTemplates[page as keyof typeof seoTemplates];
+        seoSettings = {
+          id: 0,
+          page,
+          title: template.title,
+          description: template.description,
+          keywords: template.keywords,
+          ogTitle: template.title,
+          ogDescription: template.description,
+          ogImage: '/api/placeholder/1200/630',
+          canonicalUrl: fullUrl,
+          schemaType: template.schemaType,
+          schemaData: {},
+          priority: 0.8,
+          changeFreq: 'weekly',
+          noindex: false,
+          nofollow: false,
+          updatedAt: new Date(),
+          score: 80,
+          ranking: 1,
+          reviewCount: 127,
+          averageRating: "4.8",
+          businessName: "Farm Feast Farm House", 
+          ratingScale: "5",
+          reviewsEnabled: true,
+          showInSnippets: true,
+          reviewTitle: null,
+          reviewDescription: null,
+          reviewKeywords: null
+        };
+      }
+
+      // Get review data
+      const reviewData = await storage.getReviewSettings();
+      
+      // Generate structured data
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": seoSettings?.schemaType || "LodgingBusiness",
+        "name": seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad",
+        "description": seoSettings?.description || "Escape to luxury at Farm Feast Farm House. Premium farmhouse rental with swimming pool, modern amenities, and professional services. Perfect for events, family gatherings, and weekend getaways near Hyderabad.",
+        "url": fullUrl,
+        "image": seoSettings?.ogImage || "/api/placeholder/1200/630",
+        "telephone": "+91-8897326898",
+        "email": "info@farmfeastfarmhouse.shop",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "SY. No 170/A, Near Cheeryal Kaman, Keesara",
+          "addressLocality": "Keesara",
+          "postalCode": "501301",
+          "addressRegion": "Telangana",
+          "addressCountry": "IN"
+        },
+        "amenityFeature": [
+          { "@type": "LocationFeatureSpecification", "name": "Swimming Pool" },
+          { "@type": "LocationFeatureSpecification", "name": "Free Parking" },
+          { "@type": "LocationFeatureSpecification", "name": "Air Conditioning" },
+          { "@type": "LocationFeatureSpecification", "name": "Pet Friendly" },
+          { "@type": "LocationFeatureSpecification", "name": "Free WiFi" }
+        ],
+        "priceRange": "₹5500-15000",
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 17.5099358,
+          "longitude": 78.6273986
+        }
+      };
+
+      // Add review data if available
+      if (seoSettings?.reviewsEnabled && seoSettings?.reviewCount > 0) {
+        Object.assign(structuredData, {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": parseFloat(seoSettings.averageRating || "4.8"),
+            "reviewCount": seoSettings.reviewCount || 127,
+            "bestRating": parseInt(seoSettings.ratingScale || "5"),
+            "worstRating": 1
+          }
+        });
+      }
+
+      const title = seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad";
+      const description = seoSettings?.description || "Escape to luxury at Farm Feast Farm House. Premium farmhouse rental with swimming pool, modern amenities, and professional services. Perfect for events, family gatherings, and weekend getaways near Hyderabad.";
+      const image = seoSettings?.ogImage || "/api/placeholder/1200/630";
+      const keywords = seoSettings?.keywords || "farmhouse rental, luxury farmhouse, swimming pool, Hyderabad, weekend getaway, event venue, family gathering";
+      const robots = seoSettings?.noindex ? "noindex,nofollow" : "index,follow";
+
+      const metaHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <meta name="keywords" content="${keywords}" />
+    <meta name="robots" content="${robots}" />
+    <meta name="googlebot" content="${robots}" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:image" content="${image}" />
+    <meta property="og:url" content="${fullUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Farm Feast Farm House" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="twitter:image" content="${image}" />
+    
+    ${seoSettings?.canonicalUrl ? `<link rel="canonical" href="${seoSettings.canonicalUrl}" />` : ''}
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    ${JSON.stringify(structuredData, null, 2)}
+    </script>
+</head>
+<body>
+    <h1>${title}</h1>
+    <p>${description}</p>
+    <div class="location-info">
+        <h2>Location & Contact</h2>
+        <p><strong>Address:</strong> SY. No 170/A, Near Cheeryal Kaman, Keesara, Telangana 501301</p>
+        <p><strong>Phone:</strong> +91-8897326898</p>
+        <p><strong>Email:</strong> info@farmfeastfarmhouse.shop</p>
+    </div>
+    <div class="amenities">
+        <h2>Amenities</h2>
+        <ul>
+            <li>Swimming Pool</li>
+            <li>Free Parking</li>
+            <li>Air Conditioning</li>
+            <li>Pet Friendly</li>
+            <li>Free WiFi</li>
+        </ul>
+    </div>
+    <p><a href="${page === 'home' ? '/' : '/' + page}">Visit the interactive website</a></p>
+    <script>
+        // Redirect to main app for human visitors (not bots)
+        if (!navigator.userAgent.match(/bot|crawl|slurp|spider|mediapartners|facebookexternalhit|twitterbot|linkedinbot|whatsapp/i)) {
+            setTimeout(() => {
+                window.location.href = '${page === 'home' ? '/' : '/' + page}';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=600'); // 10 minutes cache
+      res.send(metaHTML);
+    } catch (error) {
+      console.error("Error generating SEO crawler page:", error);
+      res.status(500).send('<html><body><h1>Error loading page</h1></body></html>');
+    }
+  });
+
   // Gallery management (admin)
   app.get("/api/admin/gallery", requireAdmin, async (req, res) => {
     try {
@@ -1643,6 +1813,8 @@ Farm Feast Farm House Team
       res.status(500).json({ message: "Failed to send message" });
     }
   });
+
+
 
   const httpServer = createServer(app);
   return httpServer;
