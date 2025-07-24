@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send payment received email when UTR is submitted
       if (booking.email && utrNumber) {
         try {
-          const emailHtml = generatePaymentReceivedEmail(booking);
+          const emailHtml = await generatePaymentReceivedEmail(booking);
           await sendEmail({
             to: booking.email,
             subject: `💰 Payment Received - ${booking.confirmationCode}`,
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send booking received email to customer (not confirmed yet, payment needed)
       if (booking.email) {
         try {
-          const emailHtml = generateBookingReceivedEmail(booking);
+          const emailHtml = await generateBookingReceivedEmail(booking);
           await sendEmail({
             to: booking.email,
             subject: `📧 Booking Received - Payment Required - ${booking.confirmationCode}`,
@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send booking received email to customer (same flow as regular bookings)
       if (booking.email) {
         try {
-          const emailHtml = generateBookingReceivedEmail(booking);
+          const emailHtml = await generateBookingReceivedEmail(booking);
           await sendEmail({
             to: booking.email,
             subject: `📧 Booking Received - Payment Required - ${booking.confirmationCode}`,
@@ -1038,7 +1038,7 @@ Farm Feast Farm House Team
       if (booking.email) {
         if (status === "complete" && paymentStatus === "verified") {
           // Send confirmation email
-          const emailHtml = generateConfirmationEmail(updatedBooking);
+          const emailHtml = await generateConfirmationEmail(updatedBooking);
           await sendEmail({
             to: booking.email,
             subject: `🎉 Booking Confirmed - ${booking.confirmationCode}`,
@@ -1047,7 +1047,7 @@ Farm Feast Farm House Team
           console.log(`✅ Confirmation email sent to ${booking.email}`);
         } else if (status === "canceled") {
           // Send cancellation email
-          const emailHtml = generateCancellationEmail(updatedBooking, paymentNotes);
+          const emailHtml = await generateCancellationEmail(updatedBooking, paymentNotes);
           await sendEmail({
             to: booking.email,
             subject: `❌ Booking Cancelled - ${booking.confirmationCode}`,
@@ -1255,7 +1255,7 @@ Farm Feast Farm House Team
       }
     } catch (error) {
       console.error("Error sending test email:", error);
-      res.status(500).json({ message: "Failed to send test email", error: error.message });
+      res.status(500).json({ message: "Failed to send test email", error: (error as Error).message });
     }
   });
 
