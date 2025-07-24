@@ -29,12 +29,7 @@ export default function SitemapManagement() {
   // Regenerate sitemap mutation
   const regenerateSitemapMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/sitemap/regenerate", {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
-      return response.json();
+      return apiRequest("POST", "/api/admin/sitemap/regenerate", {});
     },
     onSuccess: (data: SitemapInfo) => {
       setSitemapInfo(data);
