@@ -22,13 +22,8 @@ export default function SiteSettingsManagement() {
   const [editingSetting, setEditingSetting] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings = [], isLoading } = useQuery({
     queryKey: ["/api/admin/site-settings"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
   });
 
   const form = useForm<SiteSettingsForm>({
@@ -37,6 +32,7 @@ export default function SiteSettingsManagement() {
       key: "",
       value: "",
       description: "",
+      type: "text",
     },
   });
 
@@ -90,9 +86,10 @@ export default function SiteSettingsManagement() {
   const handleEdit = (setting: any) => {
     setEditingSetting(setting);
     form.reset({
-      key: setting.key,
-      value: setting.value,
-      description: setting.description,
+      key: setting.key || "",
+      value: setting.value || "",
+      description: setting.description || "",
+      type: setting.type || "text",
     });
     setShowForm(true);
   };
@@ -165,7 +162,7 @@ export default function SiteSettingsManagement() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {predefinedSettings.map((setting) => {
-              const existingSetting = settings?.find((s: any) => s.key === setting.key);
+              const existingSetting = settings.find((s: any) => s.key === setting.key);
               return (
                 <Button
                   key={setting.key}
@@ -216,7 +213,8 @@ export default function SiteSettingsManagement() {
                       <FormControl>
                         <Input 
                           placeholder="e.g., contact_phone, site_name" 
-                          {...field} 
+                          {...field}
+                          value={field.value || ""} 
                           disabled={!!editingSetting}
                           className="font-mono"
                         />
@@ -238,7 +236,8 @@ export default function SiteSettingsManagement() {
                       <FormControl>
                         <Textarea 
                           placeholder={getPlaceholder(form.watch("key"))}
-                          {...field} 
+                          {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -253,7 +252,11 @@ export default function SiteSettingsManagement() {
                     <FormItem>
                       <FormLabel>Description (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Brief description of this setting" {...field} />
+                        <Input 
+                          placeholder="Brief description of this setting" 
+                          {...field} 
+                          value={field.value || ""} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +297,7 @@ export default function SiteSettingsManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {settings?.map((setting: any) => (
+              {settings.map((setting: any) => (
                 <TableRow key={setting.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
