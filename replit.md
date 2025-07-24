@@ -130,6 +130,14 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 
 ## Recent Updates (July 2025)
 
+### Database Migration from Memory to Persistent Storage
+- **Switched to Database Storage**: Migrated from MemStorage to DatabaseStorage to ensure data persistence across deployments
+- **Fixed deployment data loss**: Admin panel data, bookings, services, coupons, and all settings now persist after redeployment
+- **Database seeding**: Added initial data seeding for services, coupons, site settings, review settings, and homepage images
+- **Homepage images management**: Fully functional admin-managed homepage images with database persistence
+- **Complete CRUD operations**: All admin panel features now use PostgreSQL database for reliable data storage
+- **Production ready**: Data integrity maintained across application restarts and deployments
+
 ### Site Settings Admin Panel Fix
 - **Fixed API request format**: Corrected apiRequest parameter order from `(url, options)` to `(method, url, data)` across all admin components
 - **Added missing routes**: Implemented complete CRUD operations for site settings including GET, POST, and PUT endpoints
