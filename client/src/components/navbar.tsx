@@ -1,8 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Phone, Menu, X, HelpCircle } from "lucide-react";
+import { Phone, Menu, X } from "lucide-react";
 import { useState } from "react";
-import TourTrigger from "@/components/tour/TourTrigger";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -43,7 +42,6 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center space-x-3">
-            <TourTrigger variant="help" className="hidden sm:block" />
             <a
               href="tel:8897326898"
               className="hidden sm:flex items-center text-sm text-muted-foreground hover:text-primary"
