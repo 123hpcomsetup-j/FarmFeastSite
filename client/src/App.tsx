@@ -7,6 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Gallery from "@/pages/gallery";
+import Location from "@/pages/location";
 import Booking from "@/pages/booking";
 import Payment from "@/pages/payment";
 import BookingConfirmation from "@/pages/booking-confirmation";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
       <Route path="/gallery" component={Gallery} />
+      <Route path="/location" component={Location} />
       <Route path="/booking" component={Booking} />
       <Route path="/payment" component={Payment} />
       <Route path="/booking-confirmation" component={BookingConfirmation} />
