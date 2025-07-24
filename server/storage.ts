@@ -297,6 +297,15 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateSeoSettings(id: number, settings: Partial<InsertSeoSettings>): Promise<SeoSettings | undefined> {
+    const [updatedSettings] = await this.db
+      .update(seoSettings)
+      .set({ ...settings, updatedAt: new Date() })
+      .where(eq(seoSettings.id, id))
+      .returning();
+    return updatedSettings;
+  }
+
   // Review Settings
   async getReviewSettings(): Promise<ReviewSettings | undefined> {
     const [settings] = await this.db.select().from(reviewSettings).limit(1);

@@ -82,11 +82,11 @@ export default function Contact() {
   };
 
   const contactInfo = {
-    address: getSettingValue("address") || "SY. No 170/A, Bhamragarh, Nagpur, Maharashtra 441801",
-    phone: getSettingValue("phone") || "+91 9876543210",
-    email: getSettingValue("email") || "info@farmfeastfarmhouse.com",
-    whatsapp: getSettingValue("whatsapp") || "+91 9876543210",
-    mapEmbedUrl: getSettingValue("mapEmbedUrl") || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.2!2d79.0882!3d21.1458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDA4JzQ0LjkiTiA3OcKwMDUnMTcuNSJF!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
+    address: getSettingValue("contact_address") || "SY. No 170/A, Bhamragarh, Nagpur, Maharashtra 441801",
+    phone: getSettingValue("contact_phone") || "+91 9876543210",
+    email: getSettingValue("contact_email") || "info@farmfeastfarmhouse.com",
+    whatsapp: getSettingValue("whatsapp_number") || "+91 9876543210",
+    mapEmbedUrl: getSettingValue("google_maps_embed_url") || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.2!2d79.0882!3d21.1458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDA4JzQ0LjkiTiA3OcKwMDUnMTcuNSJF!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
   };
 
   if (isSubmitted) {

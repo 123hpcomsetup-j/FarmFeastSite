@@ -182,7 +182,15 @@ export async function generatePaymentReceivedEmail(booking: any): Promise<string
   `;
 }
 
-export function generateConfirmationEmail(booking: any): string {
+export async function generateConfirmationEmail(booking: any): Promise<string> {
+  // Get dynamic contact info from admin settings
+  const phoneSetting = await storage.getSiteSettingByKey('contact_phone');
+  const emailSetting = await storage.getSiteSettingByKey('contact_email');
+  const whatsappSetting = await storage.getSiteSettingByKey('whatsapp_number');
+  
+  const contactPhone = phoneSetting?.value || '+91 8897326898';
+  const contactEmail = emailSetting?.value || 'info@farmfeastfarmhouse.shop';
+  const whatsappNumber = whatsappSetting?.value || '+91 8897326898';
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
@@ -214,9 +222,9 @@ export function generateConfirmationEmail(booking: any): string {
         
         <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <h4 style="margin-top: 0;">Contact Information</h4>
-          <p><strong>Phone:</strong> +91 8897326898</p>
-          <p><strong>Email:</strong> info@farmfeastfarmhouse.shop</p>
-          <p><strong>WhatsApp:</strong> Available for instant support</p>
+          <p><strong>Phone:</strong> ${contactPhone}</p>
+          <p><strong>Email:</strong> ${contactEmail}</p>
+          <p><strong>WhatsApp:</strong> ${whatsappNumber}</p>
         </div>
         
         <p>Thank you for choosing Farm Feast Farm House. We look forward to hosting you!</p>
@@ -233,7 +241,15 @@ export function generateConfirmationEmail(booking: any): string {
   `;
 }
 
-export function generateCancellationEmail(booking: any, reason?: string): string {
+export async function generateCancellationEmail(booking: any, reason?: string): Promise<string> {
+  // Get dynamic contact info from admin settings
+  const phoneSetting = await storage.getSiteSettingByKey('contact_phone');
+  const emailSetting = await storage.getSiteSettingByKey('contact_email');
+  const whatsappSetting = await storage.getSiteSettingByKey('whatsapp_number');
+  
+  const contactPhone = phoneSetting?.value || '+91 8897326898';
+  const contactEmail = emailSetting?.value || 'info@farmfeastfarmhouse.shop';
+  const whatsappNumber = whatsappSetting?.value || '+91 8897326898';
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center;">
