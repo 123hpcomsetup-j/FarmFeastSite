@@ -19,10 +19,18 @@ export default function ImageOptimized({
 }: ImageOptimizedProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
+  const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (priority) return;
+    if (priority) {
+      // For priority images, preload immediately
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setIsLoaded(true);
+      img.onerror = () => setHasError(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -31,7 +39,7 @@ export default function ImageOptimized({
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: '50px' }
+      { threshold: 0.1, rootMargin: '100px' }
     );
 
     if (imgRef.current) {
@@ -39,26 +47,39 @@ export default function ImageOptimized({
     }
 
     return () => observer.disconnect();
-  }, [priority]);
+  }, [priority, src]);
+
+  if (hasError) {
+    return (
+      <div className={`bg-gray-100 flex items-center justify-center ${className}`}>
+        <span className="text-gray-400 text-sm">Image unavailable</span>
+      </div>
+    );
+  }
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div ref={imgRef} className={`relative overflow-hidden ${className}`}>
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" 
+             style={{ aspectRatio: width && height ? `${width}/${height}` : undefined }} />
       )}
-      {isInView && (
+      {(isInView || priority) && (
         <img
-          ref={imgRef}
           src={src}
           alt={alt}
           width={width}
           height={height}
           loading={priority ? "eager" : "lazy"}
-          decoding="async"
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "low"}
           onLoad={() => setIsLoaded(true)}
-          className={`transition-opacity duration-300 ${
+          onError={() => setHasError(true)}
+          className={`transition-opacity duration-200 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           } ${className}`}
+          style={{
+            aspectRatio: width && height ? `${width}/${height}` : undefined
+          }}
         />
       )}
     </div>

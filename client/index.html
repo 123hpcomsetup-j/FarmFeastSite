@@ -10,12 +10,75 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//api.farmfeastfarmhouse.co.in">
     
-    <!-- Critical CSS inline for faster render -->
+    <!-- Critical CSS inline for fastest render -->
     <style>
-      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; }
+      /* Critical above-the-fold styles */
+      * { box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; line-height: 1.5; }
+      .hero-gradient { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+      .max-w-7xl { max-width: 80rem; margin: 0 auto; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+      .grid { display: grid; }
+      .lg\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .gap-12 { gap: 3rem; }
+      .items-center { align-items: center; }
+      .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+      .font-bold { font-weight: 700; }
+      .text-primary { color: #22c55e; }
+      .leading-tight { line-height: 1.25; }
+      .space-y-6 > * + * { margin-top: 1.5rem; }
+      .space-y-4 > * + * { margin-top: 1rem; }
+      .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+      .text-muted-foreground { color: #71717a; }
+      .leading-relaxed { line-height: 1.625; }
+      .rounded-2xl { border-radius: 1rem; }
+      .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+      .aspect-\\[4\\/3\\] { aspect-ratio: 4/3; }
+      .w-full { width: 100%; }
+      .h-full { height: 100%; }
+      .object-cover { object-fit: cover; }
+      .overflow-hidden { overflow: hidden; }
+      .relative { position: relative; }
+      .absolute { position: absolute; }
+      .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+      .bg-gradient-to-t { background-image: linear-gradient(to top, var(--tw-gradient-stops)); }
+      .from-black\\/20 { --tw-gradient-from: rgba(0, 0, 0, 0.2); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)); }
+      .to-transparent { --tw-gradient-to: transparent; }
+      
+      /* Navbar critical styles */
+      .bg-background { background-color: #ffffff; }
+      .border-b { border-bottom-width: 1px; }
+      .border-border { border-color: #e4e4e7; }
+      .sticky { position: sticky; }
+      .top-0 { top: 0; }
+      .z-50 { z-index: 50; }
+      .h-16 { height: 4rem; }
+      .flex { display: flex; }
+      .justify-between { justify-content: space-between; }
+      .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+      .text-primary { color: #22c55e; }
+      
+      /* Loading states */
+      .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+      .animate-spin { animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
       .loader { display: flex; justify-content: center; align-items: center; height: 100vh; }
       .spinner { width: 2rem; height: 2rem; border: 2px solid #e5e5e5; border-top: 2px solid #22c55e; border-radius: 50%; animation: spin 1s linear infinite; }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      
+      /* Hide elements initially to prevent FOUC */
+      .lazy-load { opacity: 0; transition: opacity 0.3s ease; }
+      .lazy-load.loaded { opacity: 1; }
+      
+      @media (min-width: 1024px) {
+        .lg\\:text-6xl { font-size: 3.75rem; line-height: 1; }
+        .lg\\:py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+        .lg\\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+      }
+      @media (min-width: 640px) {
+        .sm\\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+      }
     </style>
   </head>
   <body>

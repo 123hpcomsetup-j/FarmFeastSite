@@ -11,6 +11,7 @@ import CustomScripts from "@/components/CustomScripts";
 import ResourcePreloader from "@/components/ResourcePreloader";
 import PreloadFonts from "@/components/PreloadFonts";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import CriticalResourceLoader from "@/components/CriticalResourceLoader";
 
 // Import critical pages normally, lazy load secondary pages
 import Home from "@/pages/home";
@@ -35,10 +36,13 @@ const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
-// Loading component
+// Ultra-fast loading component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="text-center space-y-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+      <p className="text-sm text-gray-600">Loading...</p>
+    </div>
   </div>
 );
 
@@ -143,6 +147,7 @@ function App() {
       <TooltipProvider>
         <TourProvider>
           <SeoHead />
+          <CriticalResourceLoader />
           <PreloadFonts />
           <ResourcePreloader />
           <ServiceWorkerRegistration />
