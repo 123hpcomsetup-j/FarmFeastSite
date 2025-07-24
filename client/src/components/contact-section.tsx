@@ -1,7 +1,18 @@
 import { Phone, MessageCircle, MapPin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
 export default function ContactSection() {
+  // Get site settings
+  const { data: settings = [] } = useQuery<any[]>({
+    queryKey: ["/api/settings"],
+  });
+
+  // Helper function to get setting value
+  const getSetting = (key: string, defaultValue: string = "") => {
+    const setting = settings.find((s: any) => s.key === key);
+    return setting?.value || defaultValue;
+  };
   const serviceAreas = [
     { name: "Keesara Daira", distance: "1.8 km" },
     { name: "Cheeriyal", distance: "2.3 km" },
@@ -31,17 +42,19 @@ export default function ContactSection() {
             <h3 className="text-xl font-semibold mb-2">Call Us</h3>
             <div className="space-y-1">
               <a
-                href="tel:8897326898"
+                href={`tel:${getSetting("contact_phone", "8897326898")}`}
                 className="block text-primary hover:text-primary/80 text-lg font-medium"
               >
-                8897326898
+                {getSetting("contact_phone", "8897326898").replace("+91", "")}
               </a>
-              <a
-                href="tel:8309001021"
-                className="block text-primary hover:text-primary/80 text-lg font-medium"
-              >
-                8309001021
-              </a>
+              {getSetting("phone_secondary") && (
+                <a
+                  href={`tel:${getSetting("phone_secondary", "8309001021")}`}
+                  className="block text-primary hover:text-primary/80 text-lg font-medium"
+                >
+                  {getSetting("phone_secondary", "8309001021")}
+                </a>
+              )}
             </div>
           </div>
           
@@ -52,7 +65,7 @@ export default function ContactSection() {
             <h3 className="text-xl font-semibold mb-2">WhatsApp</h3>
             <Button asChild className="bg-green-600 hover:bg-green-700">
               <a
-                href="https://wa.me/918897326898"
+                href={`https://wa.me/${getSetting("whatsapp_number", "918897326898")}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -67,8 +80,7 @@ export default function ContactSection() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Location</h3>
             <p className="text-muted-foreground">
-              SY. No 170/A, Near Cheeryal Kaman,<br />
-              Keesara, Rangareddy - 501301
+              {getSetting("contact_address", "SY. No 170/A, Near Cheeryal Kaman, Keesara, Rangareddy - 501301")}
             </p>
           </div>
         </div>

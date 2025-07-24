@@ -29,6 +29,17 @@ export default function BookingConfirmation() {
   const [searchAttempted, setSearchAttempted] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
 
+  // Get site settings
+  const { data: settings = [] } = useQuery<any[]>({
+    queryKey: ["/api/settings"],
+  });
+
+  // Helper function to get setting value
+  const getSetting = (key: string, defaultValue: string = "") => {
+    const setting = settings.find((s: any) => s.key === key);
+    return setting?.value || defaultValue;
+  };
+
   // Check URL parameters for auto-fill and payment flag
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -252,16 +263,16 @@ export default function BookingConfirmation() {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-blue-600" />
-                    <span className="text-blue-900">Phone: +91-8897326898</span>
+                    <span className="text-blue-900">Phone: {getSetting("contact_phone", "+91-8897326898")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-blue-600" />
-                    <span className="text-blue-900">Email: info@farmfeastfarmhouse.shop</span>
+                    <span className="text-blue-900">Email: {getSetting("contact_email", "info@farmfeastfarmhouse.shop")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <span className="text-blue-900">
-                      Address: SY. No 170/A, Near Cheeryal Kaman, Keesara, Rangareddy - 501301
+                      Address: {getSetting("contact_address", "SY. No 170/A, Near Cheeryal Kaman, Keesara, Rangareddy - 501301")}
                     </span>
                   </div>
                 </div>

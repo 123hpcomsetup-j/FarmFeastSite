@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Phone, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -6,6 +7,17 @@ import { useState } from "react";
 export default function Navbar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Get site settings
+  const { data: settings = [] } = useQuery<any[]>({
+    queryKey: ["/api/settings"],
+  });
+
+  // Helper function to get setting value
+  const getSetting = (key: string, defaultValue: string = "") => {
+    const setting = settings.find((s: any) => s.key === key);
+    return setting?.value || defaultValue;
+  };
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -22,7 +34,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center">
             <h1 className="text-2xl font-bold text-primary">
-              🌿 Farm Feast
+              🌿 {getSetting("site_name", "Farm Feast")}
             </h1>
           </Link>
           
@@ -45,11 +57,11 @@ export default function Navbar() {
           
           <div className="flex items-center space-x-3">
             <a
-              href="tel:8897326898"
+              href={`tel:${getSetting("contact_phone", "8897326898")}`}
               className="hidden sm:flex items-center text-sm text-muted-foreground hover:text-primary"
             >
               <Phone className="w-4 h-4 mr-1" />
-              8897326898
+              {getSetting("contact_phone", "8897326898").replace("+91", "")}
             </a>
             <Link href="/booking">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90">

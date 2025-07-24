@@ -1,29 +1,47 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Shield } from "lucide-react";
 import ConsentManager from "@/components/ConsentManager";
 
 export default function Footer() {
+  // Get site settings
+  const { data: settings = [] } = useQuery<any[]>({
+    queryKey: ["/api/settings"],
+  });
+
+  // Helper function to get setting value
+  const getSetting = (key: string, defaultValue: string = "") => {
+    const setting = settings.find((s: any) => s.key === key);
+    return setting?.value || defaultValue;
+  };
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Farm Feast Farm House</h3>
+            <h3 className="text-xl font-bold">{getSetting("site_name", "Farm Feast Farm House")}</h3>
             <p className="text-gray-300 text-sm">
               Experience luxury countryside living with modern amenities. 
               Perfect for family getaways, corporate retreats, and special events.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
+              {getSetting("social_facebook") && (
+                <a href={getSetting("social_facebook")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {getSetting("social_instagram") && (
+                <a href={getSetting("social_instagram")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
+              {getSetting("social_twitter") && (
+                <a href={getSetting("social_twitter")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                  <Twitter className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -60,17 +78,20 @@ export default function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span className="text-gray-300">+91 8897326898</span>
+                <a href={`tel:${getSetting("contact_phone", "8897326898")}`} className="text-gray-300 hover:text-white transition-colors">
+                  {getSetting("contact_phone", "+91 8897326898")}
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span className="text-gray-300">info@farmfeastfarmhouse.shop</span>
+                <a href={`mailto:${getSetting("contact_email", "info@farmfeastfarmhouse.shop")}`} className="text-gray-300 hover:text-white transition-colors">
+                  {getSetting("contact_email", "info@farmfeastfarmhouse.shop")}
+                </a>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5" />
                 <span className="text-gray-300">
-                  Your Farm Address<br />
-                  City, State - PIN Code
+                  {getSetting("contact_address", "SY. No 170/A, Near Cheeryal Kaman, Keesara, Rangareddy - 501301")}
                 </span>
               </div>
             </div>
