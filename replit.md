@@ -130,6 +130,14 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 
 ## Recent Updates (July 2025)
 
+### Security Vulnerability Fix - Hardcoded Credentials Removed (July 2025)
+- **Critical Security Issue Resolved**: Removed hardcoded admin password ("test@1234") from database initialization code
+- **Environment Variable Implementation**: Admin credentials now sourced securely from ADMIN_USERNAME and ADMIN_PASSWORD environment variables
+- **Database Update**: Existing admin user updated with secure credentials from environment variables
+- **Bcrypt Security**: Password properly hashed using bcrypt with salt rounds for maximum security
+- **Code Review**: Eliminated hardcoded credentials from both backup storage (storage-backup.ts) and main storage (storage-old.ts)
+- **Production Security**: Admin authentication now follows security best practices with no credentials exposed in source code
+
 ### Database Migration from Memory to Persistent Storage (COMPLETED)
 - **Fully Database-Driven**: Complete migration from MemStorage to DatabaseStorage with 12 active PostgreSQL tables
 - **Zero Data Loss**: All admin panel data, bookings, services, coupons, and settings persist permanently after deployments
