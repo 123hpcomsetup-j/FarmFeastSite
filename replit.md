@@ -196,6 +196,14 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Error Handling**: Added comprehensive error handling and logging for failed script execution
 - **Real-time Loading**: Scripts load automatically when page loads and update when admin makes changes
 
+### Dynamic Homepage Hero Content (July 2025)
+- **Homepage Statistics Made Dynamic**: Price per guest (₹1,150), capacity (50+), and support hours (24/7) now editable through admin panel
+- **Hero Content Personalization**: Main hero title, subtitle, location, and description text now fully admin-controlled
+- **Database Integration**: Added site settings for hero_title_line1, hero_title_line2, hero_location, and hero_description
+- **Admin Panel Enhancement**: Added new settings with appropriate icons (DollarSign, Users, Headphones) for easy editing
+- **Fallback System**: Maintains original content as fallbacks if admin settings are not configured
+- **Real-time Updates**: Changes in admin panel instantly reflect on homepage without page reload
+
 ### Gallery Image Persistence Fix (July 2025)
 - **Database Storage Verified**: Images are correctly saved to database during upload process
 - **Real-time Updates**: Enhanced gallery management with aggressive cache invalidation and auto-refresh

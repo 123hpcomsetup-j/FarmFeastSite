@@ -122,6 +122,12 @@ export default function SiteSettingsManagement() {
     { key: "price_per_guest", placeholder: "₹1,150", icon: DollarSign },
     { key: "capacity", placeholder: "50+", icon: Users },
     { key: "support_hours", placeholder: "24/7", icon: Headphones },
+    
+    // Homepage Hero Content
+    { key: "hero_title_line1", placeholder: "Your Perfect", icon: Settings },
+    { key: "hero_title_line2", placeholder: "Getaway", icon: Settings },
+    { key: "hero_location", placeholder: "Near Hyderabad", icon: MapPin },
+    { key: "hero_description", placeholder: "Escape the city buzz and relax in nature at Farm Feast Farm House. Premium farmhouse with swimming pool, luxury amenities, and professional services.", icon: Settings },
   ];
 
   const getIcon = (key: string) => {
