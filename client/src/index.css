@@ -27,28 +27,7 @@
   --warning: hsl(38, 92%, 50%);
 }
 
-.dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(142, 76%, 36%);
-  --primary-foreground: hsl(355, 7%, 97%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
-}
+/* Dark mode removed - not used in this application */
 
 @layer base {
   * {
@@ -60,18 +39,9 @@
   }
 }
 
-/* Custom farmhouse-themed styles */
+/* Essential farmhouse styles - reduced to critical only */
 .hero-gradient {
   background: linear-gradient(135deg, hsl(142, 76%, 36%, 0.1) 0%, hsl(142, 76%, 36%, 0.05) 100%);
-}
-
-.service-card:hover {
-  transform: translateY(-4px);
-  transition: all 0.3s ease;
-}
-
-.gallery-image {
-  transition: transform 0.3s ease;
 }
 
 .gallery-image:hover {
@@ -100,35 +70,7 @@
   background-color: hsl(38, 92%, 50%);
 }
 
-/* Nature-inspired accents */
-.bg-nature-50 {
-  background-color: hsl(120, 60%, 97%);
-}
-
-.bg-nature-100 {
-  background-color: hsl(120, 60%, 92%);
-}
-
-.text-nature-600 {
-  color: hsl(120, 60%, 30%);
-}
-
-.text-nature-700 {
-  color: hsl(120, 60%, 25%);
-}
-
-/* Mobile-first booking form animations */
-.booking-step {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideInUp 0.6s ease-out forwards;
-}
-
-.booking-step.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
+/* Essential animations only - removed unused styles */
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -137,37 +79,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 

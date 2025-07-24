@@ -13,6 +13,7 @@ import PreloadFonts from "@/components/PreloadFonts";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import CriticalResourceLoader from "@/components/CriticalResourceLoader";
 import CriticalCSSOptimizer from "@/components/CriticalCSSOptimizer";
+import OptimizedAssetLoader from "@/components/OptimizedAssetLoader";
 
 // Import critical pages normally, lazy load secondary pages
 import Home from "@/pages/home";
