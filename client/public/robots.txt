@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Allow specific crawler endpoints for better SEO
+Allow: /api/crawler/
+
+# Block admin areas
+Disallow: /admin
+Disallow: /api/admin/
+
+# Block uploads folder (if sensitive)
+Allow: /uploads/
+
+# Main sitemap
+Sitemap: https://farmfeastfarmhouse.co.in/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1

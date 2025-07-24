@@ -387,8 +387,9 @@ export async function seoMiddleware(req: Request, res: Response, next: NextFunct
     const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     
     // Handle blog posts specially
-    if (pageName === 'blog-post') {
-      const slug = req.path.split('/')[2];
+    if (pageName === 'blog-post' || req.path.startsWith('/blog/')) {
+      const pathParts = req.path.split('/');
+      const slug = pathParts[pathParts.length - 1];
       const blogSEO = await generateBlogPostSEO(slug, req);
       
       if (blogSEO) {

@@ -443,7 +443,7 @@ Farm Feast Farm House Team
       }
 
       // Generate JWT token
-      const adminData = { id: admin.id, username: admin.username, role: admin.role };
+      const adminData = { id: admin.id, username: admin.username, role: admin.role || 'admin' };
       const token = generateToken(adminData);
 
       console.log("Login successful for user:", admin.username);
@@ -972,12 +972,15 @@ Farm Feast Farm House Team
   app.get("/api/crawler/blog/:slug", async (req, res) => {
     try {
       const { slug } = req.params;
+      console.log(`Blog crawler endpoint called for slug: ${slug}`);
       const fullUrl = `${req.protocol}://${req.get('host')}/blog/${slug}`;
       
       // Fetch blog post
       const blogPost = await storage.getBlogPostBySlug(slug);
+      console.log(`Blog post found:`, blogPost?.title);
       
       if (!blogPost) {
+        console.log(`Blog post not found for slug: ${slug}`);
         return res.status(404).json({ error: "Blog post not found" });
       }
       
@@ -985,7 +988,7 @@ Farm Feast Farm House Team
       const seoData = {
         title: blogPost.metaTitle || `${blogPost.title} - Farm Feast Farm House Blog`,
         description: blogPost.metaDescription || blogPost.excerpt || '',
-        keywords: `${blogPost.tags ? JSON.parse(blogPost.tags).join(', ') : ''}, farm activities, farmhouse blog, keesara experiences`,
+        keywords: `${Array.isArray(blogPost.tags) ? blogPost.tags.join(', ') : (blogPost.tags || '')}, farm activities, farmhouse blog, keesara experiences`,
         ogTitle: blogPost.metaTitle || blogPost.title,
         ogDescription: blogPost.metaDescription || blogPost.excerpt || '',
         ogImage: blogPost.featuredImage || '/api/placeholder/1200/630',
