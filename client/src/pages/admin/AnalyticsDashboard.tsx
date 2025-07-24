@@ -132,7 +132,7 @@ export default function AnalyticsDashboard() {
   }
 
   // Handle authentication errors
-  if (overviewError?.message.includes('Authentication') || realtimeError?.message.includes('Authentication')) {
+  if ((overviewError as any)?.message?.includes('Authentication') || (realtimeError as any)?.message?.includes('Authentication')) {
     return (
       <div className="p-6">
         <Card>
@@ -146,6 +146,33 @@ export default function AnalyticsDashboard() {
               className="mt-4"
             >
               Refresh Page
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle other errors with debugging info
+  if (overviewError || realtimeError) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-red-600">Analytics Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>There was an issue loading analytics data.</p>
+            {overviewError && <p className="text-sm text-gray-600 mt-2">Overview: {String(overviewError)}</p>}
+            {realtimeError && <p className="text-sm text-gray-600 mt-2">Realtime: {String(realtimeError)}</p>}
+            <Button 
+              onClick={() => {
+                refetchOverview();
+                refetchRealtime();
+              }} 
+              className="mt-4"
+            >
+              Retry
             </Button>
           </CardContent>
         </Card>

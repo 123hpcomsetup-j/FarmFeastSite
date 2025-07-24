@@ -637,8 +637,7 @@ class DatabaseStorage implements IStorage {
       .from(visitorSessions)
       .where(and(
         eq(visitorSessions.isActive, true),
-        // Use SQL function for date comparison
-        this.db.sql`${visitorSessions.lastActiveAt} > ${thirtyMinutesAgo}`
+        gt(visitorSessions.lastActiveAt, thirtyMinutesAgo)
       ));
   }
 
@@ -669,46 +668,47 @@ class DatabaseStorage implements IStorage {
     
     // Get basic stats
     const totalVisitors = (await this.db
-      .select({ count: this.db.sql`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(visitorSessions)
-      .where(this.db.sql`${visitorSessions.createdAt} > ${daysAgo}`))[0]?.count || 0;
+      .where(gt(visitorSessions.createdAt, daysAgo)))[0]?.count || 0;
 
     const totalPageViews = (await this.db
-      .select({ count: this.db.sql`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(pageViews)
-      .where(this.db.sql`${pageViews.createdAt} > ${daysAgo}`))[0]?.count || 0;
+      .where(gt(pageViews.createdAt, daysAgo)))[0]?.count || 0;
 
     // Get top pages
     const topPages = await this.db
       .select({
         page: pageViews.page,
-        views: this.db.sql`count(*)`
+        views: sql`count(*)`
       })
       .from(pageViews)
-      .where(this.db.sql`${pageViews.createdAt} > ${daysAgo}`)
+      .where(gt(pageViews.createdAt, daysAgo))
       .groupBy(pageViews.page)
-      .orderBy(this.db.sql`count(*) desc`)
+      .orderBy(sql`count(*) desc`)
       .limit(5);
 
     // Get device breakdown
     const deviceBreakdown = await this.db
       .select({
         device: visitorSessions.device,
-        count: this.db.sql`count(*)`
+        count: sql`count(*)`
       })
       .from(visitorSessions)
-      .where(this.db.sql`${visitorSessions.createdAt} > ${daysAgo}`)
+      .where(gt(visitorSessions.createdAt, daysAgo))
       .groupBy(visitorSessions.device);
 
     // Get visitors by hour (last 24 hours)
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const visitorsByHour = await this.db
       .select({
-        hour: this.db.sql`extract(hour from ${visitorSessions.createdAt})`,
-        visitors: this.db.sql`count(*)`
+        hour: sql`extract(hour from ${visitorSessions.createdAt})`,
+        visitors: sql`count(*)`
       })
       .from(visitorSessions)
-      .where(this.db.sql`${visitorSessions.createdAt} > now() - interval '24 hours'`)
-      .groupBy(this.db.sql`extract(hour from ${visitorSessions.createdAt})`);
+      .where(gt(visitorSessions.createdAt, last24Hours))
+      .groupBy(sql`extract(hour from ${visitorSessions.createdAt})`);
 
     return {
       totalVisitors: parseInt(totalVisitors as string) || 0,
@@ -731,16 +731,16 @@ class DatabaseStorage implements IStorage {
     const sessionsLast30Min = await this.db
       .select()
       .from(visitorSessions)
-      .where(this.db.sql`${visitorSessions.lastActiveAt} > ${thirtyMinutesAgo}`)
-      .orderBy(visitorSessions.lastActiveAt);
+      .where(gt(visitorSessions.lastActiveAt, thirtyMinutesAgo))
+      .orderBy(desc(visitorSessions.lastActiveAt));
 
     const currentPageViews = await this.db
       .select({
         page: pageViews.page,
-        visitors: this.db.sql`count(distinct ${pageViews.sessionId})`
+        visitors: sql`count(distinct ${pageViews.sessionId})`
       })
       .from(pageViews)
-      .where(this.db.sql`${pageViews.createdAt} > ${thirtyMinutesAgo}`)
+      .where(gt(pageViews.createdAt, thirtyMinutesAgo))
       .groupBy(pageViews.page);
 
     return {
@@ -756,6 +756,6 @@ class DatabaseStorage implements IStorage {
 
 // Import database connection
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, gt, desc } from "drizzle-orm";
 
 export const storage = new DatabaseStorage(db);
