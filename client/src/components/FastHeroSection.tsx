@@ -80,7 +80,7 @@ const FastHeroSection = memo(() => {
               </Button>
             </div>
             
-            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+            <div className="flex items-center space-x-6 text-sm text-foreground/80">
               <div className="flex items-center">
                 <MapPin className="w-4 h-4 text-primary mr-2" />
                 <span>Cheeriyal, Telangana</span>

@@ -295,16 +295,16 @@ export default function BookingForm() {
                         flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
                         ${isCompleted ? 'bg-primary border-primary text-white' : 
                           isCurrent ? 'border-primary text-primary bg-primary/10' : 
-                          'border-gray-300 text-gray-400'}
+                          'border-muted-foreground text-muted-foreground'}
                       `}
                     >
                       {isCompleted ? <Check className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
                     </div>
-                    <span className={`ml-2 text-sm font-medium ${isCurrent ? 'text-primary' : 'text-gray-500'}`}>
+                    <span className={`ml-2 text-sm font-medium ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>
                       {step.title}
                     </span>
                     {index < steps.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-primary' : 'bg-gray-300'}`} />
+                      <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-primary' : 'bg-border'}`} />
                     )}
                   </div>
                 );
@@ -314,7 +314,7 @@ export default function BookingForm() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className={`transition-all duration-300 ${isAnimating ? 'opacity-50 transform scale-95' : 'opacity-100 transform scale-100'}`}>
+              <div className={`transition-all duration-300 ${isAnimating ? 'opacity-70 transform scale-95' : 'opacity-100 transform scale-100'}`}>
                 
                 {/* Step 1: Personal Information */}
                 {currentStep === 0 && (
