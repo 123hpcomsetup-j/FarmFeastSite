@@ -36,6 +36,14 @@ interface SeoSettings {
   changeFreq: string;
   noindex: boolean;
   nofollow: boolean;
+  reviewSnippet1Author?: string;
+  reviewSnippet1Date?: string;
+  reviewSnippet1Rating?: string;
+  reviewSnippet1Body?: string;
+  reviewSnippet2Author?: string;
+  reviewSnippet2Date?: string;
+  reviewSnippet2Rating?: string;
+  reviewSnippet2Body?: string;
 }
 
 export default function SeoHead({ 
@@ -209,6 +217,46 @@ export default function SeoHead({
             "bestRating": parseInt((reviewData.ratingScale || 5).toString()),
             "worstRating": 1
           };
+
+          // Add individual review snippets from SEO settings
+          const reviews = [];
+          if (seoSettings?.reviewSnippet1Author && seoSettings?.reviewSnippet1Body) {
+            reviews.push({
+              "@type": "Review",
+              "author": {
+                "@type": "Person",
+                "name": seoSettings.reviewSnippet1Author
+              },
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": parseInt(seoSettings.reviewSnippet1Rating || "5"),
+                "bestRating": parseInt((reviewData.ratingScale || 5).toString())
+              },
+              "reviewBody": seoSettings.reviewSnippet1Body,
+              "datePublished": seoSettings.reviewSnippet1Date
+            });
+          }
+          
+          if (seoSettings?.reviewSnippet2Author && seoSettings?.reviewSnippet2Body) {
+            reviews.push({
+              "@type": "Review",
+              "author": {
+                "@type": "Person",
+                "name": seoSettings.reviewSnippet2Author
+              },
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": parseInt(seoSettings.reviewSnippet2Rating || "5"),
+                "bestRating": parseInt((reviewData.ratingScale || 5).toString())
+              },
+              "reviewBody": seoSettings.reviewSnippet2Body,
+              "datePublished": seoSettings.reviewSnippet2Date
+            });
+          }
+
+          if (reviews.length > 0) {
+            structuredData.review = reviews;
+          }
         }
       }
     }
