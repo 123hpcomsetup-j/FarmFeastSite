@@ -6,6 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
+import { generateToken, requireAuth } from "./auth";
 import { sendEmail, generateConfirmationEmail, generateCancellationEmail, generateBookingReceivedEmail, generatePaymentReceivedEmail, generateAdminBookingNotificationEmail, generateAdminPaymentConfirmationEmail } from "./emailService";
 import { 
   insertBookingSchema, 
@@ -56,11 +57,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Admin middleware (define first)
-  const requireAdmin = (req: any, res: any, next: any) => {
-    // Simple admin check - in production, use proper JWT
-    next();
-  };
+  // Admin middleware using proper JWT authentication
+  const requireAdmin = requireAuth;
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -433,9 +431,14 @@ Farm Feast Farm House Team
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Generate JWT token
+      const adminData = { id: admin.id, username: admin.username, role: admin.role };
+      const token = generateToken(adminData);
+
       res.json({ 
         message: "Login successful", 
-        admin: { id: admin.id, username: admin.username, role: admin.role } 
+        admin: adminData,
+        token: token
       });
     } catch (error) {
       console.error("Admin login error:", error);
