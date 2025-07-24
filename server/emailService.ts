@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { storage } from './storage';
 
 interface EmailOptions {
   to: string;
@@ -45,7 +46,19 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 }
 
-export function generateBookingReceivedEmail(booking: any): string {
+export async function generateBookingReceivedEmail(booking: any): Promise<string> {
+  // Get dynamic UPI ID from admin settings
+  const upiIdSetting = await storage.getSiteSettingByKey('upi_id');
+  const upiId = upiIdSetting?.value || 'ybl@ybl'; // fallback if not set
+  
+  // Get other dynamic contact info
+  const phoneSetting = await storage.getSiteSettingByKey('contact_phone');
+  const emailSetting = await storage.getSiteSettingByKey('contact_email');
+  const whatsappSetting = await storage.getSiteSettingByKey('whatsapp_number');
+  
+  const contactPhone = phoneSetting?.value || '+91 8897326898';
+  const contactEmail = emailSetting?.value || 'info@farmfeastfarmhouse.shop';
+  const whatsappNumber = whatsappSetting?.value || '+91 8897326898';
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #3b82f6; color: white; padding: 20px; text-align: center;">
@@ -71,7 +84,7 @@ export function generateBookingReceivedEmail(booking: any): string {
           <h4 style="margin-top: 0; color: #d97706;">⚠️ Payment Required</h4>
           <p><strong>To confirm your booking, please complete the payment:</strong></p>
           <p>• Amount to pay: <strong>₹${booking.finalTotal?.toLocaleString()}</strong></p>
-          <p>• UPI ID: <strong>ybl@ybl</strong></p>
+          <p>• UPI ID: <strong>${upiId}</strong></p>
           <p>• After payment, submit your UTR number through our website</p>
         </div>
         
@@ -87,9 +100,9 @@ export function generateBookingReceivedEmail(booking: any): string {
         <p>If you have any questions, please contact us:</p>
         
         <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>Phone:</strong> +91 8897326898</p>
-          <p><strong>Email:</strong> info@farmfeastfarmhouse.shop</p>
-          <p><strong>WhatsApp:</strong> Available for instant support</p>
+          <p><strong>Phone:</strong> ${contactPhone}</p>
+          <p><strong>Email:</strong> ${contactEmail}</p>
+          <p><strong>WhatsApp:</strong> ${whatsappNumber}</p>
         </div>
         
         <p>Thank you for choosing Farm Feast Farm House!</p>
@@ -106,7 +119,15 @@ export function generateBookingReceivedEmail(booking: any): string {
   `;
 }
 
-export function generatePaymentReceivedEmail(booking: any): string {
+export async function generatePaymentReceivedEmail(booking: any): Promise<string> {
+  // Get dynamic contact info from admin settings
+  const phoneSetting = await storage.getSiteSettingByKey('contact_phone');
+  const emailSetting = await storage.getSiteSettingByKey('contact_email');
+  const whatsappSetting = await storage.getSiteSettingByKey('whatsapp_number');
+  
+  const contactPhone = phoneSetting?.value || '+91 8897326898';
+  const contactEmail = emailSetting?.value || 'info@farmfeastfarmhouse.shop';
+  const whatsappNumber = whatsappSetting?.value || '+91 8897326898';
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #f59e0b; color: white; padding: 20px; text-align: center;">
@@ -142,9 +163,9 @@ export function generatePaymentReceivedEmail(booking: any): string {
         <p>If you have any questions, please contact us:</p>
         
         <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>Phone:</strong> +91 8897326898</p>
-          <p><strong>Email:</strong> info@farmfeastfarmhouse.shop</p>
-          <p><strong>WhatsApp:</strong> Available for instant support</p>
+          <p><strong>Phone:</strong> ${contactPhone}</p>
+          <p><strong>Email:</strong> ${contactEmail}</p>
+          <p><strong>WhatsApp:</strong> ${whatsappNumber}</p>
         </div>
         
         <p>Thank you for your payment!</p>
