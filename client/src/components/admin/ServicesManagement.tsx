@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertServiceSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
@@ -27,11 +27,7 @@ export default function ServicesManagement() {
 
   const { data: services, isLoading } = useQuery({
     queryKey: ["/api/admin/services"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<ServiceForm>({
@@ -48,13 +44,8 @@ export default function ServicesManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: ServiceForm) => {
-      return apiRequest("/api/admin/services", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("POST", "/api/admin/services", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services"] });
@@ -73,13 +64,8 @@ export default function ServicesManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: ServiceForm }) => {
-      return apiRequest(`/api/admin/services/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("PUT", `/api/admin/services/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services"] });
@@ -99,12 +85,8 @@ export default function ServicesManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/services/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("DELETE", `/api/admin/services/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services"] });
