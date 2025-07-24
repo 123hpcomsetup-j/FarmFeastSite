@@ -67,7 +67,7 @@ export default function BlogManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: BlogPostFormData) => {
-      return await apiRequest("/api/blog-posts", "POST", data);
+      return await apiRequest("POST", "/api/blog-posts", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
@@ -89,7 +89,7 @@ export default function BlogManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<BlogPostFormData> }) => {
-      return await apiRequest(`/api/blog-posts/${id}`, "PUT", data);
+      return await apiRequest("PUT", `/api/blog-posts/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
@@ -112,7 +112,7 @@ export default function BlogManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/blog-posts/${id}`, "DELETE");
+      return await apiRequest("DELETE", `/api/blog-posts/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
