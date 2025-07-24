@@ -38,7 +38,7 @@ export default function ServicesManagement() {
       price: 0,
       category: "accommodation",
       active: true,
-      features: [],
+      icon: "",
     },
   });
 

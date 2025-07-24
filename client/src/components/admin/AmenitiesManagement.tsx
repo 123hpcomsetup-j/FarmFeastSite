@@ -31,10 +31,12 @@ export default function AmenitiesManagement() {
   const form = useForm<AmenityForm>({
     resolver: zodResolver(insertAmenitySchema),
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
       icon: "",
-      category: "basic",
+      color: "bg-blue-50 text-blue-600",
+      order: 1,
+      active: true,
     },
   });
 
