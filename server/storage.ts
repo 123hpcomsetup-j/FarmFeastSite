@@ -12,6 +12,9 @@ import {
   homepageImages,
   customScripts,
   contactMessages,
+  visitorSessions,
+  pageViews,
+  analyticsEvents,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -37,7 +40,13 @@ import {
   type CustomScript,
   type InsertCustomScript,
   type ContactMessage,
-  type InsertContactMessage
+  type InsertContactMessage,
+  type VisitorSession,
+  type InsertVisitorSession,
+  type PageView,
+  type InsertPageView,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent
 } from "@shared/schema";
 
 export interface IStorage {
@@ -128,6 +137,29 @@ export interface IStorage {
   updateContactMessage(id: number, message: Partial<ContactMessage>): Promise<ContactMessage | undefined>;
   deleteContactMessage(id: number): Promise<boolean>;
   markContactMessageAsRead(id: number): Promise<boolean>;
+
+  // Analytics
+  createVisitorSession(session: InsertVisitorSession): Promise<VisitorSession>;
+  getVisitorSession(sessionId: string): Promise<VisitorSession | undefined>;
+  updateVisitorSession(sessionId: string, updates: Partial<VisitorSession>): Promise<VisitorSession | undefined>;
+  getActiveVisitorSessions(): Promise<VisitorSession[]>;
+  createPageView(pageView: InsertPageView): Promise<PageView>;
+  getPageViewsBySession(sessionId: string): Promise<PageView[]>;
+  createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
+  getAnalyticsOverview(days?: number): Promise<{
+    totalVisitors: number;
+    uniqueVisitors: number;
+    totalPageViews: number;
+    averageSessionDuration: number;
+    topPages: { page: string; views: number }[];
+    deviceBreakdown: { device: string; count: number }[];
+    visitorsByHour: { hour: number; visitors: number }[];
+  }>;
+  getRealtimeVisitors(): Promise<{
+    activeVisitors: number;
+    sessionsLast30Min: VisitorSession[];
+    currentPageViews: { page: string; visitors: number }[];
+  }>;
 }
 
 // Database Storage Implementation
@@ -576,6 +608,149 @@ class DatabaseStorage implements IStorage {
       .where(eq(contactMessages.id, id))
       .returning();
     return !!updated;
+  }
+
+  // Analytics Methods
+  async createVisitorSession(session: InsertVisitorSession): Promise<VisitorSession> {
+    const [newSession] = await this.db.insert(visitorSessions).values(session).returning();
+    return newSession;
+  }
+
+  async getVisitorSession(sessionId: string): Promise<VisitorSession | undefined> {
+    const [session] = await this.db.select().from(visitorSessions).where(eq(visitorSessions.sessionId, sessionId));
+    return session;
+  }
+
+  async updateVisitorSession(sessionId: string, updates: Partial<VisitorSession>): Promise<VisitorSession | undefined> {
+    const [updatedSession] = await this.db
+      .update(visitorSessions)
+      .set({ ...updates, lastActiveAt: new Date() })
+      .where(eq(visitorSessions.sessionId, sessionId))
+      .returning();
+    return updatedSession;
+  }
+
+  async getActiveVisitorSessions(): Promise<VisitorSession[]> {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    return await this.db
+      .select()
+      .from(visitorSessions)
+      .where(and(
+        eq(visitorSessions.isActive, true),
+        // Use SQL function for date comparison
+        this.db.sql`${visitorSessions.lastActiveAt} > ${thirtyMinutesAgo}`
+      ));
+  }
+
+  async createPageView(pageView: InsertPageView): Promise<PageView> {
+    const [newPageView] = await this.db.insert(pageViews).values(pageView).returning();
+    return newPageView;
+  }
+
+  async getPageViewsBySession(sessionId: string): Promise<PageView[]> {
+    return await this.db.select().from(pageViews).where(eq(pageViews.sessionId, sessionId));
+  }
+
+  async createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const [newEvent] = await this.db.insert(analyticsEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getAnalyticsOverview(days: number = 30): Promise<{
+    totalVisitors: number;
+    uniqueVisitors: number;
+    totalPageViews: number;
+    averageSessionDuration: number;
+    topPages: { page: string; views: number }[];
+    deviceBreakdown: { device: string; count: number }[];
+    visitorsByHour: { hour: number; visitors: number }[];
+  }> {
+    const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    
+    // Get basic stats
+    const totalVisitors = (await this.db
+      .select({ count: this.db.sql`count(*)` })
+      .from(visitorSessions)
+      .where(this.db.sql`${visitorSessions.createdAt} > ${daysAgo}`))[0]?.count || 0;
+
+    const totalPageViews = (await this.db
+      .select({ count: this.db.sql`count(*)` })
+      .from(pageViews)
+      .where(this.db.sql`${pageViews.createdAt} > ${daysAgo}`))[0]?.count || 0;
+
+    // Get top pages
+    const topPages = await this.db
+      .select({
+        page: pageViews.page,
+        views: this.db.sql`count(*)`
+      })
+      .from(pageViews)
+      .where(this.db.sql`${pageViews.createdAt} > ${daysAgo}`)
+      .groupBy(pageViews.page)
+      .orderBy(this.db.sql`count(*) desc`)
+      .limit(5);
+
+    // Get device breakdown
+    const deviceBreakdown = await this.db
+      .select({
+        device: visitorSessions.device,
+        count: this.db.sql`count(*)`
+      })
+      .from(visitorSessions)
+      .where(this.db.sql`${visitorSessions.createdAt} > ${daysAgo}`)
+      .groupBy(visitorSessions.device);
+
+    // Get visitors by hour (last 24 hours)
+    const visitorsByHour = await this.db
+      .select({
+        hour: this.db.sql`extract(hour from ${visitorSessions.createdAt})`,
+        visitors: this.db.sql`count(*)`
+      })
+      .from(visitorSessions)
+      .where(this.db.sql`${visitorSessions.createdAt} > now() - interval '24 hours'`)
+      .groupBy(this.db.sql`extract(hour from ${visitorSessions.createdAt})`);
+
+    return {
+      totalVisitors: parseInt(totalVisitors as string) || 0,
+      uniqueVisitors: parseInt(totalVisitors as string) || 0, // Same as total for now
+      totalPageViews: parseInt(totalPageViews as string) || 0,
+      averageSessionDuration: 0, // TODO: Calculate from page views
+      topPages: topPages.map(p => ({ page: p.page, views: parseInt(p.views as string) || 0 })),
+      deviceBreakdown: deviceBreakdown.map(d => ({ device: d.device || 'unknown', count: parseInt(d.count as string) || 0 })),
+      visitorsByHour: visitorsByHour.map(v => ({ hour: parseInt(v.hour as string) || 0, visitors: parseInt(v.visitors as string) || 0 }))
+    };
+  }
+
+  async getRealtimeVisitors(): Promise<{
+    activeVisitors: number;
+    sessionsLast30Min: VisitorSession[];
+    currentPageViews: { page: string; visitors: number }[];
+  }> {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    
+    const sessionsLast30Min = await this.db
+      .select()
+      .from(visitorSessions)
+      .where(this.db.sql`${visitorSessions.lastActiveAt} > ${thirtyMinutesAgo}`)
+      .orderBy(visitorSessions.lastActiveAt);
+
+    const currentPageViews = await this.db
+      .select({
+        page: pageViews.page,
+        visitors: this.db.sql`count(distinct ${pageViews.sessionId})`
+      })
+      .from(pageViews)
+      .where(this.db.sql`${pageViews.createdAt} > ${thirtyMinutesAgo}`)
+      .groupBy(pageViews.page);
+
+    return {
+      activeVisitors: sessionsLast30Min.length,
+      sessionsLast30Min,
+      currentPageViews: currentPageViews.map(p => ({ 
+        page: p.page, 
+        visitors: parseInt(p.visitors as string) || 0 
+      }))
+    };
   }
 }
 

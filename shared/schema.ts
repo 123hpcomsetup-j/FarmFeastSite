@@ -265,6 +265,49 @@ export const dynamicContent = pgTable("dynamic_content", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Analytics and visitor tracking tables
+export const visitorSessions = pgTable("visitor_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  fingerprint: text("fingerprint"), // browser fingerprint for tracking
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  country: text("country"),
+  city: text("city"),
+  device: text("device"), // mobile, desktop, tablet
+  browser: text("browser"),
+  os: text("os"),
+  referrer: text("referrer"),
+  landingPage: text("landing_page"),
+  isActive: boolean("is_active").default(true),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  page: text("page").notNull(),
+  url: text("url").notNull(),
+  title: text("title"),
+  timeOnPage: integer("time_on_page"), // seconds
+  scrollDepth: integer("scroll_depth"), // percentage
+  exitPage: boolean("exit_page").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  eventType: text("event_type").notNull(), // click, form_submit, scroll, download, etc.
+  eventCategory: text("event_category"), // navigation, form, social, etc.
+  eventAction: text("event_action"), // button_click, form_submit, etc.
+  eventLabel: text("event_label"), // specific element or identifier
+  value: integer("value"), // numeric value if applicable
+  metadata: json("metadata"), // additional event data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
   id: true,
   status: true,
@@ -284,6 +327,22 @@ export const insertDynamicContentSchema = createInsertSchema(dynamicContent).omi
 export const adminLoginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
+});
+
+export const insertVisitorSessionSchema = createInsertSchema(visitorSessions).omit({
+  id: true,
+  createdAt: true,
+  lastActiveAt: true,
+});
+
+export const insertPageViewSchema = createInsertSchema(pageViews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type Booking = typeof bookings.$inferSelect;
@@ -310,6 +369,12 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type DynamicContent = typeof dynamicContent.$inferSelect;
 export type InsertDynamicContent = z.infer<typeof insertDynamicContentSchema>;
+export type VisitorSession = typeof visitorSessions.$inferSelect;
+export type InsertVisitorSession = z.infer<typeof insertVisitorSessionSchema>;
+export type PageView = typeof pageViews.$inferSelect;
+export type InsertPageView = z.infer<typeof insertPageViewSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 
 // Homepage Images table
 export const homepageImages = pgTable("homepage_images", {

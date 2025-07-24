@@ -21,7 +21,10 @@ import {
   insertBlogPostSchema,
   insertHomepageImageSchema,
   insertCustomScriptSchema,
-  insertContactMessageSchema
+  insertContactMessageSchema,
+  insertVisitorSessionSchema,
+  insertPageViewSchema,
+  insertAnalyticsEventSchema
 } from "@shared/schema";
 import { hyderabadLocationKeywords, seoTemplates } from "./seoConfig";
 
@@ -2023,7 +2026,110 @@ Farm Feast Farm House Team
     }
   });
 
+  // Analytics API Routes
+  // Create a new visitor session
+  app.post("/api/analytics/session", async (req, res) => {
+    try {
+      const result = insertVisitorSessionSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid session data", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newSession = await storage.createVisitorSession(result.data);
+      res.json(newSession);
+    } catch (error) {
+      console.error("Error creating visitor session:", error);
+      res.status(500).json({ error: "Failed to create visitor session" });
+    }
+  });
 
+  // Update visitor session (activity tracking)
+  app.put("/api/analytics/session/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const updates = req.body;
+      const updatedSession = await storage.updateVisitorSession(sessionId, updates);
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating visitor session:", error);
+      res.status(500).json({ error: "Failed to update visitor session" });
+    }
+  });
+
+  // Track a page view
+  app.post("/api/analytics/pageview", async (req, res) => {
+    try {
+      const result = insertPageViewSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid page view data", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newPageView = await storage.createPageView(result.data);
+      res.json(newPageView);
+    } catch (error) {
+      console.error("Error creating page view:", error);
+      res.status(500).json({ error: "Failed to create page view" });
+    }
+  });
+
+  // Track analytics events (clicks, form submissions, etc.)
+  app.post("/api/analytics/event", async (req, res) => {
+    try {
+      const result = insertAnalyticsEventSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid analytics event data", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newEvent = await storage.createAnalyticsEvent(result.data);
+      res.json(newEvent);
+    } catch (error) {
+      console.error("Error creating analytics event:", error);
+      res.status(500).json({ error: "Failed to create analytics event" });
+    }
+  });
+
+  // Get analytics overview (admin only)
+  app.get("/api/admin/analytics/overview", requireAdmin, async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const overview = await storage.getAnalyticsOverview(days);
+      res.json(overview);
+    } catch (error) {
+      console.error("Error fetching analytics overview:", error);
+      res.status(500).json({ error: "Failed to fetch analytics overview" });
+    }
+  });
+
+  // Get real-time visitor data (admin only)
+  app.get("/api/admin/analytics/realtime", requireAdmin, async (req, res) => {
+    try {
+      const realtimeData = await storage.getRealtimeVisitors();
+      res.json(realtimeData);
+    } catch (error) {
+      console.error("Error fetching real-time analytics:", error);
+      res.status(500).json({ error: "Failed to fetch real-time analytics" });
+    }
+  });
+
+  // Get active visitor sessions (admin only)  
+  app.get("/api/admin/analytics/active-sessions", requireAdmin, async (req, res) => {
+    try {
+      const activeSessions = await storage.getActiveVisitorSessions();
+      res.json(activeSessions);
+    } catch (error) {
+      console.error("Error fetching active sessions:", error);
+      res.status(500).json({ error: "Failed to fetch active sessions" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

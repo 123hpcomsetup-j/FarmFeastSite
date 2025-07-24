@@ -18,6 +18,7 @@ import SitemapManagement from "@/components/admin/SitemapManagement";
 import SiteSettingsManagement from "@/components/admin/SiteSettingsManagement";
 import HomepageImagesManagement from "@/components/admin/HomepageImagesManagement";
 import CustomScriptsManagement from "@/components/admin/CustomScriptsManagement";
+import AnalyticsDashboard from "@/pages/admin/AnalyticsDashboard";
 import { 
   Calendar, 
   Settings, 
@@ -35,11 +36,13 @@ import {
   X,
   Home,
   TrendingUp,
-  Code
+  Code,
+  Activity
 } from "lucide-react";
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: Home },
+  { id: "analytics", label: "Analytics", icon: Activity },
   { id: "bookings", label: "Bookings", icon: Calendar },
   { id: "confirmations", label: "Confirmations", icon: CheckCircle },
   { id: "payments", label: "Payments", icon: CreditCard },
@@ -241,6 +244,8 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
+      case "analytics":
+        return <AnalyticsDashboard />;
       case "bookings":
         return <BookingsManagement />;
       case "confirmations":
