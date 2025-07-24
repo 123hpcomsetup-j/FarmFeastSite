@@ -157,12 +157,21 @@ function generateMetaTags(seoSettings: any, reviewData: any, url: string): strin
 // SEO middleware for server-side rendering
 export async function seoMiddleware(req: Request, res: Response, next: NextFunction) {
   // Only process GET requests for HTML pages
-  if (req.method !== 'GET' || req.url.startsWith('/api/') || req.url.startsWith('/src/') || req.url.startsWith('/@vite/')) {
+  if (req.method !== 'GET' || req.url.startsWith('/api/') || req.url.startsWith('/src/') || req.url.startsWith('/@vite/') || req.url.startsWith('/assets/')) {
     return next();
   }
 
   // Skip in development mode for now (Vite handles HTML serving)
   if (process.env.NODE_ENV === 'development') {
+    return next();
+  }
+
+  // Check if this is a search engine crawler or social media bot
+  const userAgent = req.get('User-Agent') || '';
+  const isCrawler = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator/i.test(userAgent);
+  
+  // Only serve server-side rendered HTML to crawlers, let regular users get the React app
+  if (!isCrawler) {
     return next();
   }
 
