@@ -44,13 +44,17 @@ export default function CustomScripts() {
       }
 
       try {
-        // Create a container div to safely parse HTML content
+        // Create a container div to safely parse HTML content using DOMParser
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(scriptConfig.script, 'text/html');
         const container = document.createElement('div');
         container.setAttribute('data-custom-script', scriptConfig.id.toString());
         container.setAttribute('data-script-name', scriptConfig.name);
         
-        // Parse the script content safely
-        container.innerHTML = scriptConfig.script;
+        // Safely move parsed nodes to container
+        Array.from(doc.body.childNodes).forEach(node => {
+          container.appendChild(node.cloneNode(true));
+        });
         console.log(`CustomScripts: Parsed HTML for "${scriptConfig.name}":`, container.childNodes.length, "nodes");
         
         // Get the target location
