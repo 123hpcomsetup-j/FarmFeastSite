@@ -327,14 +327,19 @@ const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    const hasCompletedTour = localStorage.getItem('farmhouse-tour-completed');
-    const hasVisited = localStorage.getItem('farmhouse-visited');
+    // Tour disabled to prevent popup
+    // const hasCompletedTour = localStorage.getItem('farmhouse-tour-completed');
+    // const hasVisited = localStorage.getItem('farmhouse-visited');
     
-    if (!hasVisited && !hasCompletedTour) {
-      setFirstVisit(true);
-      setShowWelcome(true);
-      localStorage.setItem('farmhouse-visited', 'true');
-    }
+    // if (!hasVisited && !hasCompletedTour) {
+    //   setFirstVisit(true);
+    //   setShowWelcome(true);
+    //   localStorage.setItem('farmhouse-visited', 'true');
+    // }
+    
+    // Mark tour as completed to prevent any tour dialogs
+    localStorage.setItem('farmhouse-tour-completed', 'true');
+    localStorage.setItem('farmhouse-visited', 'true');
   }, []);
 
   const startTour = () => {
