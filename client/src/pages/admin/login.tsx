@@ -36,8 +36,10 @@ export default function AdminLogin() {
       const response = await apiRequest("POST", "/api/admin/login", data);
       const result = await response.json();
 
-      if (result.token) {
-        localStorage.setItem("admin_token", result.token);
+      if (result.admin) {
+        // Create a simple token for session management
+        const token = `admin_${result.admin.id}_${Date.now()}`;
+        localStorage.setItem("admin_token", token);
         localStorage.setItem("admin_user", JSON.stringify(result.admin));
         
         toast({
