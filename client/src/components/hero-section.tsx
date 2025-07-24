@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Calendar, MessageCircle, MapPin, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import ImageOptimized from "./ImageOptimized";
 import type { GalleryImage, SiteSettings } from "@shared/schema";
 
 export default function HeroSection() {
@@ -81,10 +82,13 @@ export default function HeroSection() {
           </div>
           
           <div className="relative">
-            <img
-              src={heroImage?.url || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"}
-              alt={heroImage?.alt || "Beautiful farmhouse exterior with green landscaping"}
+            <ImageOptimized
+              src={heroImage?.source === 'url' ? heroImage.url || '/api/placeholder/800/600' : heroImage?.filename ? `/uploads/${heroImage.filename}` : '/api/placeholder/800/600'}
+              alt={heroImage?.alt || "Farm Feast Farm House - Luxury Farmhouse"}
               className="rounded-2xl shadow-2xl w-full h-96 object-cover"
+              width={800}
+              height={384}
+              priority={true}
             />
             
             {/* Quick stats overlay - Dynamic from admin settings */}
