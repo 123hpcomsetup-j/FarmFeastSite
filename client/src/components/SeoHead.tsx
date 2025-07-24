@@ -16,6 +16,8 @@ interface ReviewData {
   averageRating?: number;
   businessName?: string;
   ratingScale?: number;
+  reviewsEnabled?: boolean;
+  showInSnippets?: boolean;
 }
 
 interface SeoSettings {
@@ -126,7 +128,7 @@ export default function SeoHead({
     if (reviewData?.enabled && reviewData.reviewCount && reviewData.reviewCount > 0) {
       metaTags.push(
         { name: 'rating', content: reviewData.averageRating?.toString() || '0' },
-        { name: 'review_count', content: reviewData.reviewCount.toString() },
+        { name: 'review_count', content: reviewData.reviewCount?.toString() || '0' },
       );
     }
 
@@ -161,9 +163,9 @@ export default function SeoHead({
         },
         "aggregateRating": {
           "@type": "AggregateRating",
-          "ratingValue": parseFloat(reviewData.averageRating),
-          "reviewCount": reviewData.reviewCount,
-          "bestRating": parseInt(reviewData.ratingScale) || 5,
+          "ratingValue": parseFloat((reviewData.averageRating || 0).toString()),
+          "reviewCount": reviewData.reviewCount || 0,
+          "bestRating": parseInt((reviewData.ratingScale || 5).toString()),
           "worstRating": 1
         },
         "review": [

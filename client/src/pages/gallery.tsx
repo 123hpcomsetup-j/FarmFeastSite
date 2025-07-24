@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import SeoHead from "@/components/SeoHead";
+import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
@@ -72,6 +74,10 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead 
+        title="Farmhouse Gallery | Luxury Accommodation Photos in Keesara, Hyderabad"
+        description="Explore our beautiful farmhouse gallery showcasing luxury rooms, swimming pool, gardens, and amenities. Located in Keesara, Hyderabad with stunning views and modern facilities for perfect weekend getaways."
+      />
       <Navbar />
       <main>
         {/* Header Section */}
@@ -182,6 +188,8 @@ export default function Gallery() {
             </div>
           </div>
         )}
+        
+        <LocationSeoContent page="gallery" showNearbyLocations={true} showKeywordTags={false} />
       </main>
       <Footer />
     </div>

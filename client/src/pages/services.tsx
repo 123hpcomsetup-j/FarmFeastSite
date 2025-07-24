@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import type { Service } from "@shared/schema";
+import SeoHead from "@/components/SeoHead";
+import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Services() {
   const { data: services, isLoading } = useQuery<Service[]>({
@@ -28,6 +30,10 @@ export default function Services() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead 
+        title="Farmhouse Services in Hyderabad | Corporate Events & Family Stays"
+        description="Comprehensive farmhouse rental services in Hyderabad including luxury accommodation, corporate event hosting, birthday parties, and family vacations. Located in Keesara with easy access from Hitech City, Gachibowli, and all major Hyderabad areas."
+      />
       <Navbar />
       <main>
         {/* Header Section */}
@@ -140,6 +146,8 @@ export default function Services() {
             </div>
           </div>
         </section>
+        
+        <LocationSeoContent page="services" showNearbyLocations={true} showKeywordTags={false} />
       </main>
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import GallerySection from "@/components/gallery-section";
 import ContactSection from "@/components/contact-section";
 import MapComponent from "@/components/MapComponent";
 import SeoHead from "@/components/SeoHead";
+import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Home() {
   return (
@@ -31,6 +32,7 @@ export default function Home() {
             <MapComponent />
           </div>
         </section>
+        <LocationSeoContent page="home" showNearbyLocations={true} showKeywordTags={true} />
         <ContactSection />
       </main>
       <Footer />
