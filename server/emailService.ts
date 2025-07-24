@@ -1,16 +1,36 @@
+import nodemailer from 'nodemailer';
+
 interface EmailOptions {
   to: string;
   subject: string;
   html: string;
 }
 
+// Create Gmail transporter
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'info@farmfeastfarmhouse.shop',
+      pass: 'snxz naab kfcb rrmu'
+    }
+  });
+};
+
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
-    console.log(`📧 Email notification: ${options.subject} to ${options.to}`);
-    console.log(`📧 Content: ${options.html.replace(/<[^>]*>/g, '').substring(0, 200)}...`);
+    const transporter = createTransporter();
     
-    // In a real implementation, this would use SendGrid or another email service
-    // For now, we'll just log the email notification
+    const mailOptions = {
+      from: '"Farm Feast Farm House" <info@farmfeastfarmhouse.shop>',
+      to: options.to,
+      subject: options.subject,
+      html: options.html
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent successfully to ${options.to}: ${options.subject}`);
+    console.log(`Message ID: ${result.messageId}`);
     return true;
   } catch (error) {
     console.error("Failed to send email:", error);
