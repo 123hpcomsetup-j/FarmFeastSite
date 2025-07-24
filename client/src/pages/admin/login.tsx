@@ -41,18 +41,28 @@ export default function AdminLogin() {
         localStorage.setItem("admin_token", result.token);
         localStorage.setItem("admin_user", JSON.stringify(result.admin));
         
+        console.log("Login successful, token stored:", result.token.substring(0, 20) + "...");
+        
         toast({
           title: "Login Successful",
           description: "Welcome to the admin panel!",
         });
 
         setLocation("/admin/dashboard");
+      } else {
+        console.error("Login response missing admin or token:", result);
+        toast({
+          title: "Login Failed",
+          description: "Invalid response from server",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error("Login error:", error);
+      console.error("Error details:", error.message, error.stack);
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid credentials",
+        description: error.message || "Invalid credentials. Please check username and password.",
         variant: "destructive",
       });
     } finally {

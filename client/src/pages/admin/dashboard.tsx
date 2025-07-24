@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { getAdminQueryFn } from "@/lib/queryClient";
 import BookingsManagement from "@/components/admin/BookingsManagement";
 import ServicesManagement from "@/components/admin/ServicesManagement";
 import CouponsManagement from "@/components/admin/CouponsManagement";
@@ -80,11 +81,12 @@ export default function AdminDashboard() {
 
   const { data: bookings = [] } = useQuery({
     queryKey: ["/api/admin/bookings"],
+    queryFn: getAdminQueryFn,
     enabled: !!adminUser,
   });
 
   const { data: services = [] } = useQuery({
-    queryKey: ["/api/admin/services"],
+    queryKey: ["/api/services"],
     enabled: !!adminUser,
   });
 
