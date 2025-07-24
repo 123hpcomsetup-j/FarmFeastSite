@@ -229,6 +229,19 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
   viewCount: true,
 });
 
+// Dynamic content management for all static text
+export const dynamicContent = pgTable("dynamic_content", {
+  id: serial("id").primaryKey(),
+  identifier: text("identifier").notNull().unique(), // unique identifier like "hero_title", "services_subtitle"
+  content: text("content").notNull(),
+  contentType: text("content_type").default("text"), // text, html, markdown
+  description: text("description"), // admin description of what this content is for
+  category: text("category").default("general"), // general, hero, services, gallery, footer, etc.
+  page: text("page").default("home"), // home, services, gallery, about, etc.
+  editable: boolean("editable").default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
   id: true,
   status: true,
@@ -236,6 +249,11 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).om
   replyMessage: true,
   repliedAt: true,
   createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDynamicContentSchema = createInsertSchema(dynamicContent).omit({
+  id: true,
   updatedAt: true,
 });
 
@@ -267,6 +285,8 @@ export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type DynamicContent = typeof dynamicContent.$inferSelect;
+export type InsertDynamicContent = z.infer<typeof insertDynamicContentSchema>;
 
 // Homepage Images table
 export const homepageImages = pgTable("homepage_images", {
