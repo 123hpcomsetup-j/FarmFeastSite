@@ -53,22 +53,22 @@ export default function MapComponent() {
   const locationData = getLocationData();
   const mapUrls = getMapUrls();
 
-  // Get user's current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.log("Location access denied:", error);
-        }
-      );
-    }
-  }, []);
+  // User location disabled to prevent popup
+  // useEffect(() => {
+  //   if (navigator.geolocation) {
+  //     navigator.geolocation.getCurrentPosition(
+  //       (position) => {
+  //         setUserLocation({
+  //           lat: position.coords.latitude,
+  //           lng: position.coords.longitude
+  //         });
+  //       },
+  //       (error) => {
+  //         console.log("Location access denied:", error);
+  //       }
+  //     );
+  //   }
+  // }, []);
 
   const openInGoogleMaps = () => {
     window.open(mapUrls.placeUrl, '_blank');
@@ -146,14 +146,7 @@ export default function MapComponent() {
             )}
           </div>
 
-          {/* Distance Information */}
-          {userLocation && (
-            <div className="bg-green-50 p-3 rounded-lg">
-              <p className="text-sm text-green-800">
-                📍 We've detected your location and can provide personalized directions
-              </p>
-            </div>
-          )}
+          {/* Distance Information - Removed to prevent location popup */}
         </CardContent>
       </Card>
 
