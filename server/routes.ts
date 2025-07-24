@@ -611,11 +611,12 @@ Farm Feast Farm House Team
       try {
         const siteSettings = await storage.getAllSiteSettings();
         if (verified) {
-          await sendEmail(
-            updatedBooking.email,
-            "Payment Confirmed - Farm Feast Farm House",
-            generateAdminPaymentConfirmationEmail(updatedBooking, siteSettings)
-          );
+          const emailContent = await generateAdminPaymentConfirmationEmail(updatedBooking);
+          await sendEmail({
+            to: updatedBooking.email,
+            subject: "Payment Confirmed - Farm Feast Farm House",
+            html: emailContent
+          });
         }
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
@@ -814,13 +815,12 @@ Farm Feast Farm House Team
           reviewTitle: `Best Farm House for Rent in ${page === 'home' ? 'Keesara, Hyderabad' : 'Hyderabad'}`,
           reviewDescription: `Highly rated farmhouse rental in Keesara, Hyderabad with excellent reviews from families and corporate guests.`,
           reviewKeywords: 'best farmhouse hyderabad, top rated farm house, luxury accommodation keesara',
-          createdAt: new Date(),
           updatedAt: new Date()
         };
       }
       
       // Enhance existing settings with location keywords if missing
-      if (settings && !settings.keywords.includes('hyderabad')) {
+      if (settings && settings.keywords && !settings.keywords.includes('hyderabad')) {
         const locationKeywords = hyderabadLocationKeywords.slice(0, 8).join(', ');
         settings.keywords = `${settings.keywords}, ${locationKeywords}`;
       }
@@ -2101,7 +2101,9 @@ Farm Feast Farm House Team
   app.get("/api/admin/analytics/overview", requireAdmin, async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 30;
+      console.log("Fetching analytics overview for", days, "days");
       const overview = await storage.getAnalyticsOverview(days);
+      console.log("Analytics overview result:", overview);
       res.json(overview);
     } catch (error) {
       console.error("Error fetching analytics overview:", error);
@@ -2112,7 +2114,9 @@ Farm Feast Farm House Team
   // Get real-time visitor data (admin only)
   app.get("/api/admin/analytics/realtime", requireAdmin, async (req, res) => {
     try {
+      console.log("Fetching real-time analytics data");
       const realtimeData = await storage.getRealtimeVisitors();
+      console.log("Real-time analytics result:", realtimeData);
       res.json(realtimeData);
     } catch (error) {
       console.error("Error fetching real-time analytics:", error);
@@ -2128,6 +2132,24 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error fetching active sessions:", error);
       res.status(500).json({ error: "Failed to fetch active sessions" });
+    }
+  });
+
+  // Test analytics database connection (public for testing)
+  app.get("/api/analytics/test", async (req, res) => {
+    try {
+      const testData = {
+        totalSessions: await storage.db.select({ count: storage.db.sql`count(*)` }).from(visitorSessions),
+        totalPageViews: await storage.db.select({ count: storage.db.sql`count(*)` }).from(pageViews),
+        recentSessions: await storage.db.select().from(visitorSessions).limit(5).orderBy(visitorSessions.createdAt),
+      };
+      res.json({
+        message: "Analytics database connection working",
+        data: testData
+      });
+    } catch (error) {
+      console.error("Analytics test error:", error);
+      res.status(500).json({ error: "Database connection failed", details: error.message });
     }
   });
 

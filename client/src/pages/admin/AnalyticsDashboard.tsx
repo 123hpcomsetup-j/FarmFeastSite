@@ -62,35 +62,53 @@ export default function AnalyticsDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Analytics overview query
-  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useQuery<AnalyticsOverview>({
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, error: overviewError } = useQuery<AnalyticsOverview>({
     queryKey: ['/api/admin/analytics/overview', timeRange],
     queryFn: async () => {
       const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       const response = await fetch(`/api/admin/analytics/overview?days=${timeRange}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch analytics overview');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication expired');
+        }
+        throw new Error('Failed to fetch analytics overview');
+      }
       return response.json();
     },
     refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
+    retry: 1, // Reduce retries for faster error detection
   });
 
   // Real-time data query
-  const { data: realtime, isLoading: realtimeLoading, refetch: refetchRealtime } = useQuery<RealtimeData>({
+  const { data: realtime, isLoading: realtimeLoading, refetch: refetchRealtime, error: realtimeError } = useQuery<RealtimeData>({
     queryKey: ['/api/admin/analytics/realtime'],
     queryFn: async () => {
       const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       const response = await fetch('/api/admin/analytics/realtime', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch real-time analytics');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication expired');
+        }
+        throw new Error('Failed to fetch real-time analytics');
+      }
       return response.json();
     },
     refetchInterval: autoRefresh ? 10000 : false, // Refresh every 10 seconds
+    retry: 1, // Reduce retries for faster error detection
   });
 
   const handleRefresh = () => {
@@ -98,7 +116,7 @@ export default function AnalyticsDashboard() {
     refetchRealtime();
   };
 
-  if (overviewLoading) {
+  if (overviewLoading && realtimeLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
@@ -109,6 +127,28 @@ export default function AnalyticsDashboard() {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Handle authentication errors
+  if (overviewError?.message.includes('Authentication') || realtimeError?.message.includes('Authentication')) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-red-600">Authentication Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Your session has expired. Please refresh the page and log in again.</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Refresh Page
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -715,9 +715,9 @@ class DatabaseStorage implements IStorage {
       uniqueVisitors: parseInt(totalVisitors as string) || 0, // Same as total for now
       totalPageViews: parseInt(totalPageViews as string) || 0,
       averageSessionDuration: 0, // TODO: Calculate from page views
-      topPages: topPages.map(p => ({ page: p.page, views: parseInt(p.views as string) || 0 })),
-      deviceBreakdown: deviceBreakdown.map(d => ({ device: d.device || 'unknown', count: parseInt(d.count as string) || 0 })),
-      visitorsByHour: visitorsByHour.map(v => ({ hour: parseInt(v.hour as string) || 0, visitors: parseInt(v.visitors as string) || 0 }))
+      topPages: topPages.map((p: any) => ({ page: p.page, views: parseInt(p.views as string) || 0 })),
+      deviceBreakdown: deviceBreakdown.map((d: any) => ({ device: d.device || 'unknown', count: parseInt(d.count as string) || 0 })),
+      visitorsByHour: visitorsByHour.map((v: any) => ({ hour: parseInt(v.hour as string) || 0, visitors: parseInt(v.visitors as string) || 0 }))
     };
   }
 
@@ -746,7 +746,7 @@ class DatabaseStorage implements IStorage {
     return {
       activeVisitors: sessionsLast30Min.length,
       sessionsLast30Min,
-      currentPageViews: currentPageViews.map(p => ({ 
+      currentPageViews: currentPageViews.map((p: any) => ({ 
         page: p.page, 
         visitors: parseInt(p.visitors as string) || 0 
       }))
