@@ -8,13 +8,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Eye, Download, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, Download, RefreshCw, Trash2, Plus } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function BookingsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newBooking, setNewBooking] = useState({
+    fullName: '',
+    email: '',
+    contactNumber: '',
+    checkinDate: '',
+    checkoutDate: '',
+    guestCount: 1,
+    finalTotal: 0,
+    address: '',
+    notes: ''
+  });
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["/api/admin/bookings"],
@@ -60,6 +76,42 @@ export default function BookingsManagement() {
       });
     },
   });
+
+  const createBookingMutation = useMutation({
+    mutationFn: async (bookingData: any) => {
+      return apiRequest("POST", "/api/admin/bookings", bookingData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+      setShowCreateDialog(false);
+      setNewBooking({
+        fullName: '',
+        email: '',
+        contactNumber: '',
+        checkinDate: '',
+        checkoutDate: '',
+        guestCount: 1,
+        finalTotal: 0,
+        address: '',
+        notes: ''
+      });
+      toast({
+        title: "Success",
+        description: "Booking created successfully. Email sent to customer.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create booking",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateBooking = () => {
+    createBookingMutation.mutate(newBooking);
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -137,10 +189,142 @@ export default function BookingsManagement() {
           <h2 className="text-2xl font-bold text-gray-900">Bookings Management</h2>
           <p className="text-gray-600">Manage all farmhouse bookings and reservations</p>
         </div>
-        <Button onClick={exportBookings} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Booking
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create External Booking</DialogTitle>
+                <DialogDescription>
+                  Create a booking on behalf of a customer. They will receive an email with payment instructions.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Input
+                    id="fullName"
+                    value={newBooking.fullName}
+                    onChange={(e) => setNewBooking({...newBooking, fullName: e.target.value})}
+                    placeholder="Customer's full name"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newBooking.email}
+                    onChange={(e) => setNewBooking({...newBooking, email: e.target.value})}
+                    placeholder="customer@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="contactNumber">Contact Number *</Label>
+                  <Input
+                    id="contactNumber"
+                    value={newBooking.contactNumber}
+                    onChange={(e) => setNewBooking({...newBooking, contactNumber: e.target.value})}
+                    placeholder="+91 9876543210"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="guestCount">Number of Guests</Label>
+                  <Input
+                    id="guestCount"
+                    type="number"
+                    min="1"
+                    value={newBooking.guestCount}
+                    onChange={(e) => setNewBooking({...newBooking, guestCount: parseInt(e.target.value) || 1})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="checkinDate">Check-in Date *</Label>
+                  <Input
+                    id="checkinDate"
+                    type="date"
+                    value={newBooking.checkinDate}
+                    onChange={(e) => setNewBooking({...newBooking, checkinDate: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="checkoutDate">Check-out Date *</Label>
+                  <Input
+                    id="checkoutDate"
+                    type="date"
+                    value={newBooking.checkoutDate}
+                    onChange={(e) => setNewBooking({...newBooking, checkoutDate: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="finalTotal">Total Amount (₹) *</Label>
+                  <Input
+                    id="finalTotal"
+                    type="number"
+                    min="0"
+                    value={newBooking.finalTotal}
+                    onChange={(e) => setNewBooking({...newBooking, finalTotal: parseInt(e.target.value) || 0})}
+                    placeholder="10000"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={newBooking.address}
+                    onChange={(e) => setNewBooking({...newBooking, address: e.target.value})}
+                    placeholder="Customer's address"
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="notes">Special Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={newBooking.notes}
+                    onChange={(e) => setNewBooking({...newBooking, notes: e.target.value})}
+                    placeholder="Any special requirements or notes"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCreateDialog(false)}
+                  disabled={createBookingMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateBooking}
+                  disabled={createBookingMutation.isPending || !newBooking.fullName || !newBooking.email || !newBooking.contactNumber}
+                >
+                  {createBookingMutation.isPending ? 'Creating...' : 'Create Booking'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button onClick={exportBookings} variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <Card>
