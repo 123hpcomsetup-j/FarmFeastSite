@@ -42,13 +42,7 @@ export default function SiteSettingsManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: SiteSettingsForm) => {
-      return apiRequest("/api/admin/site-settings", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("POST", "/api/admin/site-settings", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
@@ -67,13 +61,7 @@ export default function SiteSettingsManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: SiteSettingsForm }) => {
-      return apiRequest(`/api/admin/site-settings/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("PUT", `/api/admin/site-settings/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });

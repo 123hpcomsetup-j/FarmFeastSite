@@ -668,6 +668,18 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async updateSiteSettings(id: number, setting: Partial<InsertSiteSettings>): Promise<SiteSettings | undefined> {
+    const index = this.siteSettings.findIndex(s => s.id === id);
+    if (index === -1) return undefined;
+    
+    this.siteSettings[index] = { 
+      ...this.siteSettings[index], 
+      ...setting, 
+      updatedAt: new Date() 
+    };
+    return this.siteSettings[index];
+  }
+
   // Amenity methods
   async getAllAmenities(): Promise<Amenity[]> {
     return [...this.amenities];
