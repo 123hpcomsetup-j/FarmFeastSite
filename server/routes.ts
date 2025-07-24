@@ -526,6 +526,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/seo/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertSeoSettingsSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid SEO data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const settings = await storage.updateSeoSettings(id, result.data);
+      if (!settings) {
+        return res.status(404).json({ message: "SEO settings not found" });
+      }
+
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating SEO settings:", error);
+      res.status(500).json({ message: "Failed to update SEO settings" });
+    }
+  });
+
   // Review settings
   app.get("/api/reviews/seo", async (req, res) => {
     try {
