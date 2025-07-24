@@ -137,6 +137,7 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Bcrypt Security**: Password properly hashed using bcrypt with salt rounds for maximum security
 - **Code Review**: Eliminated hardcoded credentials from both backup storage (storage-backup.ts) and main storage (storage-old.ts)
 - **Production Security**: Admin authentication now follows security best practices with no credentials exposed in source code
+- **Custom Admin Credentials**: Updated to user-specified credentials (username: jishanth, password: Abhi@1431) with proper JWT authentication system
 
 ### Database Migration from Memory to Persistent Storage (COMPLETED)
 - **Fully Database-Driven**: Complete migration from MemStorage to DatabaseStorage with 12 active PostgreSQL tables
