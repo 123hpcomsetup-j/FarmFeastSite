@@ -72,8 +72,8 @@ export default function SeoHead({
   });
 
   // Use SEO settings from database if available, otherwise fall back to props
-  const title = seoSettings?.title || propTitle || "Farm Feast Farm House - Luxury Farmhouse Rental";
-  const description = seoSettings?.description || propDescription || "Experience luxury at Farm Feast Farm House. Book your perfect getaway with premium amenities and beautiful natural surroundings.";
+  const title = seoSettings?.title || propTitle || "FarmFeast Farmhouse – Nature Stay & Events in Keesara";
+  const description = seoSettings?.description || propDescription || "Escape to FarmFeast Farmhouse in Keesara. Enjoy farm stays, events, and nature near Hyderabad — perfect for families, friends, and celebrations.";
   const image = seoSettings?.ogImage || propImage || "/api/placeholder/1200/630";
   const keywords = seoSettings?.keywords || 'farmhouse rental, luxury accommodation, farm stay, vacation rental, peaceful getaway, family vacation';
   const robots = seoSettings?.noindex ? 'noindex' : 'index, follow';
