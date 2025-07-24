@@ -17,6 +17,7 @@ import PaymentManagement from "@/components/admin/PaymentManagement";
 import SitemapManagement from "@/components/admin/SitemapManagement";
 import SiteSettingsManagement from "@/components/admin/SiteSettingsManagement";
 import HomepageImagesManagement from "@/components/admin/HomepageImagesManagement";
+import CustomScriptsManagement from "@/components/admin/CustomScriptsManagement";
 import { 
   Calendar, 
   Settings, 
@@ -33,7 +34,8 @@ import {
   Menu,
   X,
   Home,
-  TrendingUp
+  TrendingUp,
+  Code
 } from "lucide-react";
 
 const menuItems = [
@@ -51,6 +53,7 @@ const menuItems = [
   { id: "reviews", label: "Reviews", icon: BarChart3 },
   { id: "sitemap", label: "Sitemap", icon: Globe },
   { id: "settings", label: "Site Settings", icon: Settings },
+  { id: "custom-scripts", label: "Custom Scripts", icon: Code },
 ];
 
 export default function AdminDashboard() {
@@ -264,6 +267,8 @@ export default function AdminDashboard() {
         return <SitemapManagement />;
       case "settings":
         return <SiteSettingsManagement />;
+      case "custom-scripts":
+        return <CustomScriptsManagement />;
       default:
         return <div>Select a tab to view content</div>;
     }
