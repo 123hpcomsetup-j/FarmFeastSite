@@ -68,7 +68,7 @@ export const adminUsers = pgTable("admin_users", {
 // SEO settings table
 export const seoSettings = pgTable("seo_settings", {
   id: serial("id").primaryKey(),
-  page: text("page").notNull().unique(), // home, services, gallery, booking
+  page: text("page").notNull().unique(), // home, services, gallery, booking, privacy-policy, terms-conditions, etc.
   title: text("title").notNull(),
   description: text("description").notNull(),
   keywords: text("keywords"),
@@ -76,6 +76,12 @@ export const seoSettings = pgTable("seo_settings", {
   ogDescription: text("og_description"),
   ogImage: text("og_image"),
   canonicalUrl: text("canonical_url"),
+  schemaType: text("schema_type").default("WebPage"), // WebPage, Article, Service, LodgingBusiness
+  schemaData: json("schema_data").$type<Record<string, any>>(),
+  priority: integer("priority").default(50), // 0-100 priority scale
+  changeFreq: text("change_freq").default("monthly"),
+  noindex: boolean("noindex").default(false),
+  nofollow: boolean("nofollow").default(false),
   score: integer("score").default(0),
   ranking: integer("ranking").default(0),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -179,7 +185,6 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 
 export const insertSeoSettingsSchema = createInsertSchema(seoSettings).omit({
   id: true,
-  updatedAt: true,
 });
 
 export const insertReviewSettingsSchema = createInsertSchema(reviewSettings).omit({
