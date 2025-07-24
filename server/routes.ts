@@ -2,6 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import bcrypt from "bcrypt";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { sendEmail, generateConfirmationEmail, generateCancellationEmail } from "./emailService";
 import { 
@@ -17,9 +20,43 @@ import {
   insertBlogPostSchema
 } from "@shared/schema";
 
+// Configure multer for file uploads
+const storage_multer = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'uploads';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ 
+  storage: storage_multer,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  
+  // Serve uploaded files
+  app.use('/uploads', express.static('uploads'));
 
   // Get all services
   app.get("/api/services", async (req, res) => {
@@ -527,21 +564,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/gallery", requireAdmin, async (req, res) => {
+  app.post("/api/admin/gallery", requireAdmin, upload.single('image'), async (req, res) => {
     try {
-      const result = insertGalleryImageSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid gallery data", 
-          errors: result.error.issues 
-        });
+      if (!req.file) {
+        return res.status(400).json({ message: "Image file is required" });
       }
 
-      const image = await storage.createGalleryImage(result.data);
+      const imageData = {
+        title: req.body.title || req.file.originalname,
+        description: req.body.description || '',
+        url: `/uploads/${req.file.filename}`,
+        category: req.body.category || 'general',
+        filename: req.file.filename,
+        alt: req.body.title || req.file.originalname,
+        order: parseInt(req.body.order) || 1,
+        active: true
+      };
+
+      const image = await storage.createGalleryImage(imageData);
       res.status(201).json(image);
     } catch (error) {
-      console.error("Error creating gallery image:", error);
-      res.status(500).json({ message: "Failed to create gallery image" });
+      console.error("Error uploading image:", error);
+      res.status(500).json({ message: "Failed to upload image" });
     }
   });
 

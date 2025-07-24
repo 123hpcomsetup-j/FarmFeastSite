@@ -29,11 +29,10 @@ export default function GalleryManagement() {
   });
 
   const form = useForm<GalleryImageForm>({
-    resolver: zodResolver(insertGalleryImageSchema),
+    resolver: zodResolver(insertGalleryImageSchema.omit({ url: true, filename: true, alt: true, order: true, active: true, uploadedAt: true })),
     defaultValues: {
       title: "",
       description: "",
-      url: "",
       category: "exterior",
     },
   });
