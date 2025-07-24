@@ -3,6 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Farm Feast Farm House - Luxury Farmhouse Booking</title>
+    
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//api.farmfeastfarmhouse.co.in">
+    
+    <!-- Critical CSS inline for faster render -->
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; }
+      .loader { display: flex; justify-content: center; align-items: center; height: 100vh; }
+      .spinner { width: 2rem; height: 2rem; border: 2px solid #e5e5e5; border-top: 2px solid #22c55e; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -1,55 +1,138 @@
 import { Switch, Route } from "wouter";
+import { lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TourProvider from "@/components/tour/TourProvider";
 import SeoHead from "@/components/SeoHead";
-import Home from "@/pages/home";
-import Services from "@/pages/services";
-import Gallery from "@/pages/gallery";
-import Location from "@/pages/location";
-import Blog from "@/pages/blog";
-import BlogPost from "@/pages/blog-post";
-import Booking from "@/pages/booking";
-import Payment from "@/pages/payment";
-import PaymentSuccess from "@/pages/payment-success";
-import BookingConfirmation from "@/pages/booking-confirmation";
-import Contact from "@/pages/Contact";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsConditions from "@/pages/terms-conditions";
-import CookiePolicy from "@/pages/cookie-policy";
-import DataProcessing from "@/pages/data-processing";
-import NotFoundChecker from "@/pages/404-checker";
-import AdminLogin from "@/pages/admin/login";
-import AdminDashboard from "@/pages/admin/dashboard";
-import NotFound from "@/pages/not-found";
 import CookieConsent from "@/components/CookieConsent";
 import CustomScripts from "@/components/CustomScripts";
+import ResourcePreloader from "@/components/ResourcePreloader";
+import PreloadFonts from "@/components/PreloadFonts";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+
+// Import critical pages normally, lazy load secondary pages
+import Home from "@/pages/home";
+import Services from "@/pages/services";
+import Booking from "@/pages/booking";
+
+// Lazy load secondary pages for better performance
+const Gallery = lazy(() => import("@/pages/gallery"));
+const Location = lazy(() => import("@/pages/location"));
+const Blog = lazy(() => import("@/pages/blog"));
+const BlogPost = lazy(() => import("@/pages/blog-post"));
+const Payment = lazy(() => import("@/pages/payment"));
+const PaymentSuccess = lazy(() => import("@/pages/payment-success"));
+const BookingConfirmation = lazy(() => import("@/pages/booking-confirmation"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const TermsConditions = lazy(() => import("@/pages/terms-conditions"));
+const CookiePolicy = lazy(() => import("@/pages/cookie-policy"));
+const DataProcessing = lazy(() => import("@/pages/data-processing"));
+const NotFoundChecker = lazy(() => import("@/pages/404-checker"));
+const AdminLogin = lazy(() => import("@/pages/admin/login"));
+const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+// Loading component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
-      <Route path="/gallery" component={Gallery} />
-      <Route path="/blog" component={Blog} />
-      <Route path="/blog/:slug" component={BlogPost} />
-      <Route path="/location" component={Location} />
-      <Route path="/contact" component={Contact} />
       <Route path="/booking" component={Booking} />
-      <Route path="/payment" component={Payment} />
-      <Route path="/payment-success" component={PaymentSuccess} />
-      <Route path="/booking-confirmation" component={BookingConfirmation} />
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/terms-conditions" component={TermsConditions} />
-      <Route path="/cookie-policy" component={CookiePolicy} />
-      <Route path="/data-processing" component={DataProcessing} />
-      <Route path="/404-checker" component={NotFoundChecker} />
-      <Route path="/admin" component={AdminLogin} />
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
-      <Route component={NotFound} />
+      <Route path="/gallery">
+        <Suspense fallback={<PageLoader />}>
+          <Gallery />
+        </Suspense>
+      </Route>
+      <Route path="/blog">
+        <Suspense fallback={<PageLoader />}>
+          <Blog />
+        </Suspense>
+      </Route>
+      <Route path="/blog/:slug">
+        <Suspense fallback={<PageLoader />}>
+          <BlogPost />
+        </Suspense>
+      </Route>
+      <Route path="/location">
+        <Suspense fallback={<PageLoader />}>
+          <Location />
+        </Suspense>
+      </Route>
+      <Route path="/contact">
+        <Suspense fallback={<PageLoader />}>
+          <Contact />
+        </Suspense>
+      </Route>
+      <Route path="/payment">
+        <Suspense fallback={<PageLoader />}>
+          <Payment />
+        </Suspense>
+      </Route>
+      <Route path="/payment-success">
+        <Suspense fallback={<PageLoader />}>
+          <PaymentSuccess />
+        </Suspense>
+      </Route>
+      <Route path="/booking-confirmation">
+        <Suspense fallback={<PageLoader />}>
+          <BookingConfirmation />
+        </Suspense>
+      </Route>
+      <Route path="/privacy-policy">
+        <Suspense fallback={<PageLoader />}>
+          <PrivacyPolicy />
+        </Suspense>
+      </Route>
+      <Route path="/terms-conditions">
+        <Suspense fallback={<PageLoader />}>
+          <TermsConditions />
+        </Suspense>
+      </Route>
+      <Route path="/cookie-policy">
+        <Suspense fallback={<PageLoader />}>
+          <CookiePolicy />
+        </Suspense>
+      </Route>
+      <Route path="/data-processing">
+        <Suspense fallback={<PageLoader />}>
+          <DataProcessing />
+        </Suspense>
+      </Route>
+      <Route path="/404-checker">
+        <Suspense fallback={<PageLoader />}>
+          <NotFoundChecker />
+        </Suspense>
+      </Route>
+      <Route path="/admin">
+        <Suspense fallback={<PageLoader />}>
+          <AdminLogin />
+        </Suspense>
+      </Route>
+      <Route path="/admin/login">
+        <Suspense fallback={<PageLoader />}>
+          <AdminLogin />
+        </Suspense>
+      </Route>
+      <Route path="/admin/dashboard">
+        <Suspense fallback={<PageLoader />}>
+          <AdminDashboard />
+        </Suspense>
+      </Route>
+      <Route>
+        <Suspense fallback={<PageLoader />}>
+          <NotFound />
+        </Suspense>
+      </Route>
     </Switch>
   );
 }
@@ -60,6 +143,9 @@ function App() {
       <TooltipProvider>
         <TourProvider>
           <SeoHead />
+          <PreloadFonts />
+          <ResourcePreloader />
+          <ServiceWorkerRegistration />
           <CustomScripts />
           <Toaster />
           <Router />

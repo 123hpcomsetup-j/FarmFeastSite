@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import ImageOptimized from "./ImageOptimized";
 import type { GalleryImage } from "@shared/schema";
 
 export default function GallerySection() {
@@ -63,14 +64,20 @@ export default function GallerySection() {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayImages.map((image, index) => (
-            <img
-              key={index}
-              src={image.url}
-              alt={image.alt}
-              className="gallery-image rounded-xl shadow-lg w-full h-64 object-cover cursor-pointer hover:shadow-xl transition-all duration-300"
-            />
-          ))}
+          {displayImages.map((image, index) => {
+            const imageSrc = (image as any).source === 'url' ? (image as any).url : (image as any).filename ? `/uploads/${(image as any).filename}` : (image as any).url;
+            return (
+              <ImageOptimized
+                key={index}
+                src={imageSrc}
+                alt={(image as any).alt}
+                className="gallery-image rounded-xl shadow-lg w-full h-64 object-cover cursor-pointer hover:shadow-xl transition-all duration-300"
+                width={500}
+                height={256}
+                priority={index < 3}
+              />
+            );
+          })}
         </div>
         
         <div className="text-center mt-8">
