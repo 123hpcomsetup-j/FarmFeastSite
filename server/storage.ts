@@ -10,6 +10,7 @@ import {
   amenities,
   blogPosts,
   homepageImages,
+  customScripts,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -31,7 +32,9 @@ import {
   type BlogPost,
   type InsertBlogPost,
   type HomepageImage,
-  type InsertHomepageImage
+  type InsertHomepageImage,
+  type CustomScript,
+  type InsertCustomScript
 } from "@shared/schema";
 
 export interface IStorage {
@@ -106,6 +109,14 @@ export interface IStorage {
   createHomepageImage(image: InsertHomepageImage): Promise<HomepageImage>;
   updateHomepageImage(id: number, image: Partial<InsertHomepageImage>): Promise<HomepageImage | undefined>;
   deleteHomepageImage(id: number): Promise<boolean>;
+
+  // Custom Scripts
+  getAllCustomScripts(): Promise<CustomScript[]>;
+  getCustomScriptById(id: number): Promise<CustomScript | undefined>;
+  createCustomScript(script: InsertCustomScript): Promise<CustomScript>;
+  updateCustomScript(id: number, script: Partial<InsertCustomScript>): Promise<CustomScript | undefined>;
+  deleteCustomScript(id: number): Promise<boolean>;
+  getActiveCustomScripts(): Promise<CustomScript[]>;
 }
 
 // Database Storage Implementation
@@ -470,6 +481,43 @@ class DatabaseStorage implements IStorage {
   async deleteHomepageImage(id: number): Promise<boolean> {
     const result = await this.db.delete(homepageImages).where(eq(homepageImages.id, id));
     return result.rowCount > 0;
+  }
+
+  // Custom Scripts
+  async getAllCustomScripts(): Promise<CustomScript[]> {
+    return await this.db.select().from(customScripts).orderBy(customScripts.createdAt);
+  }
+
+  async getCustomScriptById(id: number): Promise<CustomScript | undefined> {
+    const [script] = await this.db.select().from(customScripts).where(eq(customScripts.id, id));
+    return script;
+  }
+
+  async createCustomScript(script: InsertCustomScript): Promise<CustomScript> {
+    const [newScript] = await this.db.insert(customScripts).values(script).returning();
+    return newScript;
+  }
+
+  async updateCustomScript(id: number, script: Partial<InsertCustomScript>): Promise<CustomScript | undefined> {
+    const [updatedScript] = await this.db
+      .update(customScripts)
+      .set({ ...script, updatedAt: new Date() })
+      .where(eq(customScripts.id, id))
+      .returning();
+    return updatedScript;
+  }
+
+  async deleteCustomScript(id: number): Promise<boolean> {
+    const result = await this.db.delete(customScripts).where(eq(customScripts.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getActiveCustomScripts(): Promise<CustomScript[]> {
+    return await this.db
+      .select()
+      .from(customScripts)
+      .where(eq(customScripts.isActive, true))
+      .orderBy(customScripts.createdAt);
   }
 }
 

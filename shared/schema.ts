@@ -262,3 +262,24 @@ export const insertHomepageImageSchema = createInsertSchema(homepageImages).omit
 
 export type InsertHomepageImage = z.infer<typeof insertHomepageImageSchema>;
 export type HomepageImage = typeof homepageImages.$inferSelect;
+
+// Custom Scripts table for chatbots, analytics, etc.
+export const customScripts = pgTable("custom_scripts", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  script: text("script").notNull(),
+  location: varchar("location", { length: 20 }).notNull(), // head, body_start, body_end
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCustomScriptSchema = createInsertSchema(customScripts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCustomScript = z.infer<typeof insertCustomScriptSchema>;
+export type CustomScript = typeof customScripts.$inferSelect;

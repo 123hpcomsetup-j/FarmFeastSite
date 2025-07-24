@@ -155,6 +155,8 @@ export default function BookingsManagement() {
                 <TableHead>Check-out</TableHead>
                 <TableHead>Guests</TableHead>
                 <TableHead>Total Amount</TableHead>
+                <TableHead>UTR Number</TableHead>
+                <TableHead>Payment Status</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -170,6 +172,29 @@ export default function BookingsManagement() {
                     <TableCell>{format(new Date(booking.checkoutDate), "MMM dd, yyyy")}</TableCell>
                     <TableCell>{booking.guestCount}</TableCell>
                     <TableCell>₹{booking.finalTotal?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      {booking.upiTransactionId ? (
+                        <span className="text-sm font-mono bg-blue-50 px-2 py-1 rounded">
+                          {booking.upiTransactionId}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No UTR</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {booking.paymentStatus === 'verified' && (
+                        <Badge className="bg-green-100 text-green-800">Verified</Badge>
+                      )}
+                      {booking.paymentStatus === 'pending' && (
+                        <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                      )}
+                      {booking.paymentStatus === 'failed' && (
+                        <Badge className="bg-red-100 text-red-800">Failed</Badge>
+                      )}
+                      {!booking.paymentStatus && (
+                        <Badge className="bg-gray-100 text-gray-800">Not Set</Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

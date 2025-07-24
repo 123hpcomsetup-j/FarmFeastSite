@@ -18,7 +18,8 @@ import {
   insertAmenitySchema, 
   insertGalleryImageSchema,
   insertBlogPostSchema,
-  insertHomepageImageSchema
+  insertHomepageImageSchema,
+  insertCustomScriptSchema
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -1262,6 +1263,96 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error deleting homepage image:", error);
       res.status(500).json({ message: "Failed to delete homepage image" });
+    }
+  });
+
+  // Custom Scripts Management Routes
+  app.get("/api/admin/custom-scripts", requireAdmin, async (req, res) => {
+    try {
+      const scripts = await storage.getAllCustomScripts();
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching custom scripts:", error);
+      res.status(500).json({ message: "Failed to fetch custom scripts" });
+    }
+  });
+
+  app.get("/api/admin/custom-scripts/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const script = await storage.getCustomScriptById(id);
+      if (!script) {
+        return res.status(404).json({ message: "Custom script not found" });
+      }
+      res.json(script);
+    } catch (error) {
+      console.error("Error fetching custom script:", error);
+      res.status(500).json({ message: "Failed to fetch custom script" });
+    }
+  });
+
+  app.post("/api/admin/custom-scripts", requireAdmin, async (req, res) => {
+    try {
+      const result = insertCustomScriptSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid custom script data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const script = await storage.createCustomScript(result.data);
+      res.status(201).json(script);
+    } catch (error) {
+      console.error("Error creating custom script:", error);
+      res.status(500).json({ message: "Failed to create custom script" });
+    }
+  });
+
+  app.put("/api/admin/custom-scripts/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertCustomScriptSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid custom script data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const script = await storage.updateCustomScript(id, result.data);
+      if (!script) {
+        return res.status(404).json({ message: "Custom script not found" });
+      }
+      res.json(script);
+    } catch (error) {
+      console.error("Error updating custom script:", error);
+      res.status(500).json({ message: "Failed to update custom script" });
+    }
+  });
+
+  app.delete("/api/admin/custom-scripts/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteCustomScript(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Custom script not found" });
+      }
+      res.json({ message: "Custom script deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting custom script:", error);
+      res.status(500).json({ message: "Failed to delete custom script" });
+    }
+  });
+
+  // Public endpoint to get active custom scripts
+  app.get("/api/custom-scripts", async (req, res) => {
+    try {
+      const scripts = await storage.getActiveCustomScripts();
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching active custom scripts:", error);
+      res.status(500).json({ message: "Failed to fetch custom scripts" });
     }
   });
 
