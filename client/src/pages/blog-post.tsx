@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowLeft, Eye } from "lucide-react";
 import { BlogPost } from "@shared/schema";
-import { FastNavbar } from "@/components/FastNavbar";
-import { Footer } from "@/components/Footer";
+import FastNavbar from "@/components/FastNavbar";
+import Footer from "@/components/Footer";
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -74,7 +74,7 @@ export default function BlogPostPage() {
 
             <header className="mb-8">
               <div className="flex flex-wrap gap-2 mb-4">
-                {post.tags.map((tag) => (
+                {post.tags?.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
@@ -89,7 +89,7 @@ export default function BlogPostPage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                    {new Date(post.publishedAt || post.createdAt || new Date()).toLocaleDateString()}
                   </span>
                 </div>
                 
@@ -124,7 +124,7 @@ export default function BlogPostPage() {
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Published</p>
                   <p className="font-semibold">
-                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                    {new Date(post.publishedAt || post.createdAt || new Date()).toLocaleDateString()}
                   </p>
                 </div>
               </div>

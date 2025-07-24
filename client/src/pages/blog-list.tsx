@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { BlogPost } from "@shared/schema";
-import { FastNavbar } from "@/components/FastNavbar";
-import { Footer } from "@/components/Footer";
+import FastNavbar from "@/components/FastNavbar";
+import Footer from "@/components/Footer";
 
 export default function BlogListPage() {
   const { data: blogPosts = [], isLoading } = useQuery<BlogPost[]>({
@@ -55,7 +55,7 @@ export default function BlogListPage() {
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                      {new Date(post.publishedAt || post.createdAt || new Date()).toLocaleDateString()}
                     </span>
                     <Clock className="h-4 w-4 ml-2" />
                     <span>{post.readTime} min read</span>
@@ -70,7 +70,7 @@ export default function BlogListPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-wrap gap-1">
-                      {post.tags.slice(0, 2).map((tag) => (
+                      {post.tags?.slice(0, 2).map((tag) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
