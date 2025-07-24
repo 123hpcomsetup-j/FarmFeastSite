@@ -8,11 +8,18 @@ interface EmailOptions {
 
 // Create Gmail transporter
 const createTransporter = () => {
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+  
+  if (!gmailUser || !gmailPassword) {
+    throw new Error('Gmail credentials not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
+  }
+  
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'info@farmfeastfarmhouse.shop',
-      pass: 'snxz naab kfcb rrmu'
+      user: gmailUser,
+      pass: gmailPassword
     }
   });
 };
@@ -22,7 +29,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: '"Farm Feast Farm House" <info@farmfeastfarmhouse.shop>',
+      from: `"Farm Feast Farm House" <${process.env.GMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html

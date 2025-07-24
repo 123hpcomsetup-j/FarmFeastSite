@@ -1,7 +1,5 @@
 // Email notification service for booking confirmations
-// This is a simplified service that logs to console
-// In production, you would integrate with services like SendGrid, Mailgun, etc.
-
+import { sendEmail } from "./emailService";
 import type { Booking, SiteSettings } from "@shared/schema";
 
 interface EmailTemplate {
@@ -124,28 +122,29 @@ Farm Feast Farmhouse - Your satisfaction is our priority! 🌾
 
   async sendPaymentConfirmationEmail(booking: Booking, siteSettings: SiteSettings[]): Promise<void> {
     try {
+      if (!booking.email) {
+        console.log(`No email address provided for booking ${booking.confirmationCode}`);
+        return;
+      }
+
       const settings = this.getSiteSettings(siteSettings);
       const emailTemplate = this.generatePaymentConfirmationEmail(booking, settings);
       
-      // In production, replace this with actual email service
-      console.log(`
-═══════════════════════════════════════════════════════════════
-📧 EMAIL NOTIFICATION - PAYMENT CONFIRMED
-═══════════════════════════════════════════════════════════════
-To: ${booking.email || booking.contactNumber}
-Subject: ${emailTemplate.subject}
+      // Convert text email to HTML
+      const htmlBody = emailTemplate.body.replace(/\n/g, '<br>').replace(/━+/g, '<hr>');
+      
+      // Send actual email
+      const emailSent = await sendEmail({
+        to: booking.email,
+        subject: emailTemplate.subject,
+        html: `<div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px;">${htmlBody}</div>`
+      });
 
-${emailTemplate.body}
-
-═══════════════════════════════════════════════════════════════
-      `);
-
-      // Here you would integrate with an email service like:
-      // await emailProvider.send({
-      //   to: booking.email || `${booking.contactNumber}@sms.gateway.com`,
-      //   subject: emailTemplate.subject,
-      //   text: emailTemplate.body
-      // });
+      if (emailSent) {
+        console.log(`✅ Payment confirmation email sent to ${booking.email} for booking ${booking.confirmationCode}`);
+      } else {
+        console.error(`❌ Failed to send payment confirmation email to ${booking.email} for booking ${booking.confirmationCode}`);
+      }
 
     } catch (error) {
       console.error('Failed to send payment confirmation email:', error);
@@ -155,28 +154,29 @@ ${emailTemplate.body}
 
   async sendPaymentFailedEmail(booking: Booking, siteSettings: SiteSettings[], reason?: string): Promise<void> {
     try {
+      if (!booking.email) {
+        console.log(`No email address provided for booking ${booking.confirmationCode}`);
+        return;
+      }
+
       const settings = this.getSiteSettings(siteSettings);
       const emailTemplate = this.generatePaymentFailedEmail(booking, settings, reason);
       
-      // In production, replace this with actual email service
-      console.log(`
-═══════════════════════════════════════════════════════════════
-📧 EMAIL NOTIFICATION - PAYMENT FAILED
-═══════════════════════════════════════════════════════════════
-To: ${booking.email || booking.contactNumber}
-Subject: ${emailTemplate.subject}
+      // Convert text email to HTML
+      const htmlBody = emailTemplate.body.replace(/\n/g, '<br>').replace(/━+/g, '<hr>');
+      
+      // Send actual email
+      const emailSent = await sendEmail({
+        to: booking.email,
+        subject: emailTemplate.subject,
+        html: `<div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #fff3f3; border-left: 4px solid #ef4444;">${htmlBody}</div>`
+      });
 
-${emailTemplate.body}
-
-═══════════════════════════════════════════════════════════════
-      `);
-
-      // Here you would integrate with an email service like:
-      // await emailProvider.send({
-      //   to: booking.email || `${booking.contactNumber}@sms.gateway.com`,
-      //   subject: emailTemplate.subject,
-      //   text: emailTemplate.body
-      // });
+      if (emailSent) {
+        console.log(`✅ Payment failed email sent to ${booking.email} for booking ${booking.confirmationCode}`);
+      } else {
+        console.error(`❌ Failed to send payment failed email to ${booking.email} for booking ${booking.confirmationCode}`);
+      }
 
     } catch (error) {
       console.error('Failed to send payment failed email:', error);

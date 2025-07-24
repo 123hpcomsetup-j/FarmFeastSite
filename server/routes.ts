@@ -185,6 +185,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const booking = await storage.createBooking(result.data);
+      
+      // Send booking confirmation email to customer
+      if (booking.email) {
+        try {
+          const emailHtml = generateConfirmationEmail(booking);
+          await sendEmail({
+            to: booking.email,
+            subject: `📧 Booking Received - ${booking.confirmationCode}`,
+            html: emailHtml
+          });
+          console.log(`✅ Booking confirmation email sent to ${booking.email}`);
+        } catch (emailError) {
+          console.error(`❌ Failed to send booking email to ${booking.email}:`, emailError);
+        }
+      }
+      
       res.status(201).json(booking);
     } catch (error) {
       console.error("Error creating booking:", error);
@@ -1133,6 +1149,42 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error regenerating sitemap:", error);
       res.status(500).json({ message: "Failed to regenerate sitemap" });
+    }
+  });
+
+  // Test email endpoint (admin only)
+  app.post("/api/admin/test-email", requireAdmin, async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email address required" });
+      }
+
+      const testEmailSent = await sendEmail({
+        to: email,
+        subject: "Test Email - Farm Feast Farm House",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
+              <h1>✅ Email Test Successful!</h1>
+            </div>
+            <div style="padding: 20px;">
+              <p>This is a test email from Farm Feast Farm House booking system.</p>
+              <p>If you received this email, the email service is working correctly!</p>
+              <p>Timestamp: ${new Date().toISOString()}</p>
+            </div>
+          </div>
+        `
+      });
+
+      if (testEmailSent) {
+        res.json({ message: "Test email sent successfully", email });
+      } else {
+        res.status(500).json({ message: "Failed to send test email" });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ message: "Failed to send test email", error: error.message });
     }
   });
 
