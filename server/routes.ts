@@ -123,10 +123,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coupon validation
   app.post("/api/coupons/validate", async (req, res) => {
     try {
-      const { code, total } = req.body;
+      const { code, amount, total } = req.body;
+      const orderAmount = amount || total; // Support both parameter names for compatibility
       
       if (!code) {
         return res.status(400).json({ message: "Coupon code is required" });
+      }
+      
+      if (!orderAmount) {
+        return res.status(400).json({ message: "Order amount is required" });
       }
 
       const coupon = await storage.getCouponByCode(code);
@@ -143,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Coupon has expired" });
       }
 
-      if (coupon.minAmount && total < coupon.minAmount) {
+      if (coupon.minAmount && orderAmount < coupon.minAmount) {
         return res.status(400).json({ 
           message: `Minimum order amount is ₹${coupon.minAmount}` 
         });
@@ -151,9 +156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let discountAmount = 0;
       if (coupon.type === "percentage") {
-        discountAmount = Math.round((total * coupon.value) / 100);
-        if (coupon.maxDiscount) {
-          discountAmount = Math.min(discountAmount, coupon.maxDiscount);
+        discountAmount = Math.round((orderAmount * coupon.value) / 100);
+        if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
+          discountAmount = coupon.maxDiscount;
         }
       } else {
         discountAmount = coupon.value;
