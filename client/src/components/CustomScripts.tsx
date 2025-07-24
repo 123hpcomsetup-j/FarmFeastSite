@@ -20,10 +20,28 @@ export default function CustomScripts() {
     refetchOnWindowFocus: false,
   }) as { data: CustomScript[] };
 
+  // Debug log for production
+  console.log("🔧 CustomScripts component mounted in", process.env.NODE_ENV || 'production');
+
   useEffect(() => {
-    console.log("CustomScripts: Loading scripts", scripts);
+    console.log("🔧 CustomScripts: Loading scripts", scripts);
+    
+    // Force a re-fetch in production if no scripts but API should have them
     if (!scripts.length) {
-      console.log("CustomScripts: No scripts found");
+      console.log("⚠️ CustomScripts: No scripts found - this might be a production caching issue");
+      
+      // In production, try to manually fetch scripts
+      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        fetch('/api/custom-scripts')
+          .then(res => res.json())
+          .then(data => {
+            console.log("🔧 Manual fetch result:", data);
+            if (data.length > 0) {
+              console.log("⚠️ Found scripts via manual fetch - query cache issue detected");
+            }
+          })
+          .catch(err => console.error("❌ Manual fetch failed:", err));
+      }
       return;
     }
 
@@ -32,9 +50,10 @@ export default function CustomScripts() {
     existingScripts.forEach(script => script.remove());
 
     scripts.forEach((scriptConfig) => {
-      console.log(`CustomScripts: Processing script "${scriptConfig.name}"`, {
+      console.log(`🔧 CustomScripts: Processing script "${scriptConfig.name}"`, {
         isActive: scriptConfig.isActive,
         location: scriptConfig.location,
+        hostname: window.location.hostname,
         script: scriptConfig.script?.substring(0, 100) + "..."
       });
 
@@ -118,28 +137,54 @@ export default function CustomScripts() {
               
               console.log(`CustomScripts: Script "${scriptConfig.name}" added to ${scriptConfig.location}`);
               
-              // For Tawk.to and LiveChat, trigger initialization
+              // For Tawk.to and LiveChat, trigger initialization with multiple checks
               if (scriptConfig.name.toLowerCase().includes('chat')) {
-                setTimeout(() => {
+                // Check immediately and also with delays for different loading patterns
+                const checkTawkStatus = () => {
                   if (typeof window !== 'undefined') {
-                    // Check for Tawk.to
-                    if ((window as any).Tawk_API) {
+                    const hasTawkAPI = !!(window as any).Tawk_API;
+                    const hasTawkCore = !!(window as any).$_Tawk;
+                    const hasLiveChat = !!(window as any).__lc;
+                    
+                    console.log(`🔧 Tawk.to Status Check:`, {
+                      hostname: window.location.hostname,
+                      Tawk_API: hasTawkAPI,
+                      $_Tawk: hasTawkCore,
+                      LiveChat: hasLiveChat
+                    });
+                    
+                    if (hasTawkAPI) {
                       console.log('✅ CustomScripts: Tawk.to widget loaded successfully!');
-                      // Force show the widget if it's hidden
+                      // Force show the widget
                       if ((window as any).Tawk_API.showWidget) {
                         (window as any).Tawk_API.showWidget();
                       }
+                      // Force widget to be maximized/visible
+                      if ((window as any).Tawk_API.maximize) {
+                        (window as any).Tawk_API.maximize();
+                      }
+                      return true;
                     }
-                    // Check for LiveChat
-                    if ((window as any).__lc) {
-                      console.log('✅ CustomScripts: LiveChat widget loaded successfully!');
-                    }
-                    // Also check for $_Tawk global variable
-                    if ((window as any).$_Tawk) {
+                    
+                    if (hasTawkCore) {
                       console.log('✅ CustomScripts: Tawk.to core loaded!');
                     }
+                    
+                    if (hasLiveChat) {
+                      console.log('✅ CustomScripts: LiveChat widget loaded successfully!');
+                      return true;
+                    }
                   }
-                }, 3000);
+                  return false;
+                };
+                
+                // Check immediately
+                checkTawkStatus();
+                
+                // Check with increasing delays for slow loading networks
+                setTimeout(checkTawkStatus, 1000);
+                setTimeout(checkTawkStatus, 3000);
+                setTimeout(checkTawkStatus, 5000);
               }
             } else {
               // For non-script elements (like noscript), clone and append
