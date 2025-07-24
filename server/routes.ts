@@ -937,7 +937,7 @@ Farm Feast Farm House Team
           ogDescription: template.description,
           ogImage: '/api/placeholder/1200/630',
           canonicalUrl: fullUrl,
-          schemaType: template.schemaType,
+          schemaType: (template as any).schemaType,
           schemaData: {},
           priority: 0.8,
           changeFreq: 'weekly',
@@ -946,15 +946,23 @@ Farm Feast Farm House Team
           updatedAt: new Date(),
           score: 80,
           ranking: 1,
-          reviewCount: 127,
-          averageRating: "4.8",
+          reviewCount: 1008,
+          averageRating: "4.5",
           businessName: "Farm Feast Farm House", 
           ratingScale: "5",
           reviewsEnabled: true,
           showInSnippets: true,
           reviewTitle: null,
           reviewDescription: null,
-          reviewKeywords: null
+          reviewKeywords: null,
+          reviewSnippet1Author: "Kinididoddi Pradeep",
+          reviewSnippet1Date: "2025-07-23",
+          reviewSnippet1Rating: "5",
+          reviewSnippet1Body: "Awesome! It's very good and perfectly suited for couples and families. ❤️💯",
+          reviewSnippet2Author: "Ravi Kumar",
+          reviewSnippet2Date: "2025-07-21",
+          reviewSnippet2Rating: "5",
+          reviewSnippet2Body: "Great place for a peaceful weekend. The pool and garden area were beautifully maintained!"
         };
       }
 
@@ -962,7 +970,7 @@ Farm Feast Farm House Team
       const reviewData = await storage.getReviewSettings();
       
       // Generate structured data
-      const structuredData = {
+      const structuredData: any = {
         "@context": "https://schema.org",
         "@type": seoSettings?.schemaType || "LodgingBusiness",
         "name": seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad",
@@ -995,7 +1003,7 @@ Farm Feast Farm House Team
       };
 
       // Add review data if available
-      if (seoSettings?.reviewsEnabled && seoSettings?.reviewCount > 0) {
+      if (seoSettings?.reviewsEnabled && (seoSettings?.reviewCount || 0) > 0) {
         structuredData.aggregateRating = {
           "@type": "AggregateRating",
           "ratingValue": parseFloat(seoSettings.averageRating || "4.8"),
