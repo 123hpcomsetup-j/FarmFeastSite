@@ -731,6 +731,23 @@ Farm Feast Farm House Team
     }
   });
 
+  app.get("/api/admin/reviews", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getReviewSettings();
+      res.json(settings || {
+        reviewCount: 0,
+        averageRating: "0.0",
+        businessName: "Farm Feast Farm House",
+        ratingScale: "5",
+        reviewsEnabled: true,
+        showInSnippets: true
+      });
+    } catch (error) {
+      console.error("Error fetching review settings:", error);
+      res.status(500).json({ message: "Failed to fetch review settings" });
+    }
+  });
+
   app.post("/api/admin/reviews", requireAdmin, async (req, res) => {
     try {
       const result = insertReviewSettingsSchema.safeParse(req.body);
