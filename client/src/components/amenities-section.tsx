@@ -1,29 +1,35 @@
 import { Car, Snowflake, Dog } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { HomepageImage } from "@shared/schema";
+import type { GalleryImage } from "@shared/schema";
 
 function AmenitiesImages() {
-  const { data: amenityImages = [] } = useQuery<HomepageImage[]>({
-    queryKey: ["/api/homepage-images?section=amenities"],
+  const { data: allGalleryImages = [] } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery"],
   });
+
+  // Get images from different categories for amenities display
+  const amenityImages = allGalleryImages
+    .filter(img => img.active)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .slice(0, 4);
 
   // Default images if none configured
   const defaultImages = [
     {
-      imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-      altText: "Luxurious swimming pool with clear blue water and deck area",
+      url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      alt: "Luxurious swimming pool with clear blue water and deck area",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-      altText: "Spacious air-conditioned bedroom with modern furnishing",
+      url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      alt: "Spacious air-conditioned bedroom with modern furnishing",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-      altText: "Outdoor BBQ setup with grilling equipment and seating area",
+      url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      alt: "Outdoor BBQ setup with grilling equipment and seating area",
     },
     {
-      imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-      altText: "Large parking area with vehicles and green surroundings",
+      url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
+      alt: "Large parking area with vehicles and green surroundings",
     },
   ];
 
@@ -35,8 +41,8 @@ function AmenitiesImages() {
         {displayImages.slice(0, 2).map((image, index) => (
           <img
             key={index}
-            src={image.imageUrl}
-            alt={image.altText || `Amenity image ${index + 1}`}
+            src={image.url}
+            alt={image.alt || `Amenity image ${index + 1}`}
             className={`rounded-xl shadow-lg w-full object-cover ${index === 0 ? 'h-64' : 'h-48'}`}
           />
         ))}
@@ -45,8 +51,8 @@ function AmenitiesImages() {
         {displayImages.slice(2, 4).map((image, index) => (
           <img
             key={index + 2}
-            src={image.imageUrl}
-            alt={image.altText || `Amenity image ${index + 3}`}
+            src={image.url}
+            alt={image.alt || `Amenity image ${index + 3}`}
             className={`rounded-xl shadow-lg w-full object-cover ${index === 1 ? 'h-64' : 'h-48'}`}
           />
         ))}
