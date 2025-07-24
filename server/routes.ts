@@ -996,15 +996,45 @@ Farm Feast Farm House Team
 
       // Add review data if available
       if (seoSettings?.reviewsEnabled && seoSettings?.reviewCount > 0) {
-        Object.assign(structuredData, {
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": parseFloat(seoSettings.averageRating || "4.8"),
-            "reviewCount": seoSettings.reviewCount || 127,
-            "bestRating": parseInt(seoSettings.ratingScale || "5"),
-            "worstRating": 1
-          }
-        });
+        structuredData.aggregateRating = {
+          "@type": "AggregateRating",
+          "ratingValue": parseFloat(seoSettings.averageRating || "4.8"),
+          "reviewCount": seoSettings.reviewCount || 127,
+          "bestRating": parseInt(seoSettings.ratingScale || "5"),
+          "worstRating": 1
+        };
+
+        // Add individual review snippets if enabled
+        if (seoSettings?.showInSnippets) {
+          structuredData.review = [
+            {
+              "@type": "Review",
+              "author": {
+                "@type": "Person",
+                "name": "Kinididoddi Pradeep"
+              },
+              "datePublished": "2025-07-23",
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "5"
+              },
+              "reviewBody": "Awesome! It's very good and perfectly suited for couples and families. ❤️💯"
+            },
+            {
+              "@type": "Review",
+              "author": {
+                "@type": "Person",
+                "name": "Ravi Kumar"
+              },
+              "datePublished": "2025-07-21",
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "5"
+              },
+              "reviewBody": "Great place for a peaceful weekend. The pool and garden area were beautifully maintained!"
+            }
+          ];
+        }
       }
 
       const title = seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad";

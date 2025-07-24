@@ -46,21 +46,30 @@ function getPageFromPath(path: string): string {
 
 // Generate structured data (JSON-LD)
 function generateStructuredData(seoSettings: any, reviewData: any, url: string): any {
-  // Use admin-defined schema if available
-  if (seoSettings?.schemaData && Object.keys(seoSettings.schemaData).length > 0) {
-    return {
-      "@context": "https://schema.org",
-      "@type": seoSettings.schemaType || "WebPage",
-      ...seoSettings.schemaData,
-      "name": seoSettings.title,
-      "description": seoSettings.description,
-      "url": url,
-      "image": seoSettings.ogImage || "/api/placeholder/1200/630"
-    };
+  // Use admin-defined schema if available and has JSON structured data
+  if (seoSettings?.schemaData && typeof seoSettings.schemaData === 'object' && Object.keys(seoSettings.schemaData).length > 0) {
+    try {
+      // Parse schema_data if it's a string
+      const parsedSchema = typeof seoSettings.schemaData === 'string' 
+        ? JSON.parse(seoSettings.schemaData) 
+        : seoSettings.schemaData;
+      
+      return {
+        "@context": "https://schema.org",
+        "@type": seoSettings.schemaType || "LocalBusiness",
+        ...parsedSchema,
+        "name": seoSettings.title,
+        "description": seoSettings.description,
+        "url": url,
+        "image": seoSettings.ogImage || "/api/placeholder/1200/630"
+      };
+    } catch (e) {
+      console.log('Error parsing schema data, using fallback');
+    }
   }
 
   // Generate dynamic schema based on page type
-  const schemaType = seoSettings?.schemaType || "WebPage";
+  const schemaType = seoSettings?.schemaType || "LocalBusiness";
   let structuredData: any = {
     "@context": "https://schema.org",
     "@type": schemaType,
@@ -70,8 +79,8 @@ function generateStructuredData(seoSettings: any, reviewData: any, url: string):
     "image": seoSettings?.ogImage || "/api/placeholder/1200/630"
   };
 
-  // Add business-specific data for LodgingBusiness
-  if (schemaType === "LodgingBusiness") {
+  // Add business contact info for LocalBusiness and LodgingBusiness
+  if (schemaType === "LocalBusiness" || schemaType === "LodgingBusiness") {
     structuredData = {
       ...structuredData,
       "telephone": "+91-8897326898",
@@ -98,16 +107,48 @@ function generateStructuredData(seoSettings: any, reviewData: any, url: string):
         "longitude": 78.6273986
       }
     };
+  }
 
-    // Add review data if available
-    if (reviewData?.reviewsEnabled && reviewData?.reviewCount > 0) {
-      structuredData.aggregateRating = {
-        "@type": "AggregateRating",
-        "ratingValue": parseFloat(reviewData.averageRating || "0"),
-        "reviewCount": reviewData.reviewCount,
-        "bestRating": parseInt(reviewData.ratingScale || "5"),
-        "worstRating": 1
-      };
+  // Add review data for ALL page types if available and enabled
+  if (reviewData?.reviewsEnabled && reviewData?.reviewCount > 0) {
+    structuredData.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": parseFloat(reviewData.averageRating || "0"),
+      "reviewCount": reviewData.reviewCount,
+      "bestRating": parseInt(reviewData.ratingScale || "5"),
+      "worstRating": 1
+    };
+
+    // Add sample reviews for rich snippets
+    if (seoSettings?.reviewsEnabled && seoSettings?.showInSnippets) {
+      structuredData.review = [
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Kinididoddi Pradeep"
+          },
+          "datePublished": "2025-07-23",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "Awesome! It's very good and perfectly suited for couples and families. ❤️💯"
+        },
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Ravi Kumar"
+          },
+          "datePublished": "2025-07-21",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "Great place for a peaceful weekend. The pool and garden area were beautifully maintained!"
+        }
+      ];
     }
   }
 
