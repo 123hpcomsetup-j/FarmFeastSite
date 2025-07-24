@@ -413,8 +413,11 @@ Farm Feast Farm House Team
   // Admin login
   app.post("/api/admin/login", async (req, res) => {
     try {
+      console.log("Login attempt received:", { username: req.body.username, passwordLength: req.body.password?.length });
+      
       const result = adminLoginSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Schema validation failed:", result.error);
         return res.status(400).json({ message: "Invalid input" });
       }
 
@@ -422,10 +425,13 @@ Farm Feast Farm House Team
       const admin = await storage.getAdminUserByUsername(username);
       
       if (!admin) {
+        console.log("Admin user not found for username:", username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log("Admin found, checking password...");
       const isValid = await bcrypt.compare(password, admin.password);
+      console.log("Password validation result:", isValid);
       
       if (!isValid) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -435,6 +441,7 @@ Farm Feast Farm House Team
       const adminData = { id: admin.id, username: admin.username, role: admin.role };
       const token = generateToken(adminData);
 
+      console.log("Login successful for user:", admin.username);
       res.json({ 
         message: "Login successful", 
         admin: adminData,
