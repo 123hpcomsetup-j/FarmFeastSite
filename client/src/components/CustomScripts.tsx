@@ -21,14 +21,27 @@ export default function CustomScripts() {
   }) as { data: CustomScript[] };
 
   useEffect(() => {
-    if (!scripts.length) return;
+    console.log("CustomScripts: Loading scripts", scripts);
+    if (!scripts.length) {
+      console.log("CustomScripts: No scripts found");
+      return;
+    }
 
     // Remove existing custom scripts to avoid duplicates
     const existingScripts = document.querySelectorAll('[data-custom-script]');
     existingScripts.forEach(script => script.remove());
 
     scripts.forEach((scriptConfig) => {
-      if (!scriptConfig.isActive) return;
+      console.log(`CustomScripts: Processing script "${scriptConfig.name}"`, {
+        isActive: scriptConfig.isActive,
+        location: scriptConfig.location,
+        script: scriptConfig.script?.substring(0, 100) + "..."
+      });
+
+      if (!scriptConfig.isActive) {
+        console.log(`CustomScripts: Skipping inactive script "${scriptConfig.name}"`);
+        return;
+      }
 
       try {
         // Create a container div to safely parse HTML content
@@ -38,6 +51,7 @@ export default function CustomScripts() {
         
         // Parse the script content safely
         container.innerHTML = scriptConfig.script;
+        console.log(`CustomScripts: Parsed HTML for "${scriptConfig.name}":`, container.childNodes.length, "nodes");
         
         // Get the target location
         let targetElement;
@@ -72,8 +86,10 @@ export default function CustomScripts() {
               // Set content or src
               if (element.getAttribute('src')) {
                 newScript.src = element.getAttribute('src')!;
+                console.log(`CustomScripts: Adding external script from "${element.getAttribute('src')}" to ${scriptConfig.location}`);
               } else {
                 newScript.textContent = element.textContent;
+                console.log(`CustomScripts: Adding inline script to ${scriptConfig.location}:`, element.textContent?.substring(0, 100) + "...");
               }
               
               // Insert into correct location
@@ -81,6 +97,17 @@ export default function CustomScripts() {
                 targetElement.insertBefore(newScript, targetElement.firstChild);
               } else {
                 targetElement.appendChild(newScript);
+              }
+              
+              console.log(`CustomScripts: Script "${scriptConfig.name}" added to ${scriptConfig.location}`);
+              
+              // For LiveChat specifically, try to trigger initialization
+              if (scriptConfig.name.toLowerCase().includes('live') && scriptConfig.name.toLowerCase().includes('chat')) {
+                setTimeout(() => {
+                  if (typeof window !== 'undefined' && (window as any).__lc) {
+                    console.log('CustomScripts: LiveChat widget loaded successfully!', (window as any).__lc);
+                  }
+                }, 1000);
               }
             } else {
               // For non-script elements (like noscript), clone and append
