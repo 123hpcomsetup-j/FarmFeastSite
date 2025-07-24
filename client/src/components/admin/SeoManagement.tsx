@@ -55,13 +55,7 @@ export default function SeoManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: SeoForm) => {
-      return apiRequest("/api/admin/seo", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("POST", "/api/admin/seo", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/seo"] });
@@ -80,13 +74,7 @@ export default function SeoManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: SeoForm }) => {
-      return apiRequest(`/api/admin/seo/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      return apiRequest("PUT", `/api/admin/seo/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/seo"] });
@@ -123,6 +111,12 @@ export default function SeoManagement() {
       ogDescription: page.ogDescription,
       ogImage: page.ogImage,
       canonicalUrl: page.canonicalUrl,
+      schemaType: page.schemaType || "WebPage",
+      schemaData: page.schemaData || {},
+      priority: page.priority || 50,
+      changeFreq: page.changeFreq || "monthly",
+      noindex: page.noindex || false,
+      nofollow: page.nofollow || false,
     });
     setShowForm(true);
   };

@@ -569,6 +569,18 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async updateSeoSettings(id: number, settings: Partial<InsertSeoSettings>): Promise<SeoSettings | undefined> {
+    const index = this.seoSettings.findIndex(s => s.id === id);
+    if (index === -1) return undefined;
+    
+    this.seoSettings[index] = { 
+      ...this.seoSettings[index], 
+      ...settings, 
+      updatedAt: new Date() 
+    };
+    return this.seoSettings[index];
+  }
+
   // Review Settings methods
   async getReviewSettings(): Promise<ReviewSettings | undefined> {
     return this.reviewSettings[0];
