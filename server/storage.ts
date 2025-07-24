@@ -811,4 +811,309 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+class DatabaseStorage implements IStorage {
+  constructor(private db: any) {}
+
+  // Bookings
+  async getAllBookings(): Promise<Booking[]> {
+    return await this.db.select().from(bookings).orderBy(bookings.createdAt);
+  }
+
+  async getBookingById(id: number): Promise<Booking | undefined> {
+    const [booking] = await this.db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
+  }
+
+  async getBookingByConfirmationCode(code: string): Promise<Booking | undefined> {
+    const [booking] = await this.db.select().from(bookings).where(eq(bookings.confirmationCode, code));
+    return booking;
+  }
+
+  async createBooking(booking: InsertBooking): Promise<Booking> {
+    const [newBooking] = await this.db.insert(bookings).values(booking).returning();
+    return newBooking;
+  }
+
+  async updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined> {
+    const [updatedBooking] = await this.db
+      .update(bookings)
+      .set({ ...booking, updatedAt: new Date() })
+      .where(eq(bookings.id, id))
+      .returning();
+    return updatedBooking;
+  }
+
+  async deleteBooking(id: number): Promise<boolean> {
+    const result = await this.db.delete(bookings).where(eq(bookings.id, id));
+    return result.rowCount > 0;
+  }
+
+  async updateBookingPaymentStatus(id: number, status: string, utrNumber?: string, notes?: string): Promise<boolean> {
+    const updateData: any = { paymentStatus: status, updatedAt: new Date() };
+    if (utrNumber) updateData.upiTransactionId = utrNumber;
+    if (notes) updateData.paymentNotes = notes;
+    if (status === 'paid') updateData.paymentVerifiedAt = new Date();
+
+    const result = await this.db
+      .update(bookings)
+      .set(updateData)
+      .where(eq(bookings.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Services
+  async getAllServices(): Promise<Service[]> {
+    return await this.db.select().from(services).orderBy(services.order, services.id);
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    const [newService] = await this.db.insert(services).values(service).returning();
+    return newService;
+  }
+
+  async updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined> {
+    const [updatedService] = await this.db
+      .update(services)
+      .set(service)
+      .where(eq(services.id, id))
+      .returning();
+    return updatedService;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    const result = await this.db.delete(services).where(eq(services.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Coupons
+  async getAllCoupons(): Promise<Coupon[]> {
+    return await this.db.select().from(coupons);
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    const [coupon] = await this.db.select().from(coupons).where(eq(coupons.code, code));
+    return coupon;
+  }
+
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const [newCoupon] = await this.db.insert(coupons).values(coupon).returning();
+    return newCoupon;
+  }
+
+  async updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    const [updatedCoupon] = await this.db
+      .update(coupons)
+      .set(coupon)
+      .where(eq(coupons.id, id))
+      .returning();
+    return updatedCoupon;
+  }
+
+  async deleteCoupon(id: number): Promise<boolean> {
+    const result = await this.db.delete(coupons).where(eq(coupons.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Admin Users
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    const [user] = await this.db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return user;
+  }
+
+  async createAdminUser(user: InsertAdminUser): Promise<AdminUser> {
+    const [newUser] = await this.db.insert(adminUsers).values(user).returning();
+    return newUser;
+  }
+
+  // SEO Settings
+  async getSeoSettingsByPage(page: string): Promise<SeoSettings | undefined> {
+    const [settings] = await this.db.select().from(seoSettings).where(eq(seoSettings.page, page));
+    return settings;
+  }
+
+  async getAllSeoSettings(): Promise<SeoSettings[]> {
+    return await this.db.select().from(seoSettings);
+  }
+
+  async upsertSeoSettings(settings: InsertSeoSettings): Promise<SeoSettings> {
+    const [upsertedSettings] = await this.db
+      .insert(seoSettings)
+      .values(settings)
+      .onConflictDoUpdate({
+        target: seoSettings.page,
+        set: { ...settings, updatedAt: new Date() }
+      })
+      .returning();
+    return upsertedSettings;
+  }
+
+  // Review Settings
+  async getReviewSettings(): Promise<ReviewSettings | undefined> {
+    const [settings] = await this.db.select().from(reviewSettings).limit(1);
+    return settings;
+  }
+
+  async upsertReviewSettings(settings: InsertReviewSettings): Promise<ReviewSettings> {
+    // Try to update first, then insert if not exists
+    const existing = await this.getReviewSettings();
+    if (existing) {
+      const [updated] = await this.db
+        .update(reviewSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(reviewSettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [inserted] = await this.db.insert(reviewSettings).values(settings).returning();
+      return inserted;
+    }
+  }
+
+  // Gallery Images
+  async getAllGalleryImages(): Promise<GalleryImage[]> {
+    return await this.db.select().from(galleryImages).orderBy(galleryImages.order, galleryImages.id);
+  }
+
+  async getGalleryImagesByCategory(category: string): Promise<GalleryImage[]> {
+    return await this.db
+      .select()
+      .from(galleryImages)
+      .where(and(eq(galleryImages.category, category), eq(galleryImages.active, true)))
+      .orderBy(galleryImages.order);
+  }
+
+  async createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage> {
+    const [newImage] = await this.db.insert(galleryImages).values(image).returning();
+    return newImage;
+  }
+
+  async updateGalleryImage(id: number, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
+    const [updatedImage] = await this.db
+      .update(galleryImages)
+      .set(image)
+      .where(eq(galleryImages.id, id))
+      .returning();
+    return updatedImage;
+  }
+
+  async deleteGalleryImage(id: number): Promise<boolean> {
+    const result = await this.db.delete(galleryImages).where(eq(galleryImages.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Site Settings
+  async getAllSiteSettings(): Promise<SiteSettings[]> {
+    return await this.db.select().from(siteSettings);
+  }
+
+  async getSiteSettingByKey(key: string): Promise<SiteSettings | undefined> {
+    const [setting] = await this.db.select().from(siteSettings).where(eq(siteSettings.key, key));
+    return setting;
+  }
+
+  async createSiteSetting(setting: InsertSiteSettings): Promise<SiteSettings> {
+    const [newSetting] = await this.db.insert(siteSettings).values(setting).returning();
+    return newSetting;
+  }
+
+  async updateSiteSettings(key: string, value: string): Promise<SiteSettings | undefined> {
+    const [updated] = await this.db
+      .update(siteSettings)
+      .set({ value, updatedAt: new Date() })
+      .where(eq(siteSettings.key, key))
+      .returning();
+    return updated;
+  }
+
+  // Amenities
+  async getAllAmenities(): Promise<Amenity[]> {
+    return await this.db.select().from(amenities).orderBy(amenities.order);
+  }
+
+  async createAmenity(amenity: InsertAmenity): Promise<Amenity> {
+    const [newAmenity] = await this.db.insert(amenities).values(amenity).returning();
+    return newAmenity;
+  }
+
+  async updateAmenity(id: number, amenity: Partial<InsertAmenity>): Promise<Amenity | undefined> {
+    const [updatedAmenity] = await this.db
+      .update(amenities)
+      .set(amenity)
+      .where(eq(amenities.id, id))
+      .returning();
+    return updatedAmenity;
+  }
+
+  async deleteAmenity(id: number): Promise<boolean> {
+    const result = await this.db.delete(amenities).where(eq(amenities.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Blog Posts
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return await this.db.select().from(blogPosts).orderBy(blogPosts.createdAt);
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await this.db.select().from(blogPosts).where(eq(blogPosts.slug, slug));
+    return post;
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const [newPost] = await this.db.insert(blogPosts).values(post).returning();
+    return newPost;
+  }
+
+  async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const [updatedPost] = await this.db
+      .update(blogPosts)
+      .set({ ...post, updatedAt: new Date() })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return updatedPost;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    const result = await this.db.delete(blogPosts).where(eq(blogPosts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Homepage Images
+  async getAllHomepageImages(): Promise<HomepageImage[]> {
+    return await this.db.select().from(homepageImages).orderBy(homepageImages.order);
+  }
+
+  async getHomepageImagesBySection(section: string): Promise<HomepageImage[]> {
+    return await this.db
+      .select()
+      .from(homepageImages)
+      .where(and(eq(homepageImages.section, section), eq(homepageImages.active, true)))
+      .orderBy(homepageImages.order);
+  }
+
+  async createHomepageImage(image: InsertHomepageImage): Promise<HomepageImage> {
+    const [newImage] = await this.db.insert(homepageImages).values(image).returning();
+    return newImage;
+  }
+
+  async updateHomepageImage(id: number, image: Partial<InsertHomepageImage>): Promise<HomepageImage | undefined> {
+    const [updatedImage] = await this.db
+      .update(homepageImages)
+      .set({ ...image, updatedAt: new Date() })
+      .where(eq(homepageImages.id, id))
+      .returning();
+    return updatedImage;
+  }
+
+  async deleteHomepageImage(id: number): Promise<boolean> {
+    const result = await this.db.delete(homepageImages).where(eq(homepageImages.id, id));
+    return result.rowCount > 0;
+  }
+}
+
+// Import database connection
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+
+export const storage = new DatabaseStorage(db);
