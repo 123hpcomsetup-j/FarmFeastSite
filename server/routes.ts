@@ -153,19 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get booking by confirmation code (public)
-  app.get("/api/bookings/:confirmationCode", async (req, res) => {
-    try {
-      const booking = await storage.getBookingByConfirmationCode(req.params.confirmationCode);
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-      res.json(booking);
-    } catch (error) {
-      console.error("Error fetching booking:", error);
-      res.status(500).json({ message: "Failed to fetch booking" });
-    }
-  });
+
 
   // Admin login
   app.post("/api/admin/login", async (req, res) => {

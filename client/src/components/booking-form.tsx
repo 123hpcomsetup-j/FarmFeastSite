@@ -38,6 +38,24 @@ const bookingSchema = z.object({
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
+// Helper function to get emoji for service name
+const getServiceEmoji = (name: string) => {
+  const emojiMap: { [key: string]: string } = {
+    "Pet Essentials": "🐾",
+    "Farm Tour": "🚜",
+    "Breakfast": "☕",
+    "Dinner": "🍽️",
+    "BBQ Setup": "🔥",
+    "Bonfire Evening": "🔥",
+    "Box Cricket & Sand Volleyball": "🏐",
+    "Bonfire Arrangement": "🔥",
+    "Utensils": "🍽️",
+    "Personal Chef": "👨‍🍳",
+    "Party Decorations": "🎉",
+  };
+  return emojiMap[name] || "⭐";
+};
+
 export default function BookingForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -548,7 +566,7 @@ export default function BookingForm() {
                                   }}
                                 >
                                   <div className="flex items-center space-x-3">
-                                    <div className="text-2xl">{service.icon}</div>
+                                    <div className="text-2xl">{getServiceEmoji(service.name)}</div>
                                     <div>
                                       <h4 className="font-medium text-gray-900">{service.name}</h4>
                                       <p className="text-sm text-gray-500">{service.description}</p>
