@@ -50,6 +50,40 @@ function getPageFromPath(path: string): string {
   return pageName;
 }
 
+// Generate blog post SEO metadata
+async function generateBlogPostSEO(slug: string, req: any): Promise<any> {
+  try {
+    const blogPost = await storage.getBlogPostBySlug(slug);
+    
+    if (!blogPost) {
+      return null;
+    }
+    
+    const fullUrl = `${req.protocol}://${req.get('host')}/blog/${slug}`;
+    const tags = blogPost.tags ? (Array.isArray(blogPost.tags) ? blogPost.tags : JSON.parse(blogPost.tags as string)) : [];
+    
+    return {
+      title: blogPost.metaTitle || `${blogPost.title} - Farm Feast Farm House Blog`,
+      description: blogPost.metaDescription || blogPost.excerpt || '',
+      keywords: `${tags.join(', ')}, farm activities, farmhouse blog, keesara experiences, rural tourism, farm house rental`,
+      ogTitle: blogPost.metaTitle || blogPost.title,
+      ogDescription: blogPost.metaDescription || blogPost.excerpt || '',
+      ogImage: blogPost.featuredImage || '/api/placeholder/1200/630',
+      canonicalUrl: fullUrl,
+      author: blogPost.author,
+      publishedAt: blogPost.publishedAt,
+      modifiedAt: blogPost.updatedAt,
+      readTime: blogPost.readTime,
+      tags: tags,
+      content: blogPost.content,
+      excerpt: blogPost.excerpt
+    };
+  } catch (error) {
+    console.error('Error generating blog post SEO:', error);
+    return null;
+  }
+}
+
 // Generate structured data (JSON-LD)
 function generateStructuredData(seoSettings: any, reviewData: any, url: string): any {
   // Use admin-defined schema if available and has JSON structured data
@@ -173,6 +207,120 @@ function generateStructuredData(seoSettings: any, reviewData: any, url: string):
   return structuredData;
 }
 
+// Generate blog post HTML for crawlers
+function generateBlogPostHTML(blogSEO: any, structuredData: any): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${blogSEO.title}</title>
+  <meta name="description" content="${blogSEO.description}">
+  <meta name="keywords" content="${blogSEO.keywords}">
+  <meta name="author" content="${blogSEO.author}">
+  <meta name="robots" content="index,follow">
+  <meta name="googlebot" content="index,follow">
+  <meta name="article:published_time" content="${blogSEO.publishedAt}">
+  <meta name="article:modified_time" content="${blogSEO.modifiedAt}">
+  <meta name="article:author" content="${blogSEO.author}">
+  <meta name="article:section" content="Farm Activities">
+  <meta name="article:tag" content="${blogSEO.tags.join(', ')}">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="${blogSEO.ogTitle}">
+  <meta property="og:description" content="${blogSEO.ogDescription}">
+  <meta property="og:image" content="${blogSEO.ogImage}">
+  <meta property="og:url" content="${blogSEO.canonicalUrl}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Farm Feast Farm House">
+  <meta property="article:published_time" content="${blogSEO.publishedAt}">
+  <meta property="article:modified_time" content="${blogSEO.modifiedAt}">
+  <meta property="article:author" content="${blogSEO.author}">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${blogSEO.ogTitle}">
+  <meta name="twitter:description" content="${blogSEO.ogDescription}">
+  <meta name="twitter:image" content="${blogSEO.ogImage}">
+  <meta name="twitter:creator" content="@FarmFeastFarmHouse">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${blogSEO.canonicalUrl}">
+  
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://farmfeastfarmhouse.co.in/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://farmfeastfarmhouse.co.in/blog"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "${blogSEO.title}",
+        "item": "${blogSEO.canonicalUrl}"
+      }
+    ]
+  }
+  </script>
+  
+  <!-- Main Structured Data -->
+  <script type="application/ld+json">
+  ${JSON.stringify(structuredData, null, 2)}
+  </script>
+  
+  <!-- Additional SEO optimizations -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-TileColor" content="#16a34a">
+  <meta name="theme-color" content="#16a34a">
+  
+  <!-- Performance hints -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="//farmfeastfarmhouse.co.in">
+</head>
+<body>
+  <header>
+    <h1>${blogSEO.title}</h1>
+    <p>By ${blogSEO.author} | Published on ${new Date(blogSEO.publishedAt).toLocaleDateString()} | ${blogSEO.readTime} min read</p>
+  </header>
+  
+  <main>
+    <article>
+      ${blogSEO.ogImage ? `<img src="${blogSEO.ogImage}" alt="${blogSEO.title}" width="800" height="400">` : ''}
+      <div class="content">
+        <p><strong>${blogSEO.excerpt}</strong></p>
+        ${blogSEO.content}
+      </div>
+      
+      <footer>
+        <p>Tags: ${blogSEO.tags.join(', ')}</p>
+        <p>Visit <a href="https://farmfeastfarmhouse.co.in">Farm Feast Farm House</a> for luxury farmhouse rentals near Hyderabad.</p>
+      </footer>
+    </article>
+  </main>
+  
+  <nav>
+    <a href="https://farmfeastfarmhouse.co.in/">Home</a> |
+    <a href="https://farmfeastfarmhouse.co.in/blog">Blog</a> |
+    <a href="https://farmfeastfarmhouse.co.in/services">Services</a> |
+    <a href="https://farmfeastfarmhouse.co.in/booking">Book Now</a>
+  </nav>
+</body>
+</html>`;
+}
+
 // Generate complete meta tags HTML
 function generateMetaTags(seoSettings: any, reviewData: any, url: string): string {
   const title = seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental";
@@ -238,7 +386,68 @@ export async function seoMiddleware(req: Request, res: Response, next: NextFunct
     const pageName = getPageFromPath(req.path);
     const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     
-    // Fetch SEO settings from database
+    // Handle blog posts specially
+    if (pageName === 'blog-post') {
+      const slug = req.path.split('/')[2];
+      const blogSEO = await generateBlogPostSEO(slug, req);
+      
+      if (blogSEO) {
+        // Generate blog post structured data
+        const structuredData = {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": blogSEO.title,
+          "description": blogSEO.excerpt,
+          "author": {
+            "@type": "Organization",
+            "name": blogSEO.author
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Farm Feast Farm House",
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${req.protocol}://${req.get('host')}/api/placeholder/400/400`
+            }
+          },
+          "datePublished": blogSEO.publishedAt,
+          "dateModified": blogSEO.modifiedAt,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": blogSEO.canonicalUrl
+          },
+          "image": {
+            "@type": "ImageObject",
+            "url": blogSEO.ogImage,
+            "width": 1200,
+            "height": 630
+          },
+          "keywords": blogSEO.keywords,
+          "wordCount": blogSEO.content ? blogSEO.content.replace(/<[^>]*>/g, '').length : 0,
+          "timeRequired": `PT${blogSEO.readTime || 5}M`,
+          "articleSection": "Farm Activities",
+          "articleBody": blogSEO.excerpt,
+          "url": blogSEO.canonicalUrl,
+          "isPartOf": {
+            "@type": "Blog",
+            "@id": `${req.protocol}://${req.get('host')}/blog`,
+            "name": "Farm Feast Farm House Blog"
+          },
+          "about": {
+            "@type": "Thing",
+            "name": "Farm Activities"
+          }
+        };
+        
+        // Generate complete HTML for blog posts
+        const html = generateBlogPostHTML(blogSEO, structuredData);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+        return res.send(html);
+      }
+    }
+    
+    // Fetch SEO settings from database for regular pages
     let seoSettings = await storage.getSeoSettingsByPage(pageName);
     
     // Fall back to template if no custom settings
