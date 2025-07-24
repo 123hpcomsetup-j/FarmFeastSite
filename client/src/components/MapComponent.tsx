@@ -29,7 +29,7 @@ export default function MapComponent() {
     const lngSetting = settingsArray.find((s: any) => s.key === "location_longitude");
     
     return {
-      latitude: latSetting ? parseFloat(latSetting.value) : 28.6139, // Default to Delhi
+      latitude: latSetting ? parseFloat(latSetting.value) : 28.6139,
       longitude: lngSetting ? parseFloat(lngSetting.value) : 77.2090,
       address: addressSetting?.value || "Farm Feast Farm House, Rural Location",
       name: "Farm Feast Farm House",
@@ -37,7 +37,21 @@ export default function MapComponent() {
     };
   };
 
+  const getMapUrls = () => {
+    const settingsArray = Array.isArray(settings) ? settings : [];
+    const embedUrlSetting = settingsArray.find((s: any) => s.key === "google_maps_embed_url");
+    const directionsUrlSetting = settingsArray.find((s: any) => s.key === "google_maps_directions_url");
+    const placeUrlSetting = settingsArray.find((s: any) => s.key === "google_maps_place_url");
+    
+    return {
+      embedUrl: embedUrlSetting?.value || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.8!2d77.2090!3d28.6139!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xf390df9eae466c03!2sFarm%20Feast%20FarmHouse!5e0!3m2!1sen!2sin!4v1642123456789!5m2!1sen!2sin",
+      directionsUrl: directionsUrlSetting?.value || "https://www.google.com/maps/dir//Farm+Feast+FarmHouse/@28.6139,77.2090",
+      placeUrl: placeUrlSetting?.value || "https://www.google.com/maps/place/Farm+Feast+FarmHouse/data=!4m2!3m1!1s0x0:0xf390df9eae466c03?sa=X&ved=1t:2428&ictx=111"
+    };
+  };
+
   const locationData = getLocationData();
+  const mapUrls = getMapUrls();
 
   // Get user's current location
   useEffect(() => {
@@ -57,17 +71,11 @@ export default function MapComponent() {
   }, []);
 
   const openInGoogleMaps = () => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}`;
-    window.open(url, '_blank');
+    window.open(mapUrls.placeUrl, '_blank');
   };
 
   const openDirections = () => {
-    let url = `https://www.google.com/maps/dir/`;
-    if (userLocation) {
-      url += `${userLocation.lat},${userLocation.lng}/`;
-    }
-    url += `${locationData.latitude},${locationData.longitude}`;
-    window.open(url, '_blank');
+    window.open(mapUrls.directionsUrl, '_blank');
   };
 
   const callLocation = () => {
@@ -89,7 +97,7 @@ export default function MapComponent() {
           {/* Interactive Map Container */}
           <div className="relative w-full h-64 md:h-80 bg-gray-100 rounded-lg overflow-hidden border">
             <iframe
-              src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.8!2d${locationData.longitude}!3d${locationData.latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjjCsDM2JzUwLjAiTiA3N8KwMTInMzIuNCJF!5e0!3m2!1sen!2sin!4v1642123456789!5m2!1sen!2sin`}
+              src={mapUrls.embedUrl}
               width="100%"
               height="100%"
               style={{ border: 0 }}

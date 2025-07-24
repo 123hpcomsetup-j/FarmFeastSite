@@ -5,6 +5,7 @@ import AmenitiesSection from "@/components/amenities-section";
 import ServicesSection from "@/components/services-section";
 import GallerySection from "@/components/gallery-section";
 import ContactSection from "@/components/contact-section";
+import MapComponent from "@/components/MapComponent";
 import SeoHead from "@/components/SeoHead";
 
 export default function Home() {
@@ -21,6 +22,15 @@ export default function Home() {
         <AmenitiesSection />
         <ServicesSection />
         <GallerySection />
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Us</h2>
+              <p className="text-lg text-gray-600">Easily locate our farmhouse with interactive maps and directions</p>
+            </div>
+            <MapComponent />
+          </div>
+        </section>
         <ContactSection />
       </main>
       <Footer />
