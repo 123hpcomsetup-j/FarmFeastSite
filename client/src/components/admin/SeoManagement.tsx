@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertSeoSettingsSchema, insertReviewSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, RefreshCw, Search, CheckCircle, AlertCircle, XCircle } from "lucide-react";
@@ -29,11 +29,7 @@ export default function SeoManagement() {
 
   const { data: seoPages, isLoading } = useQuery({
     queryKey: ["/api/admin/seo"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const { data: reviewSettings, isLoading: reviewLoading } = useQuery({
