@@ -22,6 +22,7 @@ export default function GalleryManagement() {
   const [editingImage, setEditingImage] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [inputMode, setInputMode] = useState<'upload' | 'url'>('upload');
 
   const { data: images, isLoading } = useQuery({
     queryKey: ["/api/admin/gallery"],
@@ -29,11 +30,14 @@ export default function GalleryManagement() {
   });
 
   const form = useForm<GalleryImageForm>({
-    resolver: zodResolver(insertGalleryImageSchema.omit({ url: true, filename: true, alt: true, order: true, active: true, uploadedAt: true })),
+    resolver: zodResolver(insertGalleryImageSchema.omit({ filename: true, uploadedAt: true })),
     defaultValues: {
-      title: "",
-      description: "",
+      alt: "",
       category: "exterior",
+      url: "",
+      source: "upload",
+      order: 0,
+      active: true,
     },
   });
 
@@ -104,20 +108,41 @@ export default function GalleryManagement() {
     },
   });
 
+  const urlMutation = useMutation({
+    mutationFn: async (data: GalleryImageForm) => {
+      return apiRequest("POST", "/api/admin/gallery/url", { ...data, source: "url" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/gallery"] });
+      toast({ title: "Success", description: "Image added successfully" });
+      setShowForm(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add image",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: GalleryImageForm) => {
     if (editingImage) {
       updateMutation.mutate({ id: editingImage.id, data });
+    } else if (inputMode === 'url') {
+      urlMutation.mutate(data);
     } else if (selectedFile) {
       const formData = new FormData();
       formData.append("image", selectedFile);
-      formData.append("title", data.title);
-      formData.append("description", data.description);
+      formData.append("alt", data.alt);
       formData.append("category", data.category);
+      formData.append("order", String(data.order || 0));
       uploadMutation.mutate(formData);
     } else {
       toast({
         title: "Error",
-        description: "Please select an image to upload",
+        description: inputMode === 'upload' ? "Please select an image to upload" : "Please provide an image URL",
         variant: "destructive",
       });
     }
@@ -125,11 +150,14 @@ export default function GalleryManagement() {
 
   const handleEdit = (image: any) => {
     setEditingImage(image);
+    setInputMode(image.source || 'upload');
     form.reset({
-      title: image.title,
-      description: image.description,
-      url: image.url,
+      alt: image.alt,
       category: image.category,
+      url: image.url,
+      source: image.source || 'upload',
+      order: image.order || 0,
+      active: image.active !== undefined ? image.active : true,
     });
     setShowForm(true);
   };
@@ -177,12 +205,44 @@ export default function GalleryManagement() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>{editingImage ? "Edit Image" : "Upload New Image"}</CardTitle>
+            <CardTitle>{editingImage ? "Edit Image" : "Add New Image"}</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {!editingImage && (
+                  <div className="flex items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Image Source:</span>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={inputMode === 'upload' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setInputMode('upload');
+                          form.setValue('source', 'upload');
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload File
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={inputMode === 'url' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setInputMode('url');
+                          form.setValue('source', 'url');
+                        }}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Image URL
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!editingImage && inputMode === 'upload' && (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <div className="text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -210,15 +270,31 @@ export default function GalleryManagement() {
                   </div>
                 )}
 
+                {(inputMode === 'url' || editingImage?.source === 'url') && (
+                  <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="alt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>Alt Text</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter image title" {...field} />
+                          <Input placeholder="Describe the image" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -254,23 +330,53 @@ export default function GalleryManagement() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter image description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="order"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display Order</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            value={field.value || 0}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="active"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Active</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            Show this image in gallery
+                          </div>
+                        </div>
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value || false}
+                            onChange={field.onChange}
+                            className="h-4 w-4"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="flex gap-2">
-                  <Button type="submit" disabled={uploadMutation.isPending || updateMutation.isPending}>
-                    {editingImage ? "Update Image" : "Upload Image"}
+                  <Button type="submit" disabled={uploadMutation.isPending || updateMutation.isPending || urlMutation.isPending}>
+                    {editingImage ? "Update Image" : (inputMode === 'upload' ? "Upload Image" : "Add Image")}
                   </Button>
                   <Button 
                     type="button" 
@@ -279,6 +385,7 @@ export default function GalleryManagement() {
                       setShowForm(false);
                       setEditingImage(null);
                       setSelectedFile(null);
+                      setInputMode('upload');
                       form.reset();
                     }}
                   >
@@ -292,7 +399,7 @@ export default function GalleryManagement() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {images?.map((image: any) => (
+        {(images || []).map((image: any) => (
           <Card key={image.id} className="overflow-hidden">
             <div className="aspect-square relative">
               <img

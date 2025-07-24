@@ -179,6 +179,14 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Fallback Images**: Default images still available if no gallery images are configured
 - **Admin Simplification**: Admins can manage all site images from single gallery interface
 
+### Gallery URL Support Enhancement (July 2025)
+- **Dual Input Methods**: Gallery management now supports both file uploads and external URL images
+- **Source Type Tracking**: Database schema updated with 'source' field to distinguish between 'upload' and 'url' images
+- **Admin Interface Toggle**: Admin panel features toggle buttons to switch between upload and URL input modes
+- **Flexible Image Management**: Admins can add images from external sources without needing to download and re-upload
+- **Schema Enhancement**: Made filename field optional for URL-based images while maintaining compatibility
+- **API Endpoints**: Added dedicated `/api/admin/gallery/url` endpoint for URL-based image creation
+
 ## GDPR & Legal Compliance
 
 ### Comprehensive Privacy Framework
