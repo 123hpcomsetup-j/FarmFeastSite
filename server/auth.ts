@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export async function authenticateAdmin(username: string, password: string) {
-  const admin = await storage.getAdminByUsername(username);
+  const admin = await storage.getAdminUserByUsername(username);
   if (!admin) {
     return null;
   }

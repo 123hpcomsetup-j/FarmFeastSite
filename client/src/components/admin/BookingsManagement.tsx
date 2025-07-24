@@ -139,45 +139,47 @@ export default function BookingsManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Array.isArray(bookings) ? bookings.map((booking: any) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-medium">#{booking.id}</TableCell>
-                  <TableCell>{booking.fullName}</TableCell>
-                  <TableCell>{booking.contactNumber}</TableCell>
-                  <TableCell>{format(new Date(booking.checkinDate), "MMM dd, yyyy")}</TableCell>
-                  <TableCell>{format(new Date(booking.checkoutDate), "MMM dd, yyyy")}</TableCell>
-                  <TableCell>{booking.guestCount}</TableCell>
-                  <TableCell>₹{booking.finalTotal?.toLocaleString()}</TableCell>
-                  <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={booking.status}
-                        onValueChange={(status) => 
-                          updateStatusMutation.mutate({ id: booking.id, status })
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedBooking(booking)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )) || (
+              {Array.isArray(bookings) && bookings.length > 0 ? (
+                bookings.map((booking: any) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">#{booking.id}</TableCell>
+                    <TableCell>{booking.fullName}</TableCell>
+                    <TableCell>{booking.contactNumber}</TableCell>
+                    <TableCell>{format(new Date(booking.checkinDate), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(booking.checkoutDate), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>{booking.guestCount}</TableCell>
+                    <TableCell>₹{booking.finalTotal?.toLocaleString()}</TableCell>
+                    <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={booking.status}
+                          onValueChange={(status) => 
+                            updateStatusMutation.mutate({ id: booking.id, status })
+                          }
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedBooking(booking)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                     No bookings found
