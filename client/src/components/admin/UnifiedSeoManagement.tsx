@@ -56,6 +56,14 @@ export default function UnifiedSeoManagement() {
       reviewTitle: "",
       reviewDescription: "",
       reviewKeywords: "",
+      reviewSnippet1Author: "Kinididoddi Pradeep",
+      reviewSnippet1Date: "2025-07-23",
+      reviewSnippet1Rating: "5",
+      reviewSnippet1Body: "Awesome! It's very good and perfectly suited for couples and families. ❤️💯",
+      reviewSnippet2Author: "Ravi Kumar",
+      reviewSnippet2Date: "2025-07-21",
+      reviewSnippet2Rating: "5",
+      reviewSnippet2Body: "Great place for a peaceful weekend. The pool and garden area were beautifully maintained!",
     },
   });
 
@@ -554,6 +562,162 @@ export default function UnifiedSeoManagement() {
                       />
                     </div>
 
+                    {/* Individual Review Snippets */}
+                    <div className="space-y-6">
+                      <h4 className="font-semibold text-lg flex items-center">
+                        <Star className="h-5 w-5 mr-2 text-yellow-500" />
+                        Review Snippets for Search Results
+                      </h4>
+                      
+                      {/* Review Snippet 1 */}
+                      <div className="border rounded-lg p-4 space-y-3">
+                        <h5 className="font-medium text-gray-700">Review Snippet #1</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet1Author"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Author Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Customer Name" value={field.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet1Date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Review Date</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="date" value={field.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet1Rating"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rating</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select rating" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="5">5 Stars</SelectItem>
+                                      <SelectItem value="4">4 Stars</SelectItem>
+                                      <SelectItem value="3">3 Stars</SelectItem>
+                                      <SelectItem value="2">2 Stars</SelectItem>
+                                      <SelectItem value="1">1 Star</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="reviewSnippet1Body"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Review Text</FormLabel>
+                              <FormControl>
+                                <Textarea {...field} placeholder="Customer review content..." value={field.value || ""} />
+                              </FormControl>
+                              <FormDescription>What the customer said about their experience</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      {/* Review Snippet 2 */}
+                      <div className="border rounded-lg p-4 space-y-3">
+                        <h5 className="font-medium text-gray-700">Review Snippet #2</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet2Author"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Author Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Customer Name" value={field.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet2Date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Review Date</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="date" value={field.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="reviewSnippet2Rating"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rating</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select rating" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="5">5 Stars</SelectItem>
+                                      <SelectItem value="4">4 Stars</SelectItem>
+                                      <SelectItem value="3">3 Stars</SelectItem>
+                                      <SelectItem value="2">2 Stars</SelectItem>
+                                      <SelectItem value="1">1 Star</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="reviewSnippet2Body"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Review Text</FormLabel>
+                              <FormControl>
+                                <Textarea {...field} placeholder="Customer review content..." value={field.value || ""} />
+                              </FormControl>
+                              <FormDescription>What the customer said about their experience</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
                     {/* Live Preview */}
                     <div className="border rounded p-4 bg-gray-50">
                       <h4 className="font-semibold mb-2">Search Result Preview</h4>
@@ -561,6 +725,30 @@ export default function UnifiedSeoManagement() {
                         <div className="text-blue-600 text-lg">{form.watch("businessName") || "Your Business"}</div>
                         <div className="text-gray-600">★★★★☆ {form.watch("averageRating") || "0.0"} ({form.watch("reviewCount") || 0} reviews)</div>
                         <div className="text-gray-700 mt-1">{form.watch("description") || "Your page description..."}</div>
+                        {form.watch("showInSnippets") && (
+                          <div className="mt-3 space-y-2">
+                            {form.watch("reviewSnippet1Body") && (
+                              <div className="bg-white p-3 rounded border-l-4 border-yellow-400">
+                                <div className="flex items-center text-xs text-gray-600 mb-1">
+                                  <span className="font-medium">{form.watch("reviewSnippet1Author") || "Customer"}</span>
+                                  <span className="mx-2">•</span>
+                                  <span>{"★".repeat(parseInt(form.watch("reviewSnippet1Rating") || "5"))}</span>
+                                </div>
+                                <div className="text-gray-800 text-sm">"{form.watch("reviewSnippet1Body")}"</div>
+                              </div>
+                            )}
+                            {form.watch("reviewSnippet2Body") && (
+                              <div className="bg-white p-3 rounded border-l-4 border-yellow-400">
+                                <div className="flex items-center text-xs text-gray-600 mb-1">
+                                  <span className="font-medium">{form.watch("reviewSnippet2Author") || "Customer"}</span>
+                                  <span className="mx-2">•</span>
+                                  <span>{"★".repeat(parseInt(form.watch("reviewSnippet2Rating") || "5"))}</span>
+                                </div>
+                                <div className="text-gray-800 text-sm">"{form.watch("reviewSnippet2Body")}"</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TabsContent>

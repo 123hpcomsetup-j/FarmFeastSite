@@ -1006,34 +1006,46 @@ Farm Feast Farm House Team
 
         // Add individual review snippets if enabled
         if (seoSettings?.showInSnippets) {
-          structuredData.review = [
-            {
+          const reviews = [];
+          
+          // Add review snippet 1 if available
+          if (seoSettings.reviewSnippet1Body && seoSettings.reviewSnippet1Author) {
+            reviews.push({
               "@type": "Review",
               "author": {
                 "@type": "Person",
-                "name": "Kinididoddi Pradeep"
+                "name": seoSettings.reviewSnippet1Author
               },
-              "datePublished": "2025-07-23",
+              "datePublished": seoSettings.reviewSnippet1Date || "2025-07-23",
               "reviewRating": {
                 "@type": "Rating",
-                "ratingValue": "5"
+                "ratingValue": seoSettings.reviewSnippet1Rating || "5"
               },
-              "reviewBody": "Awesome! It's very good and perfectly suited for couples and families. ❤️💯"
-            },
-            {
+              "reviewBody": seoSettings.reviewSnippet1Body
+            });
+          }
+          
+          // Add review snippet 2 if available
+          if (seoSettings.reviewSnippet2Body && seoSettings.reviewSnippet2Author) {
+            reviews.push({
               "@type": "Review",
               "author": {
                 "@type": "Person",
-                "name": "Ravi Kumar"
+                "name": seoSettings.reviewSnippet2Author
               },
-              "datePublished": "2025-07-21",
+              "datePublished": seoSettings.reviewSnippet2Date || "2025-07-21",
               "reviewRating": {
                 "@type": "Rating",
-                "ratingValue": "5"
+                "ratingValue": seoSettings.reviewSnippet2Rating || "5"
               },
-              "reviewBody": "Great place for a peaceful weekend. The pool and garden area were beautifully maintained!"
-            }
-          ];
+              "reviewBody": seoSettings.reviewSnippet2Body
+            });
+          }
+          
+          // Only add reviews if we have at least one
+          if (reviews.length > 0) {
+            structuredData.review = reviews;
+          }
         }
       }
 

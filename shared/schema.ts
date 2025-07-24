@@ -94,6 +94,15 @@ export const seoSettings = pgTable("seo_settings", {
   reviewTitle: text("review_title"), // Dynamic review title for SEO
   reviewDescription: text("review_description"), // Dynamic review description
   reviewKeywords: text("review_keywords"), // Dynamic review keywords
+  // Individual review snippets for rich search results
+  reviewSnippet1Author: text("review_snippet_1_author").default("Kinididoddi Pradeep"),
+  reviewSnippet1Date: text("review_snippet_1_date").default("2025-07-23"),
+  reviewSnippet1Rating: text("review_snippet_1_rating").default("5"),
+  reviewSnippet1Body: text("review_snippet_1_body").default("Awesome! It's very good and perfectly suited for couples and families. ❤️💯"),
+  reviewSnippet2Author: text("review_snippet_2_author").default("Ravi Kumar"),
+  reviewSnippet2Date: text("review_snippet_2_date").default("2025-07-21"),
+  reviewSnippet2Rating: text("review_snippet_2_rating").default("5"),
+  reviewSnippet2Body: text("review_snippet_2_body").default("Great place for a peaceful weekend. The pool and garden area were beautifully maintained!"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
