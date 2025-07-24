@@ -1136,6 +1136,70 @@ class DatabaseStorage implements IStorage {
     const result = await this.db.delete(homepageImages).where(eq(homepageImages.id, id));
     return result.rowCount > 0;
   }
+
+  // Site Settings
+  async getAllSiteSettings(): Promise<SiteSettings[]> {
+    return await this.db.select().from(siteSettings).orderBy(siteSettings.key);
+  }
+
+  async getSiteSettingByKey(key: string): Promise<SiteSettings | undefined> {
+    const [setting] = await this.db.select().from(siteSettings).where(eq(siteSettings.key, key));
+    return setting;
+  }
+
+  async createSiteSetting(setting: InsertSiteSettings): Promise<SiteSettings> {
+    const [newSetting] = await this.db.insert(siteSettings).values(setting).returning();
+    return newSetting;
+  }
+
+  async updateSiteSettings(id: number, setting: Partial<InsertSiteSettings>): Promise<SiteSettings | undefined> {
+    const [updatedSetting] = await this.db
+      .update(siteSettings)
+      .set({ ...setting, updatedAt: new Date() })
+      .where(eq(siteSettings.id, id))
+      .returning();
+    return updatedSetting;
+  }
+
+  async upsertSiteSettings(setting: InsertSiteSettings): Promise<SiteSettings> {
+    const existingSetting = await this.getSiteSettingByKey(setting.key);
+    
+    if (existingSetting) {
+      const [updated] = await this.db
+        .update(siteSettings)
+        .set({ ...setting, updatedAt: new Date() })
+        .where(eq(siteSettings.key, setting.key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await this.db.insert(siteSettings).values(setting).returning();
+      return created;
+    }
+  }
+
+  async deleteSiteSetting(id: number): Promise<boolean> {
+    const result = await this.db.delete(siteSettings).where(eq(siteSettings.id, id));
+    return result.rowCount > 0;
+  }
+
+  // SEO Settings
+  async updateSeoSettings(id: number, settings: Partial<InsertSeoSettings>): Promise<SeoSettings | undefined> {
+    const [updatedSettings] = await this.db
+      .update(seoSettings)
+      .set({ ...settings, updatedAt: new Date() })
+      .where(eq(seoSettings.id, id))
+      .returning();
+    return updatedSettings;
+  }
+
+  // Missing methods for Blog Posts
+  async getPublishedBlogPosts(): Promise<BlogPost[]> {
+    return await this.db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.status, "published"))
+      .orderBy(blogPosts.publishedAt);
+  }
 }
 
 // Import database connection
