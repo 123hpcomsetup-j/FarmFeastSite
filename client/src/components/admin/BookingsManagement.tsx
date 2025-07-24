@@ -27,9 +27,15 @@ export default function BookingsManagement() {
     checkinDate: '',
     checkoutDate: '',
     guestCount: 1,
-    finalTotal: 0,
-    address: '',
-    notes: ''
+    checkinTime: '12:00',
+    checkoutTime: '11:00',
+    basePrice: 1150,
+    servicesPrice: 0,
+    discountAmount: 0,
+    finalTotal: 1150,
+    selectedServices: [],
+    couponCode: '',
+    specialRequests: ''
   });
 
   const { data: bookings = [], isLoading } = useQuery({
@@ -91,9 +97,15 @@ export default function BookingsManagement() {
         checkinDate: '',
         checkoutDate: '',
         guestCount: 1,
-        finalTotal: 0,
-        address: '',
-        notes: ''
+        checkinTime: '12:00',
+        checkoutTime: '11:00',
+        basePrice: 1150,
+        servicesPrice: 0,
+        discountAmount: 0,
+        finalTotal: 1150,
+        selectedServices: [],
+        couponCode: '',
+        specialRequests: ''
       });
       toast({
         title: "Success",
@@ -110,7 +122,13 @@ export default function BookingsManagement() {
   });
 
   const handleCreateBooking = () => {
-    createBookingMutation.mutate(newBooking);
+    // Calculate final total based on guest count and base price
+    const calculatedTotal = Math.max(newBooking.basePrice * newBooking.guestCount + newBooking.servicesPrice - newBooking.discountAmount, 0);
+    const bookingData = {
+      ...newBooking,
+      finalTotal: calculatedTotal
+    };
+    createBookingMutation.mutate(bookingData);
   };
 
   const getStatusBadge = (status: string) => {
@@ -281,21 +299,11 @@ export default function BookingsManagement() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={newBooking.address}
-                    onChange={(e) => setNewBooking({...newBooking, address: e.target.value})}
-                    placeholder="Customer's address"
-                  />
-                </div>
-                
-                <div className="col-span-2">
-                  <Label htmlFor="notes">Special Notes</Label>
+                  <Label htmlFor="specialRequests">Special Requests</Label>
                   <Textarea
-                    id="notes"
-                    value={newBooking.notes}
-                    onChange={(e) => setNewBooking({...newBooking, notes: e.target.value})}
+                    id="specialRequests"
+                    value={newBooking.specialRequests}
+                    onChange={(e) => setNewBooking({...newBooking, specialRequests: e.target.value})}
                     placeholder="Any special requirements or notes"
                     rows={3}
                   />
