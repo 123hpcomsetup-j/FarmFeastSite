@@ -112,9 +112,9 @@ export default function SeoManagement() {
     resolver: zodResolver(insertReviewSettingsSchema),
     defaultValues: {
       reviewCount: 0,
-      averageRating: 0,
+      averageRating: "0.0",
       businessName: "",
-      ratingScale: 5,
+      ratingScale: "5",
       reviewsEnabled: true,
       showInSnippets: true,
     },
@@ -294,9 +294,9 @@ export default function SeoManagement() {
               if (reviewSettings) {
                 reviewForm.reset({
                   reviewCount: reviewSettings.reviewCount || 0,
-                  averageRating: reviewSettings.averageRating || 0,
+                  averageRating: reviewSettings.averageRating || "0.0",
                   businessName: reviewSettings.businessName || "",
-                  ratingScale: reviewSettings.ratingScale || 5,
+                  ratingScale: reviewSettings.ratingScale || "5",
                   reviewsEnabled: reviewSettings.reviewsEnabled ?? true,
                   showInSnippets: reviewSettings.showInSnippets ?? true,
                 });
@@ -331,7 +331,7 @@ export default function SeoManagement() {
                     <div className="text-sm text-gray-600">
                       <p><strong>Business Name:</strong> {reviewSettings.businessName || "Not set"}</p>
                       <p><strong>Review Count:</strong> {reviewSettings.reviewCount || 0} reviews</p>
-                      <p><strong>Average Rating:</strong> {reviewSettings.averageRating || 0}/{reviewSettings.ratingScale || 5} stars</p>
+                      <p><strong>Average Rating:</strong> {reviewSettings.averageRating || "0.0"}/{reviewSettings.ratingScale || "5"} stars</p>
                     </div>
                   </div>
                   
@@ -355,7 +355,7 @@ export default function SeoManagement() {
                     <h3 className="font-semibold text-gray-900">Search Preview</h3>
                     <div className="border rounded p-3 bg-gray-50 text-sm">
                       <div className="text-blue-600 text-lg">{reviewSettings.businessName || "Your Business"}</div>
-                      <div className="text-gray-600">★★★★☆ {reviewSettings.averageRating || 0} ({reviewSettings.reviewCount || 0} reviews)</div>
+                      <div className="text-gray-600">★★★★☆ {reviewSettings.averageRating || "0.0"} ({reviewSettings.reviewCount || 0} reviews)</div>
                       <div className="text-gray-700 mt-1">Premium farmhouse rental with luxury amenities...</div>
                     </div>
                   </div>
@@ -423,7 +423,7 @@ export default function SeoManagement() {
                                 step="0.1"
                                 min="0"
                                 max="5"
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => field.onChange(e.target.value || "0.0")}
                                 value={field.value || ''}
                               />
                             </FormControl>
@@ -441,7 +441,7 @@ export default function SeoManagement() {
                             <FormLabel>Rating Scale</FormLabel>
                             <FormControl>
                               <Select 
-                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                onValueChange={(value) => field.onChange(value)} 
                                 value={field.value?.toString()}
                               >
                                 <SelectTrigger>

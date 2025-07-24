@@ -743,7 +743,7 @@ Farm Feast Farm House Team
     }
   });
 
-  app.get("/api/admin/reviews", requireAdmin, async (req, res) => {
+  app.get("/api/admin/reviews/settings", requireAdmin, async (req, res) => {
     try {
       const settings = await storage.getReviewSettings();
       res.json(settings || {
@@ -760,7 +760,7 @@ Farm Feast Farm House Team
     }
   });
 
-  app.post("/api/admin/reviews", requireAdmin, async (req, res) => {
+  app.put("/api/admin/reviews/settings", requireAdmin, async (req, res) => {
     try {
       const result = insertReviewSettingsSchema.safeParse(req.body);
       if (!result.success) {
