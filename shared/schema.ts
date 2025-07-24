@@ -153,6 +153,22 @@ export const blogPosts = pgTable("blog_posts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Contact messages table
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  subject: varchar("subject", { length: 200 }).notNull(),
+  message: text("message").notNull(),
+  status: text("status").default("new"), // new, read, replied, closed
+  replied: boolean("replied").default(false),
+  replyMessage: text("reply_message"),
+  repliedAt: timestamp("replied_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   createdAt: true,
@@ -213,6 +229,16 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
   viewCount: true,
 });
 
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
+  id: true,
+  status: true,
+  replied: true,
+  replyMessage: true,
+  repliedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Admin login schema
 export const adminLoginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -239,6 +265,8 @@ export type Amenity = typeof amenities.$inferSelect;
 export type InsertAmenity = z.infer<typeof insertAmenitySchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 
 // Homepage Images table
 export const homepageImages = pgTable("homepage_images", {
