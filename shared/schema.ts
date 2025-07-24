@@ -102,10 +102,11 @@ export const reviewSettings = pgTable("review_settings", {
 // Gallery images table
 export const galleryImages = pgTable("gallery_images", {
   id: serial("id").primaryKey(),
-  filename: text("filename").notNull(),
+  filename: text("filename"), // Optional for URL-based images
   alt: text("alt").notNull(),
   category: text("category").notNull(),
   url: text("url").notNull(),
+  source: text("source").default("upload"), // 'upload' or 'url'
   order: integer("order").default(0),
   active: boolean("active").default(true),
   uploadedAt: timestamp("uploaded_at").defaultNow(),

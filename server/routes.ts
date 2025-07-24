@@ -784,14 +784,13 @@ Farm Feast Farm House Team
       }
 
       const imageData = {
-        title: req.body.title || req.file.originalname,
-        description: req.body.description || '',
         url: `/uploads/${req.file.filename}`,
-        category: req.body.category || 'general',
+        category: req.body.category || 'exterior',
         filename: req.file.filename,
-        alt: req.body.title || req.file.originalname,
-        order: parseInt(req.body.order) || 1,
-        active: true
+        alt: req.body.alt || req.file.originalname,
+        source: 'upload',
+        order: parseInt(req.body.order) || 0,
+        active: req.body.active !== undefined ? req.body.active === 'true' : true
       };
 
       const image = await storage.createGalleryImage(imageData);
@@ -799,6 +798,31 @@ Farm Feast Farm House Team
     } catch (error) {
       console.error("Error uploading image:", error);
       res.status(500).json({ message: "Failed to upload image" });
+    }
+  });
+
+  app.post("/api/admin/gallery/url", requireAdmin, async (req, res) => {
+    try {
+      const result = insertGalleryImageSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid gallery data", 
+          errors: result.error.issues 
+        });
+      }
+
+      // For URL-based images, filename is null
+      const imageData = {
+        ...result.data,
+        filename: null,
+        source: 'url'
+      };
+
+      const image = await storage.createGalleryImage(imageData);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error("Error adding URL image:", error);
+      res.status(500).json({ message: "Failed to add URL image" });
     }
   });
 
