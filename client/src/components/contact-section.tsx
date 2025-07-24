@@ -44,6 +44,7 @@ export default function ContactSection() {
               <a
                 href={`tel:${getSetting("contact_phone", "8897326898")}`}
                 className="block text-primary hover:text-primary/80 text-lg font-medium"
+                aria-label={`Call Farm Feast Farm House at ${getSetting("contact_phone", "8897326898")}`}
               >
                 {getSetting("contact_phone", "8897326898").replace("+91", "")}
               </a>
@@ -51,6 +52,7 @@ export default function ContactSection() {
                 <a
                   href={`tel:${getSetting("phone_secondary", "8309001021")}`}
                   className="block text-primary hover:text-primary/80 text-lg font-medium"
+                  aria-label={`Call secondary number ${getSetting("phone_secondary", "8309001021")}`}
                 >
                   {getSetting("phone_secondary", "8309001021")}
                 </a>
@@ -68,6 +70,7 @@ export default function ContactSection() {
                 href={`https://wa.me/${getSetting("whatsapp_number", "918897326898")}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Start WhatsApp chat with Farm Feast Farm House"
               >
                 Chat Now
               </a>

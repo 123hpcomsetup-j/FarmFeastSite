@@ -82,7 +82,7 @@ export default function GallerySection() {
         
         <div className="text-center mt-8">
           <Link href="/gallery">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" aria-label="View complete photo gallery with all property images">
               View More Photos
             </Button>
           </Link>

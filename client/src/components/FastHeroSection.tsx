@@ -72,6 +72,7 @@ const FastHeroSection = memo(() => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center"
+                  aria-label="Contact Farm Feast Farm House via WhatsApp"
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp
@@ -95,7 +96,7 @@ const FastHeroSection = memo(() => {
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src={imageSrc}
-                alt={heroData.heroImage?.alt || "Farm Feast Farm House - Luxury Farmhouse"}
+                alt={heroData.heroImage?.alt || "Farm Feast Farm House - Luxury farmhouse exterior with modern amenities and beautiful landscaping"}
                 className="w-full h-full object-cover"
                 width={800}
                 height={600}

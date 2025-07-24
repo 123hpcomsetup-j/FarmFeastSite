@@ -19,7 +19,7 @@ const FastNavbar = memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2" aria-label="Farm Feast Farm House - Go to homepage">
             <span className="text-2xl font-bold text-primary">Farm Feast</span>
           </Link>
 
@@ -39,6 +39,7 @@ const FastNavbar = memo(() => {
             <a
               href="tel:+918897326898"
               className="flex items-center space-x-1 text-sm font-medium text-primary hover:text-primary/80"
+              aria-label="Call Farm Feast Farm House at +91 88973 26898"
             >
               <Phone className="w-4 h-4" />
               <span className="hidden lg:inline">+91 88973 26898</span>
@@ -49,6 +50,9 @@ const FastNavbar = memo(() => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 rounded-md text-foreground hover:text-primary"
+            aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -56,7 +60,7 @@ const FastNavbar = memo(() => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div id="mobile-menu" className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
@@ -73,6 +77,7 @@ const FastNavbar = memo(() => {
               <a
                 href="tel:+918897326898"
                 className="flex items-center space-x-2 text-primary font-medium"
+                aria-label="Call Farm Feast Farm House at +91 88973 26898"
               >
                 <Phone className="w-4 h-4" />
                 <span>+91 88973 26898</span>
