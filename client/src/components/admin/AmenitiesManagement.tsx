@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminQueryFn } from "@/lib/queryClient";
 import { insertAmenitySchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, Trash2, RefreshCw, Star } from "lucide-react";
@@ -25,11 +25,7 @@ export default function AmenitiesManagement() {
 
   const { data: amenities, isLoading } = useQuery({
     queryKey: ["/api/admin/amenities"],
-    meta: {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-      },
-    },
+    queryFn: getAdminQueryFn,
   });
 
   const form = useForm<AmenityForm>({
@@ -44,13 +40,8 @@ export default function AmenitiesManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: AmenityForm) => {
-      return apiRequest("/api/admin/amenities", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("POST", "/api/admin/amenities", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/amenities"] });
@@ -69,13 +60,8 @@ export default function AmenitiesManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: AmenityForm }) => {
-      return apiRequest(`/api/admin/amenities/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("PUT", `/api/admin/amenities/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/amenities"] });
@@ -95,12 +81,8 @@ export default function AmenitiesManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/amenities/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
+      const response = await apiRequest("DELETE", `/api/admin/amenities/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/amenities"] });
