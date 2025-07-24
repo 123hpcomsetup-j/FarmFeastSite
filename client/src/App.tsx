@@ -9,6 +9,8 @@ import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Gallery from "@/pages/gallery";
 import Location from "@/pages/location";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
 import Booking from "@/pages/booking";
 import Payment from "@/pages/payment";
 import PaymentSuccess from "@/pages/payment-success";
@@ -29,6 +31,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
       <Route path="/gallery" component={Gallery} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/location" component={Location} />
       <Route path="/booking" component={Booking} />
       <Route path="/payment" component={Payment} />
