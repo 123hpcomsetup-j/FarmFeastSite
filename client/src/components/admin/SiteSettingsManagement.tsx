@@ -42,6 +42,8 @@ export default function SiteSettingsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings", "upi_id"] });
       toast({ title: "Success", description: "Setting created successfully" });
       setShowForm(false);
       form.reset();
@@ -61,6 +63,8 @@ export default function SiteSettingsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings", "upi_id"] });
       toast({ title: "Success", description: "Setting updated successfully" });
       setEditingSetting(null);
       setShowForm(false);
@@ -167,7 +171,7 @@ export default function SiteSettingsManagement() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {predefinedSettings.map((setting) => {
-              const existingSetting = settings.find((s: any) => s.key === setting.key);
+              const existingSetting = Array.isArray(settings) ? settings.find((s: any) => s.key === setting.key) : null;
               return (
                 <Button
                   key={setting.key}
@@ -302,7 +306,7 @@ export default function SiteSettingsManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {settings.map((setting: any) => (
+              {Array.isArray(settings) && settings.map((setting: any) => (
                 <TableRow key={setting.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
