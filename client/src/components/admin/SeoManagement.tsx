@@ -12,20 +12,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertSeoSettingsSchema } from "@shared/schema";
+import { insertSeoSettingsSchema, insertReviewSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { Plus, Edit, RefreshCw, Search, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 type SeoForm = z.infer<typeof insertSeoSettingsSchema>;
+type ReviewForm = z.infer<typeof insertReviewSettingsSchema>;
 
 export default function SeoManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingPage, setEditingPage] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'seo' | 'reviews'>('seo');
 
   const { data: seoPages, isLoading } = useQuery({
     queryKey: ["/api/admin/seo"],
+    meta: {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+      },
+    },
+  });
+
+  const { data: reviewSettings, isLoading: reviewLoading } = useQuery({
+    queryKey: ["/api/admin/reviews/settings"],
     meta: {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
@@ -91,6 +103,37 @@ export default function SeoManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to update SEO settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reviewForm = useForm<ReviewForm>({
+    resolver: zodResolver(insertReviewSettingsSchema),
+    defaultValues: {
+      reviewCount: 0,
+      averageRating: 0,
+      businessName: "",
+      ratingScale: 5,
+      reviewsEnabled: true,
+      showInSnippets: true,
+    },
+  });
+
+  const updateReviewMutation = useMutation({
+    mutationFn: async (data: ReviewForm) => {
+      return apiRequest("PUT", "/api/admin/reviews/settings", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/reviews/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reviews/seo"] });
+      toast({ title: "Success", description: "Review settings updated successfully" });
+      setShowReviewForm(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update review settings",
         variant: "destructive",
       });
     },
@@ -209,24 +252,279 @@ export default function SeoManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">SEO Management</h2>
-          <p className="text-gray-600">Optimize search engine visibility for each page</p>
+          <h2 className="text-2xl font-bold text-gray-900">SEO & Review Management</h2>
+          <p className="text-gray-600">Optimize search visibility and manage review snippets</p>
+          <div className="flex gap-2 mt-3">
+            <Button 
+              variant={activeTab === 'seo' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('seo')}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Search className="h-4 w-4" />
+              SEO Settings
+            </Button>
+            <Button 
+              variant={activeTab === 'reviews' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('reviews')}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              ⭐ Review Snippets
+            </Button>
+          </div>
         </div>
-        <Button 
-          onClick={() => {
-            setEditingPage(null);
-            form.reset();
-            setShowForm(!showForm);
-          }}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Page SEO
-        </Button>
+        {activeTab === 'seo' && (
+          <Button 
+            onClick={() => {
+              setEditingPage(null);
+              form.reset();
+              setShowForm(!showForm);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Page SEO
+          </Button>
+        )}
+        
+        {activeTab === 'reviews' && (
+          <Button 
+            onClick={() => {
+              if (reviewSettings) {
+                reviewForm.reset({
+                  reviewCount: reviewSettings.reviewCount || 0,
+                  averageRating: reviewSettings.averageRating || 0,
+                  businessName: reviewSettings.businessName || "",
+                  ratingScale: reviewSettings.ratingScale || 5,
+                  reviewsEnabled: reviewSettings.reviewsEnabled ?? true,
+                  showInSnippets: reviewSettings.showInSnippets ?? true,
+                });
+              }
+              setShowReviewForm(!showReviewForm);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Edit className="h-4 w-4" />
+            Edit Review Settings
+          </Button>
+        )}
       </div>
 
+      {/* Review Settings Tab */}
+      {activeTab === 'reviews' && (
+        <div className="space-y-6">
+          {reviewSettings && !showReviewForm && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  ⭐ Review Display Settings
+                  <Badge variant={reviewSettings.showInSnippets ? "default" : "secondary"}>
+                    {reviewSettings.showInSnippets ? "Enabled" : "Disabled"}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-900">Business Information</h3>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Business Name:</strong> {reviewSettings.businessName || "Not set"}</p>
+                      <p><strong>Review Count:</strong> {reviewSettings.reviewCount || 0} reviews</p>
+                      <p><strong>Average Rating:</strong> {reviewSettings.averageRating || 0}/{reviewSettings.ratingScale || 5} stars</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-900">Display Settings</h3>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Reviews Enabled:</strong> 
+                        <Badge variant={reviewSettings.reviewsEnabled ? "default" : "secondary"} className="ml-2">
+                          {reviewSettings.reviewsEnabled ? "Yes" : "No"}
+                        </Badge>
+                      </p>
+                      <p><strong>Show in Search:</strong>
+                        <Badge variant={reviewSettings.showInSnippets ? "default" : "secondary"} className="ml-2">
+                          {reviewSettings.showInSnippets ? "Yes" : "No"}
+                        </Badge>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-900">Search Preview</h3>
+                    <div className="border rounded p-3 bg-gray-50 text-sm">
+                      <div className="text-blue-600 text-lg">{reviewSettings.businessName || "Your Business"}</div>
+                      <div className="text-gray-600">★★★★☆ {reviewSettings.averageRating || 0} ({reviewSettings.reviewCount || 0} reviews)</div>
+                      <div className="text-gray-700 mt-1">Premium farmhouse rental with luxury amenities...</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Review Settings Form */}
+          {showReviewForm && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Review Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...reviewForm}>
+                  <form onSubmit={reviewForm.handleSubmit((data) => updateReviewMutation.mutate(data))} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={reviewForm.control}
+                        name="businessName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Business Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Farm Feast Farm House" />
+                            </FormControl>
+                            <FormDescription>Name displayed in search results</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={reviewForm.control}
+                        name="reviewCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Total Reviews</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="number" 
+                                min="0"
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                value={field.value || ''}
+                              />
+                            </FormControl>
+                            <FormDescription>Total number of reviews</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={reviewForm.control}
+                        name="averageRating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Average Rating</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="number" 
+                                step="0.1"
+                                min="0"
+                                max="5"
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                value={field.value || ''}
+                              />
+                            </FormControl>
+                            <FormDescription>Average rating (0-5 stars)</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={reviewForm.control}
+                        name="ratingScale"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rating Scale</FormLabel>
+                            <FormControl>
+                              <Select 
+                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                value={field.value?.toString()}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select scale" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="5">5 Stars</SelectItem>
+                                  <SelectItem value="10">10 Points</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormDescription>Maximum rating scale</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <FormField
+                        control={reviewForm.control}
+                        name="reviewsEnabled"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="rounded"
+                              />
+                            </FormControl>
+                            <FormLabel>Enable Reviews</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={reviewForm.control}
+                        name="showInSnippets"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="rounded"
+                              />
+                            </FormControl>
+                            <FormLabel>Show in Search Results</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button 
+                        type="submit" 
+                        disabled={updateReviewMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        {updateReviewMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
+                        Update Review Settings
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => setShowReviewForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* SEO Overview Dashboard */}
-      {seoPages && seoPages.length > 0 && (
+      {activeTab === 'seo' && seoPages && seoPages.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>SEO Overview Dashboard</CardTitle>
@@ -284,7 +582,7 @@ export default function SeoManagement() {
         </Card>
       )}
 
-      {showForm && (
+      {activeTab === 'seo' && showForm && (
         <Card>
           <CardHeader>
             <CardTitle>{editingPage ? "Edit SEO Settings" : "Add Page SEO Settings"}</CardTitle>
