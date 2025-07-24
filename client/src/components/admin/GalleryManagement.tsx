@@ -27,6 +27,10 @@ export default function GalleryManagement() {
   const { data: images, isLoading } = useQuery({
     queryKey: ["/api/admin/gallery"],
     queryFn: getAdminQueryFn,
+    staleTime: 0, // No cache for real-time updates
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   const form = useForm<GalleryImageForm>({
@@ -57,6 +61,7 @@ export default function GalleryManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/gallery"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/gallery"] });
       toast({ title: "Success", description: "Image uploaded successfully" });
       setShowForm(false);
       setSelectedFile(null);
@@ -77,6 +82,7 @@ export default function GalleryManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/gallery"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/gallery"] });
       toast({ title: "Success", description: "Image updated successfully" });
       setEditingImage(null);
       setShowForm(false);
@@ -97,6 +103,7 @@ export default function GalleryManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/gallery"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/gallery"] });
       toast({ title: "Success", description: "Image deleted successfully" });
     },
     onError: (error: any) => {
@@ -114,6 +121,7 @@ export default function GalleryManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/gallery"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/gallery"] });
       toast({ title: "Success", description: "Image added successfully" });
       setShowForm(false);
       form.reset();
