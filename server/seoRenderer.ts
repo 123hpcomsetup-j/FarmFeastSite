@@ -27,7 +27,7 @@ const seoTemplates = {
     title: "Book Your Stay - Farm Feast Farm House",
     description: "Reserve your perfect farmhouse getaway. Easy online booking with instant pricing, service selection, and availability checking.",
     keywords: "book farmhouse, online booking, reservation, availability, pricing",
-    schemaType: "Service"
+    schemaType: "LodgingBusiness"
   },
   contact: {
     title: "Contact Us - Farm Feast Farm House",
