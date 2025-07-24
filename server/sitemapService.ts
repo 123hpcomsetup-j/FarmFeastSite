@@ -160,9 +160,19 @@ export class SitemapService {
   }
 
   private async getBlogPages(): Promise<SitemapUrl[]> {
-    // Future implementation for blog posts
-    // This would fetch from a blog/posts table when implemented
-    return [];
+    try {
+      const blogPosts = await storage.getPublishedBlogPosts();
+      
+      return blogPosts.map(post => ({
+        loc: `${this.baseUrl}/blog/${post.slug}`,
+        lastmod: this.formatDate(post.updatedAt || post.createdAt),
+        changefreq: 'weekly' as const,
+        priority: '0.7'
+      }));
+    } catch (error) {
+      console.error('Error fetching blog posts for sitemap:', error);
+      return [];
+    }
   }
 
   private slugify(text: string): string {
