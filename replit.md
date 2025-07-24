@@ -286,6 +286,15 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Complete Site Coverage**: All 11 public pages now have dedicated SEO configurations with no fallback content
 - **Search Engine Optimization**: Legal pages properly indexed with relevant keywords for compliance and legal discoverability
 
+### Individual Blog Post SEO Fix (July 2025)
+- **Blog Post SEO Issue Resolved**: Fixed individual blog posts not being visible to Google by implementing dedicated crawler endpoints
+- **Server-Side Blog Rendering**: Created `/api/crawler/blog/:slug` endpoints that render complete HTML with blog post's own meta tags
+- **Dynamic Blog Post SEO**: Blog posts now use their own metaTitle and metaDescription fields instead of generic blog page SEO
+- **BlogPosting Structured Data**: Added proper JSON-LD schema with author, publish dates, and content organization for rich snippets
+- **Enhanced Sitemap Coverage**: Updated sitemap to include both user-facing blog URLs and crawler endpoints for maximum discoverability
+- **Search Engine Compliance**: Individual blog posts now properly indexed with unique titles, descriptions, and structured data
+- **SEO Component Integration**: Added SeoHead component to blog post pages for client-side SEO meta tag rendering
+
 ### Custom Scripts Implementation Fix (July 2025)
 - **Missing Script Execution**: Fixed critical issue where custom scripts were managed in admin panel but not executing on website
 - **Public API Endpoint**: Added `/api/custom-scripts` endpoint to fetch active scripts for public website

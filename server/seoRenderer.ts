@@ -40,6 +40,12 @@ const seoTemplates = {
 // Get page name from URL path
 function getPageFromPath(path: string): string {
   if (path === '/' || path === '') return 'home';
+  
+  // Handle blog post URLs specially
+  if (path.startsWith('/blog/') && path.split('/').length === 3) {
+    return 'blog-post';
+  }
+  
   const pageName = path.replace('/', '').split('/')[0] || 'home';
   return pageName;
 }

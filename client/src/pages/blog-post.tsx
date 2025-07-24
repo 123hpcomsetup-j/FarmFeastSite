@@ -6,6 +6,7 @@ import { Calendar, Clock, ArrowLeft, Eye } from "lucide-react";
 import { BlogPost } from "@shared/schema";
 import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
+import SeoHead from "@/components/SeoHead";
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -50,6 +51,12 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <SeoHead 
+        title={post.metaTitle || `${post.title} - Farm Feast Farm House Blog`}
+        description={post.metaDescription || post.excerpt || ''}
+        image={post.featuredImage || undefined}
+        type="article"
+      />
       <FastNavbar />
       
       <main className="container mx-auto px-4 py-8">

@@ -163,12 +163,36 @@ export class SitemapService {
     try {
       const blogPosts = await storage.getPublishedBlogPosts();
       
-      return blogPosts.map(post => ({
-        loc: `${this.baseUrl}/blog/${post.slug}`,
-        lastmod: this.formatDate(post.updatedAt || post.createdAt),
+      const blogUrls: SitemapUrl[] = [];
+      
+      // Add blog listing page
+      blogUrls.push({
+        loc: `${this.baseUrl}/blog`,
+        lastmod: this.formatDate(new Date()),
         changefreq: 'weekly' as const,
-        priority: '0.7'
-      }));
+        priority: '0.8'
+      });
+      
+      // Add individual blog posts
+      blogPosts.forEach(post => {
+        // Add user-facing blog post URL
+        blogUrls.push({
+          loc: `${this.baseUrl}/blog/${post.slug}`,
+          lastmod: this.formatDate(post.updatedAt || post.createdAt),
+          changefreq: 'weekly' as const,
+          priority: '0.7'
+        });
+        
+        // Add crawler endpoint for better SEO indexing
+        blogUrls.push({
+          loc: `${this.baseUrl}/api/crawler/blog/${post.slug}`,
+          lastmod: this.formatDate(post.updatedAt || post.createdAt),
+          changefreq: 'weekly' as const,
+          priority: '0.6'
+        });
+      });
+      
+      return blogUrls;
     } catch (error) {
       console.error('Error fetching blog posts for sitemap:', error);
       return [];

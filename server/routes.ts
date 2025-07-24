@@ -968,6 +968,109 @@ Farm Feast Farm House Team
     }
   });
 
+  // Individual blog post SEO endpoint for crawlers
+  app.get("/api/crawler/blog/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const fullUrl = `${req.protocol}://${req.get('host')}/blog/${slug}`;
+      
+      // Fetch blog post
+      const blogPost = await storage.getBlogPostBySlug(slug);
+      
+      if (!blogPost) {
+        return res.status(404).json({ error: "Blog post not found" });
+      }
+      
+      // Generate SEO data from blog post
+      const seoData = {
+        title: blogPost.metaTitle || `${blogPost.title} - Farm Feast Farm House Blog`,
+        description: blogPost.metaDescription || blogPost.excerpt || '',
+        keywords: `${blogPost.tags ? JSON.parse(blogPost.tags).join(', ') : ''}, farm activities, farmhouse blog, keesara experiences`,
+        ogTitle: blogPost.metaTitle || blogPost.title,
+        ogDescription: blogPost.metaDescription || blogPost.excerpt || '',
+        ogImage: blogPost.featuredImage || '/api/placeholder/1200/630',
+        canonicalUrl: fullUrl,
+        author: blogPost.author,
+        publishedAt: blogPost.publishedAt,
+        modifiedAt: blogPost.updatedAt
+      };
+      
+      // Generate structured data for blog post
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": blogPost.title,
+        "description": blogPost.excerpt,
+        "author": {
+          "@type": "Organization",
+          "name": blogPost.author
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Farm Feast Farm House",
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${req.protocol}://${req.get('host')}/api/placeholder/400/400`
+          }
+        },
+        "datePublished": blogPost.publishedAt,
+        "dateModified": blogPost.updatedAt,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": fullUrl
+        },
+        "image": blogPost.featuredImage
+      };
+      
+      // Generate complete HTML for crawlers
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${seoData.title}</title>
+  <meta name="description" content="${seoData.description}">
+  <meta name="keywords" content="${seoData.keywords}">
+  <meta name="author" content="${seoData.author}">
+  <meta name="robots" content="index,follow">
+  <meta name="googlebot" content="index,follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="${seoData.ogTitle}">
+  <meta property="og:description" content="${seoData.ogDescription}">
+  <meta property="og:image" content="${seoData.ogImage}">
+  <meta property="og:url" content="${seoData.canonicalUrl}">
+  <meta property="og:type" content="article">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${seoData.ogTitle}">
+  <meta name="twitter:description" content="${seoData.ogDescription}">
+  <meta name="twitter:image" content="${seoData.ogImage}">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${seoData.canonicalUrl}">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  ${JSON.stringify(structuredData, null, 2)}
+  </script>
+</head>
+<body>
+  <h1>${blogPost.title}</h1>
+  <p>${blogPost.excerpt}</p>
+  <div>${blogPost.content}</div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error("Error rendering blog post for crawler:", error);
+      res.status(500).json({ error: "Failed to render blog post" });
+    }
+  });
+
   // SEO HTML meta tags endpoint for crawlers (works in development too)
   app.get("/api/crawler/:page", async (req, res) => {
     try {
