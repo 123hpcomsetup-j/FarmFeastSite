@@ -25,6 +25,7 @@ import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import NotFound from "@/pages/not-found";
 import CookieConsent from "@/components/CookieConsent";
+import CustomScripts from "@/components/CustomScripts";
 
 function Router() {
   return (
@@ -58,6 +59,7 @@ function App() {
       <TooltipProvider>
         <TourProvider>
           <SeoHead />
+          <CustomScripts />
           <Toaster />
           <Router />
           <CookieConsent />
