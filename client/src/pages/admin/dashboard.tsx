@@ -10,8 +10,7 @@ import CouponsManagement from "@/components/admin/CouponsManagement";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import AmenitiesManagement from "@/components/admin/AmenitiesManagement";
 import BlogManagement from "@/components/admin/BlogManagement";
-import SeoManagement from "@/components/admin/SeoManagement";
-import ReviewsManagement from "@/components/admin/ReviewsManagement";
+import UnifiedSeoManagement from "@/components/admin/UnifiedSeoManagement";
 import BookingConfirmationManagement from "@/components/admin/BookingConfirmationManagement";
 import PaymentManagement from "@/components/admin/PaymentManagement";
 import SitemapManagement from "@/components/admin/SitemapManagement";
@@ -49,8 +48,7 @@ const menuItems = [
   { id: "homepage-images", label: "Homepage Images", icon: ImageIcon },
   { id: "amenities", label: "Amenities", icon: Settings },
   { id: "blog", label: "Blog Posts", icon: FileText },
-  { id: "seo", label: "SEO", icon: Search },
-  { id: "reviews", label: "Reviews", icon: BarChart3 },
+  { id: "seo", label: "SEO & Reviews", icon: Search },
   { id: "sitemap", label: "Sitemap", icon: Globe },
   { id: "settings", label: "Site Settings", icon: Settings },
   { id: "custom-scripts", label: "Custom Scripts", icon: Code },
@@ -260,9 +258,7 @@ export default function AdminDashboard() {
       case "blog":
         return <BlogManagement />;
       case "seo":
-        return <SeoManagement />;
-      case "reviews":
-        return <ReviewsManagement />;
+        return <UnifiedSeoManagement />;
       case "sitemap":
         return <SitemapManagement />;
       case "settings":
