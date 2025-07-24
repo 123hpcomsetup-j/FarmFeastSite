@@ -6,7 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { sendEmail, generateConfirmationEmail, generateCancellationEmail, generateBookingReceivedEmail, generatePaymentReceivedEmail } from "./emailService";
+import { sendEmail, generateConfirmationEmail, generateCancellationEmail, generateBookingReceivedEmail, generatePaymentReceivedEmail, generateAdminBookingNotificationEmail, generateAdminPaymentConfirmationEmail } from "./emailService";
 import { 
   insertBookingSchema, 
   adminLoginSchema, 
@@ -257,6 +257,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`❌ Failed to send booking email to ${booking.email}:`, emailError);
         }
       }
+
+      // Send admin notification about new booking
+      try {
+        const adminEmailHtml = await generateAdminBookingNotificationEmail(booking);
+        await sendEmail({
+          to: process.env.GMAIL_USER!, // Send to workspace email
+          subject: `🆕 New Booking Alert - ${booking.confirmationCode} - ${booking.fullName}`,
+          html: adminEmailHtml
+        });
+        console.log(`✅ Admin booking notification sent for ${booking.confirmationCode}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send admin booking notification for ${booking.confirmationCode}:`, emailError);
+      }
       
       res.status(201).json(booking);
     } catch (error) {
@@ -291,6 +304,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (emailError) {
           console.error(`❌ Failed to send booking email to ${booking.email}:`, emailError);
         }
+      }
+
+      // Send admin notification about new external booking (created by admin)
+      try {
+        const adminEmailHtml = await generateAdminBookingNotificationEmail(booking);
+        await sendEmail({
+          to: process.env.GMAIL_USER!, // Send to workspace email
+          subject: `📋 External Booking Created - ${booking.confirmationCode} - ${booking.fullName}`,
+          html: adminEmailHtml
+        });
+        console.log(`✅ Admin notification sent for external booking ${booking.confirmationCode}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send admin notification for external booking ${booking.confirmationCode}:`, emailError);
       }
       
       res.status(201).json(booking);
@@ -1174,7 +1200,7 @@ Farm Feast Farm House Team
       // Send email notifications based on status changes
       if (booking.email) {
         if (status === "complete" && paymentStatus === "verified") {
-          // Send confirmation email
+          // Send confirmation email to customer
           const emailHtml = await generateConfirmationEmail(updatedBooking);
           await sendEmail({
             to: booking.email,
@@ -1182,6 +1208,19 @@ Farm Feast Farm House Team
             html: emailHtml
           });
           console.log(`✅ Confirmation email sent to ${booking.email}`);
+
+          // Send admin notification about payment confirmation
+          try {
+            const adminEmailHtml = await generateAdminPaymentConfirmationEmail(updatedBooking);
+            await sendEmail({
+              to: process.env.GMAIL_USER!, // Send to workspace email
+              subject: `💰 Payment Confirmed - ${booking.confirmationCode} - ${booking.fullName}`,
+              html: adminEmailHtml
+            });
+            console.log(`✅ Admin payment confirmation notification sent for ${booking.confirmationCode}`);
+          } catch (emailError) {
+            console.error(`❌ Failed to send admin payment confirmation notification for ${booking.confirmationCode}:`, emailError);
+          }
         } else if (status === "canceled") {
           // Send cancellation email
           const emailHtml = await generateCancellationEmail(updatedBooking, paymentNotes);

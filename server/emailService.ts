@@ -299,3 +299,161 @@ export async function generateCancellationEmail(booking: any, reason?: string): 
     </div>
   `;
 }
+
+// Admin notification email functions
+export async function generateAdminBookingNotificationEmail(booking: any): Promise<string> {
+  // Get service details
+  let servicesDetails = '';
+  if (booking.selectedServices?.length > 0) {
+    servicesDetails = `
+      <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <h4 style="margin-top: 0; color: #0369a1;">Selected Services</h4>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+          ${booking.selectedServices.map((service: string) => `<li>${service}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #059669; color: white; padding: 20px; text-align: center;">
+        <h1>🆕 New Booking Received!</h1>
+      </div>
+      
+      <div style="padding: 20px;">
+        <p><strong>Admin Notification</strong></p>
+        <p>A new booking has been received and requires your attention.</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1f2937;">Customer Details</h3>
+          <p><strong>Name:</strong> ${booking.fullName}</p>
+          <p><strong>Email:</strong> ${booking.email}</p>
+          <p><strong>Phone:</strong> ${booking.phoneNumber}</p>
+          <p><strong>Confirmation Code:</strong> <span style="font-family: monospace; background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${booking.confirmationCode}</span></p>
+        </div>
+        
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #92400e;">Booking Details</h3>
+          <p><strong>Check-in:</strong> ${new Date(booking.checkinDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p><strong>Check-out:</strong> ${new Date(booking.checkoutDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p><strong>Guests:</strong> ${booking.guestCount} ${booking.guestCount === 1 ? 'person' : 'people'}</p>
+          <p><strong>Duration:</strong> ${Math.ceil((new Date(booking.checkoutDate).getTime() - new Date(booking.checkinDate).getTime()) / (1000 * 60 * 60 * 24))} days</p>
+        </div>
+        
+        ${servicesDetails}
+        
+        <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #166534;">Payment Information</h3>
+          <p><strong>Base Amount:</strong> ₹${booking.basePrice?.toLocaleString()}</p>
+          <p><strong>Service Charges:</strong> ₹${booking.serviceCharges?.toLocaleString() || 0}</p>
+          ${booking.discountAmount > 0 ? `<p><strong>Discount Applied:</strong> ₹${booking.discountAmount?.toLocaleString()} ${booking.couponCode ? `(${booking.couponCode})` : ''}</p>` : ''}
+          <p><strong style="font-size: 1.1em;">Total Amount:</strong> <strong style="color: #059669; font-size: 1.2em;">₹${booking.finalTotal?.toLocaleString()}</strong></p>
+          <p><strong>Payment Status:</strong> <span style="color: #dc2626; font-weight: bold;">PENDING PAYMENT</span></p>
+        </div>
+        
+        ${booking.specialRequests ? `
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Special Requests</h4>
+          <p style="font-style: italic;">"${booking.specialRequests}"</p>
+        </div>
+        ` : ''}
+        
+        <div style="background-color: #e0e7ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #3730a3;">Next Steps</h4>
+          <ul style="margin: 5px 0; padding-left: 20px;">
+            <li>Customer has been notified about payment requirements</li>
+            <li>Monitor for UTR submission from customer</li>
+            <li>Verify payment and update booking status</li>
+            <li>Send final confirmation once payment is verified</li>
+          </ul>
+        </div>
+        
+        <p><em>This booking was received on ${new Date(booking.createdAt).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</em></p>
+      </div>
+      
+      <div style="background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+        <p>Admin Notification | Farm Feast Farm House Management System</p>
+        <p>Login to admin panel to manage this booking</p>
+      </div>
+    </div>
+  `;
+}
+
+export async function generateAdminPaymentConfirmationEmail(booking: any): Promise<string> {
+  // Get service details
+  let servicesDetails = '';
+  if (booking.selectedServices?.length > 0) {
+    servicesDetails = `
+      <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <h4 style="margin-top: 0; color: #0369a1;">Services Booked</h4>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+          ${booking.selectedServices.map((service: string) => `<li>${service}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #16a34a; color: white; padding: 20px; text-align: center;">
+        <h1>🎉 Booking Confirmed - Payment Verified!</h1>
+      </div>
+      
+      <div style="padding: 20px;">
+        <p><strong>Admin Notification</strong></p>
+        <p>A booking has been confirmed and payment has been successfully verified!</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1f2937;">Customer Details</h3>
+          <p><strong>Name:</strong> ${booking.fullName}</p>
+          <p><strong>Email:</strong> ${booking.email}</p>
+          <p><strong>Phone:</strong> ${booking.phoneNumber}</p>
+          <p><strong>Confirmation Code:</strong> <span style="font-family: monospace; background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${booking.confirmationCode}</span></p>
+        </div>
+        
+        <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #166534;">Booking Details</h3>
+          <p><strong>Check-in:</strong> ${new Date(booking.checkinDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p><strong>Check-out:</strong> ${new Date(booking.checkoutDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p><strong>Guests:</strong> ${booking.guestCount} ${booking.guestCount === 1 ? 'person' : 'people'}</p>
+          <p><strong>Duration:</strong> ${Math.ceil((new Date(booking.checkoutDate).getTime() - new Date(booking.checkinDate).getTime()) / (1000 * 60 * 60 * 24))} days</p>
+        </div>
+        
+        ${servicesDetails}
+        
+        <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #166534;">Payment Information</h3>
+          <p><strong>Total Amount:</strong> <strong style="color: #16a34a; font-size: 1.2em;">₹${booking.finalTotal?.toLocaleString()}</strong></p>
+          <p><strong>Payment Status:</strong> <span style="color: #16a34a; font-weight: bold;">✅ VERIFIED & CONFIRMED</span></p>
+          ${booking.utrNumber ? `<p><strong>UTR Number:</strong> ${booking.utrNumber}</p>` : ''}
+          <p><strong>Payment Verified:</strong> ${new Date(booking.paymentVerifiedAt).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+        </div>
+        
+        ${booking.specialRequests ? `
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Special Requests</h4>
+          <p style="font-style: italic;">"${booking.specialRequests}"</p>
+        </div>
+        ` : ''}
+        
+        <div style="background-color: #ddd6fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #5b21b6;">Preparation Checklist</h4>
+          <ul style="margin: 5px 0; padding-left: 20px;">
+            <li>Customer has been sent final confirmation email</li>
+            <li>Prepare farmhouse for guest arrival</li>
+            <li>Ensure all requested services are arranged</li>
+            <li>Send check-in reminder 1 day before arrival</li>
+          </ul>
+        </div>
+        
+        <p><em>Booking originally received on ${new Date(booking.createdAt).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</em></p>
+      </div>
+      
+      <div style="background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+        <p>Admin Notification | Farm Feast Farm House Management System</p>
+        <p>This booking is now confirmed and ready for guest arrival</p>
+      </div>
+    </div>
+  `;
+}
