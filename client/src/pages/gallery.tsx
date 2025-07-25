@@ -124,10 +124,12 @@ export default function Gallery() {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredImages.map((image, index) => (
-                  <div
+                  <button
                   key={index}
-                  className="relative group cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="relative group cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 accessible-button"
                   onClick={() => openModal(index)}
+                  aria-label={`View ${image.alt} in full size - Category: ${image.category}`}
+                  title={`Click to view ${image.alt} in gallery modal`}
                 >
                   <img
                     src={image.src}
@@ -140,7 +142,7 @@ export default function Gallery() {
                       {image.category}
                     </span>
                   </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -160,7 +162,9 @@ export default function Gallery() {
               {/* Close Button */}
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors accessible-button"
+                aria-label="Close gallery modal and return to gallery view"
+                title="Close image viewer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -168,14 +172,18 @@ export default function Gallery() {
               {/* Navigation Buttons */}
               <button
                 onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors accessible-button"
+                aria-label="View previous image in gallery"
+                title="Previous image"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               
               <button
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors accessible-button"
+                aria-label="View next image in gallery"
+                title="Next image"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
