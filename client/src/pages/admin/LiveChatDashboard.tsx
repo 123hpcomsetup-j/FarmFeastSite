@@ -41,15 +41,39 @@ export function LiveChatDashboard() {
   const wsRef = useRef<WebSocket | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch all chat sessions
+  // Fetch all chat sessions with auth token
   const { data: allSessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["/api/admin/chat/sessions"],
+    queryFn: async () => {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/chat/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch sessions');
+      }
+      return response.json();
+    },
     refetchInterval: 5000, // Refetch every 5 seconds
   });
 
-  // Fetch active chat sessions
+  // Fetch active chat sessions with auth token
   const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
     queryKey: ["/api/admin/chat/active"],
+    queryFn: async () => {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/chat/active', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch active sessions');
+      }
+      return response.json();
+    },
     refetchInterval: 3000, // Refetch every 3 seconds
   });
 
@@ -144,11 +168,16 @@ export function LiveChatDashboard() {
   const fetchMessages = async (sessionId: number) => {
     try {
       const response = await fetch(`/api/chat/${sessionId}/messages`);
-      const data = await response.json();
-      setMessages(Array.isArray(data) ? data : []);
-      
-      // Mark messages as read
-      markReadMutation.mutate(sessionId);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(Array.isArray(data) ? data : []);
+        
+        // Mark messages as read
+        markReadMutation.mutate(sessionId);
+      } else {
+        console.error("Failed to fetch messages:", response.status);
+        setMessages([]);
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
       setMessages([]);

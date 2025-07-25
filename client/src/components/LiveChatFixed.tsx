@@ -56,11 +56,14 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
       setChatSession(session);
       setShowContactForm(false);
       // Connect WebSocket after successful session creation
-      if (session.id) {
+      if (session && session.id) {
+        console.log("Starting WebSocket connection for session:", session.id);
         setTimeout(() => {
           connectWebSocket(session.id);
           fetchMessages(session.id);
-        }, 100);
+        }, 500);
+      } else {
+        console.error("Invalid session data:", session);
       }
     },
     onError: (error) => {

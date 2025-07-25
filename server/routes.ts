@@ -2162,7 +2162,8 @@ Farm Feast Farm House Team
   // Start a new chat session (public)
   app.post("/api/chat/start", async (req, res) => {
     try {
-      const { visitorSessionId, visitorName, visitorEmail } = req.body;
+      const { visitorSessionId, visitorName, visitorEmail, visitorPhone } = req.body;
+      console.log("Starting chat with data:", { visitorSessionId, visitorName, visitorEmail, visitorPhone });
       
       // Check if visitor already has an active chat session
       let chatSession = await storage.getChatSessionByVisitorId(visitorSessionId);
@@ -2173,8 +2174,12 @@ Farm Feast Farm House Team
           visitorSessionId,
           visitorName,
           visitorEmail,
+          visitorPhone,
           status: "waiting"
         });
+        console.log("New chat session created:", chatSession);
+      } else {
+        console.log("Existing chat session found:", chatSession);
       }
       
       res.json(chatSession);
