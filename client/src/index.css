@@ -64,16 +64,55 @@
 }
 
 /* Accessibility Improvements - WCAG 2.1 AA Compliance */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 12px;
-}
 
-.accessible-button {
+/* Enhanced touch target accessibility - WCAG 2.1 AA compliant */
+.touch-target, .accessible-button, button, a[role="button"], input[type="button"], input[type="submit"] {
   min-height: 44px;
   min-width: 44px;
   padding: 12px 16px;
+  touch-action: manipulation;
+  /* Ensure adequate spacing between touch targets */
+  margin: 4px;
+  /* Prevent accidental zoom on iOS */
+  font-size: 16px;
+}
+
+/* Mobile-specific touch target enhancements */
+@media (max-width: 768px) {
+  .touch-target, .accessible-button, button {
+    min-height: 48px; /* Larger targets for mobile */
+    min-width: 48px;
+    padding: 14px 18px;
+    margin: 6px; /* More spacing on mobile */
+  }
+  
+  /* Navigation links on mobile */
+  .mobile-nav a, .mobile-menu-item {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Gallery image touch targets */
+.gallery-image, .gallery-button {
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Form input touch targets */
+input, select, textarea, .form-control {
+  min-height: 44px;
+  padding: 12px 16px;
+  touch-action: manipulation;
+}
+
+.accessible-button {
   font-size: 16px;
   line-height: 1.5;
 }

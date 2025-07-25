@@ -103,7 +103,9 @@ export default function Gallery() {
                   key={category}
                   variant={selectedCategory === category ? "default" : "outline"}
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-primary text-primary-foreground" : ""}
+                  className={`accessible-button ${selectedCategory === category ? "bg-primary text-primary-foreground" : ""}`}
+                  aria-label={`Filter gallery by ${category} images`}
+                  title={`Show ${category} category images`}
                 >
                   {category}
                 </Button>

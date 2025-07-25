@@ -657,8 +657,9 @@ export default function BookingForm() {
                     variant="outline"
                     onClick={prevStep}
                     disabled={currentStep === 0 || submitBookingMutation.isPending}
-                    className="mobile-button"
+                    className="accessible-button mobile-button"
                     aria-label="Go to previous step in booking form"
+                    title="Go back to previous step"
                   >
                     Previous
                   </Button>
@@ -668,8 +669,9 @@ export default function BookingForm() {
                       type="button"
                       onClick={nextStep}
                       disabled={!validateCurrentStep() || isAnimating}
-                      className="mobile-button flex items-center gap-2"
+                      className="accessible-button mobile-button flex items-center gap-2"
                       aria-label="Continue to next step in booking form"
+                      title="Proceed to next booking step"
                     >
                       Next Step
                       <ChevronRight className="w-4 h-4" />
@@ -678,8 +680,9 @@ export default function BookingForm() {
                     <Button
                       type="submit"
                       disabled={submitBookingMutation.isPending || !validateCurrentStep()}
-                      className="mobile-button flex items-center gap-2"
+                      className="accessible-button mobile-button flex items-center gap-2"
                       aria-label="Submit your booking request to Farm Feast Farm House"
+                      title="Complete booking submission"
                     >
                       <Send className="w-4 h-4" />
                       {submitBookingMutation.isPending ? "Submitting..." : "Submit Booking"}
