@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,7 @@ export default function Gallery() {
         title="Farmhouse Gallery | Luxury Accommodation Photos in Keesara, Hyderabad"
         description="Explore our beautiful farmhouse gallery showcasing luxury rooms, swimming pool, gardens, and amenities. Located in Keesara, Hyderabad with stunning views and modern facilities for perfect weekend getaways."
       />
-      <Navbar />
+      <FastNavbar />
       <main>
         {/* Header Section */}
         <section className="py-16 bg-gradient-to-r from-primary/10 to-primary/5">

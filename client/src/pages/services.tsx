@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export default function Services() {
         title="Farmhouse Services in Hyderabad | Corporate Events & Family Stays"
         description="Comprehensive farmhouse rental services in Hyderabad including luxury accommodation, corporate event hosting, birthday parties, and family vacations. Located in Keesara with easy access from Hitech City, Gachibowli, and all major Hyderabad areas."
       />
-      <Navbar />
+      <FastNavbar />
       <main>
         {/* Header Section */}
         <section className="py-16 bg-gradient-to-r from-primary/10 to-primary/5">
