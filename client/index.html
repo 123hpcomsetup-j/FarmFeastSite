@@ -10,6 +10,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//api.farmfeastfarmhouse.co.in">
     
+    <!-- Resource hints for faster LCP -->
+    <link rel="preload" href="/api/placeholder/800/600" as="image" fetchpriority="high">
+    <link rel="modulepreload" href="/src/main.tsx">
+    
+    <!-- Critical font preload -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    
     <!-- Critical CSS inline for fastest render -->
     <style>
       /* Critical above-the-fold styles */

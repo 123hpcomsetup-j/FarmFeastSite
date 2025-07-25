@@ -14,6 +14,12 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import CriticalResourceLoader from "@/components/CriticalResourceLoader";
 import CriticalCSSOptimizer from "@/components/CriticalCSSOptimizer";
 import OptimizedAssetLoader from "@/components/OptimizedAssetLoader";
+import { 
+  CriticalResourcePreloader, 
+  OptimizedScriptLoader, 
+  CriticalCSSInliner,
+  BundleAnalyzer 
+} from "@/components/PerformanceOptimizer";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LiveChatFixed } from "@/components/LiveChatFixed";
 
@@ -153,6 +159,10 @@ function App() {
           <SeoHead />
           <CriticalResourceLoader />
           <CriticalCSSOptimizer />
+          <CriticalResourcePreloader />
+          <CriticalCSSInliner />
+          <OptimizedScriptLoader />
+          <BundleAnalyzer />
           <PreloadFonts />
           <ResourcePreloader />
           <ServiceWorkerRegistration />

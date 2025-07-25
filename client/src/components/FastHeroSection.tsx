@@ -101,8 +101,13 @@ const FastHeroSection = memo(() => {
                 width={800}
                 height={600}
                 loading="eager"
-                decoding="sync"
-                style={{ aspectRatio: '4/3' }}
+                fetchPriority="high"
+                decoding="async"
+                style={{ 
+                  aspectRatio: '4/3',
+                  contentVisibility: 'visible',
+                  contain: 'layout style paint'
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
