@@ -34,6 +34,7 @@ import { ReflowOptimizer } from "@/components/ReflowOptimizer";
 import { LCPOptimizer } from "@/components/LCPOptimizer";
 import { RequestChainOptimizer } from "@/components/RequestChainOptimizer";
 import { FirstRequestOptimizer } from "@/components/FirstRequestOptimizer";
+import { ImageOptimizationManager } from "@/components/ImageOptimizationManager";
 import { CacheOptimizer } from "@/components/CacheOptimizer";
 import { ModernBrowserOptimizer } from "@/components/ModernBrowserOptimizer";
 import { AccessibilityAuditor } from "@/components/AccessibilityAuditor";
@@ -214,6 +215,7 @@ function App() {
         <TourProvider>
           <SeoHead />
           <FirstRequestOptimizer />
+          <ImageOptimizationManager />
           <InlineResourceLoader />
           <CriticalResourceLoader />
           <NonBlockingLoader />

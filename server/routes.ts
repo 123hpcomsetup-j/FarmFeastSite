@@ -27,6 +27,7 @@ import {
   insertAnalyticsEventSchema
 } from "@shared/schema";
 import { hyderabadLocationKeywords, seoTemplates } from "./seoConfig";
+import { ImageOptimizer, setupOptimizedPlaceholder } from "./imageOptimizer";
 
 // Configure multer for file uploads
 const storage_multer = multer.diskStorage({
@@ -66,8 +67,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   
-  // Serve uploaded files
-  app.use('/uploads', express.static('uploads'));
+  // Serve uploaded files with compression and caching
+  app.use('/uploads', express.static('uploads', {
+    maxAge: '1y', // Cache images for 1 year
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      // Add compression hints for images
+      if (path.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        res.set('Vary', 'Accept-Encoding');
+      }
+    }
+  }));
 
   // Get all services with aggressive caching and compression
   app.get("/api/services", async (req, res) => {
@@ -2469,5 +2481,8 @@ Farm Feast Farm House Team
   // Make broadcastToChat available in the route handlers
   (app as any).broadcastToChat = broadcastToChat;
   
+  // Setup optimized image placeholder endpoint
+  setupOptimizedPlaceholder(app);
+
   return httpServer;
 }
