@@ -146,6 +146,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public coupons route
+  app.get("/api/coupons", async (req, res) => {
+    try {
+      const coupons = await storage.getAllCoupons();
+      // Only return active coupons for public API
+      const activeCoupons = coupons.filter(coupon => coupon.active);
+      res.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+      res.json(activeCoupons);
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      res.status(500).json({ message: "Failed to fetch coupons" });
+    }
+  });
+
   // Coupon validation
   app.post("/api/coupons/validate", async (req, res) => {
     try {
