@@ -769,34 +769,98 @@ class DatabaseStorage implements IStorage {
 
   async getRealtimeVisitors(): Promise<{
     activeVisitors: number;
-    sessionsLast30Min: VisitorSession[];
+    onlineVisitors: number;
+    visitors: any[];
+    lastUpdated: string;
     currentPageViews: { page: string; visitors: number }[];
   }> {
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    
-    const sessionsLast30Min = await this.db
-      .select()
-      .from(visitorSessions)
-      .where(gt(visitorSessions.lastActiveAt, thirtyMinutesAgo))
-      .orderBy(desc(visitorSessions.lastActiveAt));
+    try {
+      // Consider visitors active if they were active in the last 2 minutes (real-time)
+      const cutoffTime = new Date(Date.now() - 2 * 60 * 1000);
+      
+      const activeVisitors = await this.db
+        .select({
+          id: visitorSessions.id,
+          sessionId: visitorSessions.sessionId,
+          device: visitorSessions.device,
+          browser: visitorSessions.browser,
+          currentPage: visitorSessions.currentPage,
+          lastActiveAt: visitorSessions.lastActiveAt,
+          startedAt: visitorSessions.startedAt,
+          userAgent: visitorSessions.userAgent
+        })
+        .from(visitorSessions)
+        .where(gte(visitorSessions.lastActiveAt, cutoffTime))
+        .orderBy(desc(visitorSessions.lastActiveAt));
 
-    const currentPageViews = await this.db
-      .select({
-        page: pageViews.page,
-        visitors: sql`count(distinct ${pageViews.sessionId})`
-      })
-      .from(pageViews)
-      .where(gt(pageViews.createdAt, thirtyMinutesAgo))
-      .groupBy(pageViews.page);
+      // Get current page views for active visitors
+      const activeSessions = activeVisitors.map(v => v.sessionId);
+      let currentPageViews = [];
+      
+      if (activeSessions.length > 0) {
+        currentPageViews = await this.db
+          .select({
+            sessionId: pageViews.sessionId,
+            page: pageViews.page,
+            viewedAt: pageViews.viewedAt
+          })
+          .from(pageViews)
+          .where(and(
+            inArray(pageViews.sessionId, activeSessions),
+            gte(pageViews.viewedAt, cutoffTime)
+          ))
+          .orderBy(desc(pageViews.viewedAt));
+      }
 
-    return {
-      activeVisitors: sessionsLast30Min.length,
-      sessionsLast30Min,
-      currentPageViews: currentPageViews.map((p: any) => ({ 
-        page: p.page, 
-        visitors: parseInt(p.visitors as string) || 0 
-      }))
-    };
+      // Enhanced visitor data with current activity
+      const enhancedVisitors = activeVisitors.map(visitor => {
+        const recentPages = currentPageViews
+          .filter(pv => pv.sessionId === visitor.sessionId)
+          .slice(0, 3); // Last 3 pages
+        
+        const sessionDuration = Math.floor(
+          (visitor.lastActiveAt.getTime() - visitor.startedAt.getTime()) / 1000
+        );
+
+        return {
+          ...visitor,
+          sessionDuration,
+          recentPages,
+          isActive: (Date.now() - visitor.lastActiveAt.getTime()) < 60000, // Active in last minute
+          status: (Date.now() - visitor.lastActiveAt.getTime()) < 30000 ? 'online' : 'away'
+        };
+      });
+
+      // Page views summary
+      const pageViewsSummary = await this.db
+        .select({
+          page: pageViews.page,
+          visitors: sql`count(distinct ${pageViews.sessionId})`
+        })
+        .from(pageViews)
+        .where(gte(pageViews.createdAt, cutoffTime))
+        .groupBy(pageViews.page);
+
+      return {
+        activeVisitors: enhancedVisitors.length,
+        onlineVisitors: enhancedVisitors.filter(v => v.status === 'online').length,
+        visitors: enhancedVisitors,
+        lastUpdated: new Date().toISOString(),
+        currentPageViews: pageViewsSummary.map((p: any) => ({ 
+          page: p.page, 
+          visitors: parseInt(p.visitors as string) || 0 
+        }))
+      };
+    } catch (error) {
+      console.error('Error fetching real-time visitors:', error);
+      return { 
+        activeVisitors: 0, 
+        onlineVisitors: 0, 
+        visitors: [], 
+        lastUpdated: new Date().toISOString(),
+        currentPageViews: []
+      };
+    }
   }
 
   // Live Chat methods
