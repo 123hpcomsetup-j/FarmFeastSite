@@ -144,6 +144,14 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
   const sendMessage = () => {
     if (!newMessage.trim() || !chatSession || !wsRef.current) return;
     
+    console.log("Sending message:", {
+      type: 'send_message',
+      chatSessionId: chatSession.id,
+      senderType: 'visitor',
+      senderId: sessionId,
+      content: newMessage
+    });
+    
     wsRef.current.send(JSON.stringify({
       type: 'send_message',
       chatSessionId: chatSession.id,
