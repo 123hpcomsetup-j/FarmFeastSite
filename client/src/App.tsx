@@ -33,6 +33,7 @@ import { ScrollPerformanceOptimizer } from "@/components/ScrollPerformanceOptimi
 import { ReflowOptimizer } from "@/components/ReflowOptimizer";
 import { LCPOptimizer } from "@/components/LCPOptimizer";
 import { RequestChainOptimizer } from "@/components/RequestChainOptimizer";
+import { CacheOptimizer } from "@/components/CacheOptimizer";
 import { ModernBrowserOptimizer } from "@/components/ModernBrowserOptimizer";
 import { AccessibilityAuditor } from "@/components/AccessibilityAuditor";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
@@ -232,6 +233,7 @@ function App() {
           <ReflowOptimizer />
           <LCPOptimizer />
           <RequestChainOptimizer />
+          <CacheOptimizer />
           <ModernBrowserOptimizer />
           <AccessibilityAuditor />
           {/* Temporarily load components directly until deferred loading is fixed */}
