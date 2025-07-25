@@ -62,24 +62,51 @@ export default function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState('30');
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  // Debug authentication state
+  useEffect(() => {
+    console.log('🔍 AnalyticsDashboard: Component mounted');
+    console.log('🔍 AnalyticsDashboard: Auth state:', {
+      isAuthenticated: authUtils.isAuthenticated(),
+      hasToken: !!authUtils.getToken(),
+      hasUser: !!authUtils.getUser()
+    });
+  }, []);
+
   // Analytics overview query
   const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, error: overviewError } = useQuery<AnalyticsOverview>({
     queryKey: ['/api/admin/analytics/overview', timeRange],
     queryFn: async () => {
+      console.log('📊 AnalyticsDashboard: Fetching analytics overview...');
       if (!authUtils.isAuthenticated()) {
+        console.error('❌ AnalyticsDashboard: No authentication token found');
         throw new Error('No authentication token found');
       }
       const authHeaders = authUtils.getAuthHeaders();
+      console.log('🔑 AnalyticsDashboard: Auth headers:', Object.keys(authHeaders));
+      
       const response = await fetch(`/api/admin/analytics/overview?days=${timeRange}`, {
         headers: authHeaders,
       });
+      
+      console.log('📈 AnalyticsDashboard: Response status:', response.status);
+      
       if (!response.ok) {
         if (response.status === 401) {
+          console.error('❌ AnalyticsDashboard: Authentication expired');
           throw new Error('Authentication expired');
         }
+        console.error('❌ AnalyticsDashboard: Failed to fetch analytics overview');
         throw new Error('Failed to fetch analytics overview');
       }
-      return response.json();
+      
+      const data = await response.json();
+      console.log('✅ AnalyticsDashboard: Analytics data received:', {
+        totalVisitors: data.totalVisitors,
+        totalPageViews: data.totalPageViews,
+        topPages: data.topPages?.length || 0
+      });
+      
+      return data;
     },
     refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
     retry: 1, // Reduce retries for faster error detection
@@ -89,20 +116,34 @@ export default function AnalyticsDashboard() {
   const { data: realtime, isLoading: realtimeLoading, refetch: refetchRealtime, error: realtimeError } = useQuery<RealtimeData>({
     queryKey: ['/api/admin/analytics/realtime'],
     queryFn: async () => {
+      console.log('⚡ AnalyticsDashboard: Fetching real-time analytics...');
       if (!authUtils.isAuthenticated()) {
+        console.error('❌ AnalyticsDashboard: No authentication token found for realtime');
         throw new Error('No authentication token found');
       }
       const authHeaders = authUtils.getAuthHeaders();
       const response = await fetch('/api/admin/analytics/realtime', {
         headers: authHeaders,
       });
+      
+      console.log('⚡ AnalyticsDashboard: Realtime response status:', response.status);
+      
       if (!response.ok) {
         if (response.status === 401) {
+          console.error('❌ AnalyticsDashboard: Authentication expired for realtime');
           throw new Error('Authentication expired');
         }
+        console.error('❌ AnalyticsDashboard: Failed to fetch real-time analytics');
         throw new Error('Failed to fetch real-time analytics');
       }
-      return response.json();
+      
+      const data = await response.json();
+      console.log('✅ AnalyticsDashboard: Realtime data received:', {
+        activeVisitors: data.activeVisitors,
+        onlineVisitors: data.onlineVisitors
+      });
+      
+      return data;
     },
     refetchInterval: autoRefresh ? 10000 : false, // Refresh every 10 seconds
     retry: 1, // Reduce retries for faster error detection
