@@ -41,18 +41,18 @@ export function LiveChatDashboard() {
   const wsRef = useRef<WebSocket | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch all chat sessions with auth token
+  // Fetch all chat sessions with auth token - reduced frequency to reduce console spam
   const { data: allSessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["/api/admin/chat/sessions"],
     queryFn: getAdminQueryFn,
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds instead of 5
   });
 
-  // Fetch active chat sessions with auth token
+  // Fetch active chat sessions with auth token - reduced frequency to reduce console spam
   const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
     queryKey: ["/api/admin/chat/active"],
     queryFn: getAdminQueryFn,
-    refetchInterval: 3000, // Refetch every 3 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds instead of 3
   });
 
   // Assign admin to chat session
@@ -187,7 +187,7 @@ export function LiveChatDashboard() {
         wsRef.current.close();
       }
     };
-  }, []);
+  }, []); // Only run once on mount
 
   // Reconnect WebSocket when session changes
   useEffect(() => {
@@ -272,7 +272,7 @@ export function LiveChatDashboard() {
               <div className="space-y-2 overflow-y-auto h-full">
                 {activeSessions.filter((session: ChatSession) => session.status !== 'closed').map((session: ChatSession) => (
                   <Card
-                    key={session.id}
+                    key={`active-session-${session.id}`}
                     className={`cursor-pointer transition-colors hover:bg-gray-50 ${
                       selectedSession?.id === session.id ? 'ring-2 ring-blue-500' : ''
                     }`}
@@ -331,7 +331,7 @@ export function LiveChatDashboard() {
               <div className="space-y-2 overflow-y-auto h-full">
                 {allSessions.map((session: ChatSession) => (
                   <Card
-                    key={session.id}
+                    key={`all-session-${session.id}`}
                     className={`cursor-pointer transition-colors hover:bg-gray-50 ${
                       selectedSession?.id === session.id ? 'ring-2 ring-blue-500' : ''
                     }`}
