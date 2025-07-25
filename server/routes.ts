@@ -69,9 +69,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
-  // Get all services with caching and SEO optimization
+  // Get all services with aggressive caching and compression
   app.get("/api/services", async (req, res) => {
     try {
+      // Set aggressive caching headers for faster repeat requests
+      res.set({
+        'Cache-Control': 'public, max-age=600, stale-while-revalidate=1800',
+        'ETag': `"services-${Date.now()}"`,
+        'Vary': 'Accept-Encoding'
+      });
+
+      // Check if client has cached version
+      if (req.headers['if-none-match']) {
+        return res.status(304).end();
+      }
+
       const services = await storage.getAllServices();
       
       // Add location-based descriptions for SEO
@@ -82,7 +94,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : `${service.description} Available at our luxury farmhouse in Keesara, Hyderabad with easy access from Shamirpet, Medchal, and all major Hyderabad areas.`
       }));
       
-      res.set('Cache-Control', 'public, max-age=600'); // 10 minutes cache
       res.json(enhancedServices);
     } catch (error) {
       console.error("Error fetching services:", error);

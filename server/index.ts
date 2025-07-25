@@ -1,9 +1,25 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seoMiddleware } from "./seoRenderer";
 
 const app = express();
+
+// Enable compression for faster responses (reduces transfer time)
+app.use(compression({
+  level: 6, // Good balance of compression speed vs ratio
+  threshold: 1024, // Only compress responses larger than 1KB
+  filter: (req: any, res: any) => {
+    // Don't compress if response is already compressed
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Compress JSON, text, html, css, js
+    return compression.filter(req, res);
+  }
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

@@ -33,6 +33,7 @@ import { ScrollPerformanceOptimizer } from "@/components/ScrollPerformanceOptimi
 import { ReflowOptimizer } from "@/components/ReflowOptimizer";
 import { LCPOptimizer } from "@/components/LCPOptimizer";
 import { RequestChainOptimizer } from "@/components/RequestChainOptimizer";
+import { FirstRequestOptimizer } from "@/components/FirstRequestOptimizer";
 import { CacheOptimizer } from "@/components/CacheOptimizer";
 import { ModernBrowserOptimizer } from "@/components/ModernBrowserOptimizer";
 import { AccessibilityAuditor } from "@/components/AccessibilityAuditor";
@@ -212,6 +213,7 @@ function App() {
       <TooltipProvider>
         <TourProvider>
           <SeoHead />
+          <FirstRequestOptimizer />
           <InlineResourceLoader />
           <CriticalResourceLoader />
           <NonBlockingLoader />

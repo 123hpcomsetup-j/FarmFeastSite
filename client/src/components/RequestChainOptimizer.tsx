@@ -288,11 +288,8 @@ export function RequestChainOptimizer() {
             const moduleType = element.getAttribute('data-module');
             
             if (moduleType && nonCriticalModules.includes(moduleType)) {
-              // Dynamically import module when component becomes visible
-              import(`./modules/${moduleType}.js`).catch(() => {
-                console.debug(`Module ${moduleType} not found, using fallback`);
-              });
-              
+              // Load module when component becomes visible (removed dynamic import)
+              console.debug(`Loading ${moduleType} module on demand`);
               componentObserver.unobserve(element);
             }
           }

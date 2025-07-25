@@ -180,7 +180,27 @@ export interface IStorage {
   getUnreadMessageCount(chatSessionId: number, senderType: string): Promise<number>;
 }
 
-// Database Storage Implementation
+// Response cache for faster API responses
+const responseCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+// Helper function for cached database queries
+function getCachedResult<T>(cacheKey: string, ttlMs: number = 5 * 60 * 1000): T | null {
+  const cached = responseCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    return cached.data as T;
+  }
+  return null;
+}
+
+function setCachedResult<T>(cacheKey: string, data: T, ttlMs: number = 5 * 60 * 1000): void {
+  responseCache.set(cacheKey, {
+    data,
+    timestamp: Date.now(),
+    ttl: ttlMs
+  });
+}
+
+// Database Storage Implementation with caching
 class DatabaseStorage implements IStorage {
   constructor(private db: any) {}
 
@@ -259,7 +279,15 @@ class DatabaseStorage implements IStorage {
 
   // Services
   async getAllServices(): Promise<Service[]> {
-    return await this.db.select().from(services).orderBy(services.id);
+    const cacheKey = 'all_services';
+    const cached = getCachedResult<Service[]>(cacheKey, 10 * 60 * 1000); // 10 minutes cache
+    if (cached) {
+      return cached;
+    }
+
+    const result = await this.db.select().from(services).orderBy(services.id);
+    setCachedResult(cacheKey, result, 10 * 60 * 1000);
+    return result;
   }
 
   async createService(service: InsertService): Promise<Service> {
