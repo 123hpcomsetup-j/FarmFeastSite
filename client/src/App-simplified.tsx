@@ -71,7 +71,7 @@ function App() {
                 <Route component={NotFound} />
               </Switch>
             </Suspense>
-            <LiveChatFixed />
+            <LiveChatFixed visitorSessionId="" />
             <CookieConsent />
             <CustomScripts />
             <Toaster />
