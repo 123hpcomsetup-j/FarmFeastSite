@@ -5,14 +5,26 @@
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "noEmit": true,
+    // Target modern JavaScript - ES2022 (Baseline 2023)
+    "target": "ES2022",
     "module": "ESNext",
     "strict": true,
-    "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "preserve",
+    // Modern library features - no legacy polyfills needed
+    "lib": ["ES2022", "ES2023", "DOM", "DOM.Iterable", "WebWorker"],
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
+    // Modern module detection
+    "moduleDetection": "force",
+    // Enable modern features without transformation
+    "useDefineForClassFields": true,
+    "allowSyntheticDefaultImports": true,
+    // Modern resolution
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
     "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {

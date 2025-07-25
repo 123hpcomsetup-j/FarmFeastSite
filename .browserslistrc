@@ -1,0 +1,36 @@
+# Modern Browser Targeting - Baseline 2023
+# Remove legacy browser support to reduce bundle size and eliminate unnecessary polyfills
+
+# Chrome 109+ (Baseline 2023)
+Chrome >= 109
+
+# Firefox 110+ (Baseline 2023) 
+Firefox >= 110
+
+# Safari 16.4+ (Baseline 2023)
+Safari >= 16.4
+
+# Edge 109+ (Baseline 2023)
+Edge >= 109
+
+# Exclude legacy browsers to prevent polyfill inclusion
+not IE 11
+not Chrome < 109
+not Firefox < 110
+not Safari < 16.4
+not Edge < 109
+
+# Mobile browsers - modern versions only
+iOS >= 16.4
+ChromeAndroid >= 109
+FirefoxAndroid >= 110
+
+# Exclude dead browsers (< 0.25% usage)
+not dead
+not op_mini all
+
+# Focus on browsers with > 0.25% market share
+> 0.25%
+
+# Only include browsers with updates in last 24 months
+last 2 years
