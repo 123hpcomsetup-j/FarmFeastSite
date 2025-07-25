@@ -56,10 +56,11 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Add SEO middleware before serving static files (only in production)
-  if (app.get("env") === "production") {
-    app.use(seoMiddleware);
-  }
+  // Temporarily disable SEO middleware to fix CSS loading issue
+  // TODO: Re-enable with proper bot detection that doesn't interfere with user experience
+  // if (app.get("env") === "production") {
+  //   app.use(seoMiddleware);
+  // }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
