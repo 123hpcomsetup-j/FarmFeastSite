@@ -37,18 +37,27 @@ export default function AdminLogin() {
       const result = await response.json();
 
       if (result.admin && result.token) {
-        // Store the JWT token for authentication
-        localStorage.setItem("admin_token", result.token);
-        localStorage.setItem("admin_user", JSON.stringify(result.admin));
+        // Store the JWT token for authentication (use adminToken for consistency)
+        localStorage.setItem("adminToken", result.token);
+        localStorage.setItem("adminUser", JSON.stringify(result.admin));
         
         console.log("Login successful, token stored:", result.token.substring(0, 20) + "...");
+        
+        // Verify storage immediately
+        const storedToken = localStorage.getItem("adminToken");
+        console.log("Token verification:", storedToken ? "stored successfully" : "storage failed");
+        console.log("Stored token matches:", storedToken === result.token);
         
         toast({
           title: "Login Successful",
           description: "Welcome to the admin panel!",
         });
 
-        setLocation("/admin/dashboard");
+        // Small delay to ensure storage is complete before navigation
+        setTimeout(() => {
+          console.log("Final token check before navigation:", localStorage.getItem("adminToken") ? "present" : "missing");
+          setLocation("/admin/dashboard");
+        }, 100);
       } else {
         console.error("Login response missing admin or token:", result);
         toast({
