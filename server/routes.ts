@@ -81,6 +81,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // Special handling for homepage with server-side structured data for crawlers
+  app.get('/', async (req, res, next) => {
+    try {
+      // Check if this is a crawler or testing tool
+      const userAgent = req.get('User-Agent') || '';
+      const isCrawler = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|developers\.google\.com|google-structured-data-testing-tool|google-site-verification/i.test(userAgent);
+      
+      if (isCrawler) {
+        console.log(`Crawler detected for homepage: ${userAgent}`);
+        
+        // Fetch SEO settings and review data
+        const [seoSettings, reviewData] = await Promise.all([
+          storage.getSeoSettingsByPage('home'),
+          storage.getReviewSettings()
+        ]);
+        
+        // Generate structured data with admin-controlled review snippets
+        const structuredData: any = {
+          "@context": "https://schema.org",
+          "@type": "LodgingBusiness",
+          "name": seoSettings?.title || "Farm Feast Farm House",
+          "description": seoSettings?.description || "Luxury farmhouse rental with modern amenities near Hyderabad.",
+          "url": "https://farmfeastfarmhouse.co.in",
+          "image": seoSettings?.ogImage || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfxFLqe3vFnzqcS4aLNemEBwmROuxSMEBJHA&s",
+          "telephone": "+91-8897326898",
+          "email": "info@farmfeastfarmhouse.shop",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "SY. No 170/A, Near Cheeryal Kaman, Keesara",
+            "addressLocality": "Keesara",
+            "postalCode": "501301",
+            "addressRegion": "Telangana",
+            "addressCountry": "IN"
+          },
+          "amenityFeature": [
+            { "@type": "LocationFeatureSpecification", "name": "Swimming Pool" },
+            { "@type": "LocationFeatureSpecification", "name": "Free Parking" },
+            { "@type": "LocationFeatureSpecification", "name": "Air Conditioning" },
+            { "@type": "LocationFeatureSpecification", "name": "Pet Friendly" },
+            { "@type": "LocationFeatureSpecification", "name": "Free WiFi" }
+          ],
+          "priceRange": "₹5500-15000",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 17.5099358,
+            "longitude": 78.6273986
+          }
+        };
+
+        // Add review data with admin-controlled snippets
+        if (reviewData?.enabled && seoSettings?.showInSnippets !== false) {
+          const finalReviewCount = seoSettings?.reviewCount || reviewData?.reviewCount || 1008;
+          const finalAverageRating = seoSettings?.averageRating || reviewData?.averageRating || "4.5";
+          
+          if (finalReviewCount > 0) {
+            structuredData.aggregateRating = {
+              "@type": "AggregateRating",
+              "ratingValue": parseFloat(finalAverageRating),
+              "reviewCount": finalReviewCount,
+              "bestRating": parseInt(seoSettings?.ratingScale || "5"),
+              "worstRating": 1
+            };
+
+            // Add individual review snippets from admin panel
+            if (seoSettings?.showInSnippets) {
+              const reviews = [];
+              
+              // Review snippet 1
+              if (seoSettings?.reviewSnippet1Author && seoSettings?.reviewSnippet1Body) {
+                reviews.push({
+                  "@type": "Review",
+                  "author": {
+                    "@type": "Person",
+                    "name": seoSettings.reviewSnippet1Author
+                  },
+                  "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": seoSettings.reviewSnippet1Rating || "5",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                  },
+                  "reviewBody": seoSettings.reviewSnippet1Body,
+                  "datePublished": seoSettings.reviewSnippet1Date || "2025-07-23"
+                });
+              }
+              
+              // Review snippet 2
+              if (seoSettings?.reviewSnippet2Author && seoSettings?.reviewSnippet2Body) {
+                reviews.push({
+                  "@type": "Review",
+                  "author": {
+                    "@type": "Person",
+                    "name": seoSettings.reviewSnippet2Author
+                  },
+                  "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": seoSettings.reviewSnippet2Rating || "5",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                  },
+                  "reviewBody": seoSettings.reviewSnippet2Body,
+                  "datePublished": seoSettings.reviewSnippet2Date || "2025-07-21"
+                });
+              }
+              
+              if (reviews.length > 0) {
+                structuredData.review = reviews;
+              }
+            }
+          }
+        }
+
+        const title = seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad";
+        const description = seoSettings?.description || "Escape to luxury at Farm Feast Farm House. Premium farmhouse rental with swimming pool, modern amenities, and professional services. Perfect for events, family gatherings, and weekend getaways near Hyderabad.";
+        const keywords = seoSettings?.keywords || "farmhouse rental, luxury farmhouse, swimming pool, Hyderabad, weekend getaway, event venue, family gathering";
+
+        const crawlerHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <meta name="keywords" content="${keywords}" />
+    <meta name="robots" content="index,follow" />
+    <meta name="googlebot" content="index,follow" />
+    
+    <!-- Structured Data for Rich Snippets -->
+    <script type="application/ld+json">
+    ${JSON.stringify(structuredData, null, 2)}
+    </script>
+</head>
+<body>
+    <h1>Farm Feast Farm House</h1>
+    <p>${description}</p>
+    ${structuredData.review ? `<div><h2>Customer Reviews</h2>${structuredData.review.map((review: any) => `<div><strong>${review.author.name}</strong> - ${review.reviewRating.ratingValue} stars<br><p>${review.reviewBody}</p><small>${review.datePublished}</small></div>`).join('')}</div>` : ''}
+</body>
+</html>`;
+
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Cache-Control', 'public, max-age=600');
+        res.send(crawlerHTML);
+        return;
+      }
+      
+      // For regular users, continue to next middleware (React app)
+      next();
+    } catch (error) {
+      console.error("Error serving homepage for crawler:", error);
+      next();
+    }
+  });
+
   // Get all services with aggressive caching and compression
   app.get("/api/services", async (req, res) => {
     try {
