@@ -28,17 +28,38 @@ export default function Footer() {
             </p>
             <div className="flex space-x-4">
               {getSetting("social_facebook") && (
-                <a href={getSetting("social_facebook")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                <a 
+                  href={getSetting("social_facebook")} 
+                  className="text-gray-300 hover:text-white transition-colors touch-target" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit Farm Feast Farm House on Facebook - Opens in new tab"
+                  title="Follow us on Facebook"
+                >
                   <Facebook className="h-5 w-5" />
                 </a>
               )}
               {getSetting("social_instagram") && (
-                <a href={getSetting("social_instagram")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                <a 
+                  href={getSetting("social_instagram")} 
+                  className="text-gray-300 hover:text-white transition-colors touch-target" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit Farm Feast Farm House on Instagram - Opens in new tab"
+                  title="Follow us on Instagram"
+                >
                   <Instagram className="h-5 w-5" />
                 </a>
               )}
               {getSetting("social_twitter") && (
-                <a href={getSetting("social_twitter")} className="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
+                <a 
+                  href={getSetting("social_twitter")} 
+                  className="text-gray-300 hover:text-white transition-colors touch-target" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit Farm Feast Farm House on Twitter - Opens in new tab"
+                  title="Follow us on Twitter"
+                >
                   <Twitter className="h-5 w-5" />
                 </a>
               )}
@@ -50,22 +71,22 @@ export default function Footer() {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors accessible-link">
                   Home
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="text-gray-300 hover:text-white transition-colors">
+                <Link href="/services" className="text-gray-300 hover:text-white transition-colors accessible-link">
                   Services
                 </Link>
               </li>
               <li>
-                <Link href="/gallery" className="text-gray-300 hover:text-white transition-colors">
+                <Link href="/gallery" className="text-gray-300 hover:text-white transition-colors accessible-link">
                   Gallery
                 </Link>
               </li>
               <li>
-                <Link href="/booking" className="text-gray-300 hover:text-white transition-colors">
+                <Link href="/booking" className="text-gray-300 hover:text-white transition-colors accessible-link">
                   Book Now
                 </Link>
               </li>
@@ -78,13 +99,23 @@ export default function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <a href={`tel:${getSetting("contact_phone", "8897326898")}`} className="text-gray-300 hover:text-white transition-colors">
+                <a 
+                  href={`tel:${getSetting("contact_phone", "8897326898")}`} 
+                  className="text-gray-300 hover:text-white transition-colors accessible-link"
+                  aria-label={`Call Farm Feast Farm House at ${getSetting("contact_phone", "+91 8897326898")}`}
+                  title="Call us directly"
+                >
                   {getSetting("contact_phone", "+91 8897326898")}
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href={`mailto:${getSetting("contact_email", "info@farmfeastfarmhouse.shop")}`} className="text-gray-300 hover:text-white transition-colors">
+                <a 
+                  href={`mailto:${getSetting("contact_email", "info@farmfeastfarmhouse.shop")}`} 
+                  className="text-gray-300 hover:text-white transition-colors accessible-link"
+                  aria-label={`Send email to Farm Feast Farm House at ${getSetting("contact_email", "info@farmfeastfarmhouse.shop")}`}
+                  title="Send us an email"
+                >
                   {getSetting("contact_email", "info@farmfeastfarmhouse.shop")}
                 </a>
               </div>

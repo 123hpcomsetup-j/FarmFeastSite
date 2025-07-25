@@ -60,8 +60,13 @@ const FastHeroSection = memo(() => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/booking">
-                <Button data-tour="booking-button" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Link href="/booking" className="accessible-link">
+                <Button 
+                  data-tour="booking-button" 
+                  size="lg" 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 accessible-button w-full sm:w-auto"
+                  aria-label="Book your stay at Farm Feast Farm House - Reserve dates and check availability"
+                >
                   <Calendar className="w-5 h-5 mr-2" />
                   Book Your Stay
                 </Button>
@@ -71,8 +76,9 @@ const FastHeroSection = memo(() => {
                   href="https://wa.me/918897326898"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center"
-                  aria-label="Contact Farm Feast Farm House via WhatsApp"
+                  className="inline-flex items-center accessible-link accessible-button w-full sm:w-auto justify-center"
+                  aria-label="Contact Farm Feast Farm House via WhatsApp at +91 88973 26898 - Opens in new tab"
+                  title="Chat with us on WhatsApp"
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp

@@ -202,10 +202,13 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
+          className="fixed bottom-4 right-4 z-50 rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg touch-target"
           size="icon"
+          aria-label="Open live chat - Get instant support from our team"
+          title="Start a conversation with our support team"
         >
           <MessageCircle className="h-6 w-6 text-white" />
+          <span className="sr-only">Live Chat</span>
         </Button>
       )}
 
@@ -226,9 +229,12 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
-              className="h-6 w-6"
+              className="h-8 w-8 touch-target"
+              aria-label="Close chat window"
+              title="Close live chat"
             >
               <X className="h-4 w-4" />
+              <span className="sr-only">Close Chat</span>
             </Button>
           </CardHeader>
           
@@ -259,7 +265,8 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
                 <Button 
                   onClick={handleStartChat}
                   disabled={!visitorName.trim() || !visitorPhone.trim() || startChatMutation.isPending}
-                  className="w-full"
+                  className="w-full accessible-button"
+                  aria-label={startChatMutation.isPending ? "Starting chat session, please wait" : "Start chat conversation with support team"}
                 >
                   {startChatMutation.isPending ? "Starting..." : "Start Chat"}
                 </Button>
@@ -316,6 +323,9 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
                       onClick={sendMessage}
                       disabled={!newMessage.trim() || !isConnected || chatSession?.status === 'waiting'}
                       size="sm"
+                      className="accessible-button"
+                      aria-label="Send message to support team"
+                      title="Send your message"
                     >
                       Send
                     </Button>
