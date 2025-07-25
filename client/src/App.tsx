@@ -158,7 +158,7 @@ function App() {
           <ServiceWorkerRegistration />
           <CustomScripts />
           <AnalyticsTracker />
-          <LiveChat visitorSessionId={window.localStorage?.getItem('visitor_session_id') || ''} />
+          <LiveChat visitorSessionId={typeof window !== 'undefined' && window.localStorage?.getItem('visitor_session_id') || ''} />
           <Toaster />
           <Router />
           <CookieConsent />

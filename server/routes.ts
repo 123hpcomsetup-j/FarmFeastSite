@@ -2216,6 +2216,9 @@ Farm Feast Farm House Team
   app.get("/api/chat/:sessionId/messages", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ error: "Invalid session ID" });
+      }
       const messages = await storage.getChatMessages(sessionId);
       res.json(messages);
     } catch (error) {

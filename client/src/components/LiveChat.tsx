@@ -30,6 +30,8 @@ interface ChatSession {
 }
 
 export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
+  // Use analytics session ID if no visitor session ID provided
+  const sessionId = visitorSessionId || localStorage.getItem('visitor_session_id') || `visitor_${Date.now()}`;
   const [isOpen, setIsOpen] = useState(false);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -68,14 +70,15 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
     try {
       const response = await fetch(`/api/chat/${sessionId}/messages`);
       const data = await response.json();
-      setMessages(data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching messages:", error);
+      setMessages([]);
     }
   };
 
   // WebSocket connection
-  const connectWebSocket = (sessionId: number) => {
+  const connectWebSocket = (chatSessionId: number) => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws/chat`;
     
@@ -88,9 +91,9 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
       // Join chat session
       wsRef.current?.send(JSON.stringify({
         type: 'join_chat',
-        chatSessionId: sessionId,
+        chatSessionId: chatSessionId,
         userType: 'visitor',
-        visitorSessionId
+        visitorSessionId: sessionId
       }));
     };
     
@@ -106,7 +109,7 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
           // Add system message
           setMessages(prev => [...prev, {
             id: Date.now(),
-            chatSessionId: sessionId,
+            chatSessionId: data.session.id,
             senderType: 'admin',
             senderId: 'system',
             message: 'An admin has joined the chat',
@@ -119,7 +122,7 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
           setChatSession(data.session);
           setMessages(prev => [...prev, {
             id: Date.now(),
-            chatSessionId: sessionId,
+            chatSessionId: data.session.id,
             senderType: 'admin',
             senderId: 'system',
             message: 'Chat session has been closed',
@@ -145,7 +148,7 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
       type: 'send_message',
       chatSessionId: chatSession.id,
       senderType: 'visitor',
-      senderId: visitorSessionId,
+      senderId: sessionId,
       content: newMessage
     }));
     
@@ -162,7 +165,7 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
     if (!visitorName.trim()) return;
     
     startChatMutation.mutate({
-      visitorSessionId,
+      visitorSessionId: sessionId,
       visitorName: visitorName.trim(),
       visitorEmail: visitorEmail.trim()
     });
