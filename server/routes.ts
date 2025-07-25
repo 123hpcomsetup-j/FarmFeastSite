@@ -2338,7 +2338,13 @@ Farm Feast Farm House Team
         
         switch (message.type) {
           case 'join_chat':
-            ws.chatSessionId = message.chatSessionId;
+            if (!message.chatSessionId || isNaN(parseInt(message.chatSessionId))) {
+              console.error('Invalid chat session ID:', message.chatSessionId);
+              break;
+            }
+            
+            const sessionId = parseInt(message.chatSessionId);
+            ws.chatSessionId = sessionId;
             ws.userType = message.userType;
             if (message.userType === 'admin') {
               ws.adminId = message.adminId;
@@ -2347,18 +2353,24 @@ Farm Feast Farm House Team
             }
             
             // Add to connections map
-            if (!chatConnections.has(message.chatSessionId)) {
-              chatConnections.set(message.chatSessionId, []);
+            if (!chatConnections.has(sessionId)) {
+              chatConnections.set(sessionId, []);
             }
-            chatConnections.get(message.chatSessionId)?.push(ws);
+            chatConnections.get(sessionId)?.push(ws);
             
-            console.log(`${message.userType} joined chat session ${message.chatSessionId}`);
+            console.log(`${message.userType} joined chat session ${sessionId}`);
             break;
             
           case 'send_message':
+            // Validate message data
+            if (!message.chatSessionId || !message.content || !message.senderType) {
+              console.error('Invalid message data:', message);
+              break;
+            }
+            
             // Handle message sending through WebSocket
             const newMessage = await storage.createChatMessage({
-              chatSessionId: message.chatSessionId,
+              chatSessionId: parseInt(message.chatSessionId),
               senderType: message.senderType,
               senderId: message.senderId,
               message: message.content,
@@ -2366,7 +2378,7 @@ Farm Feast Farm House Team
             });
             
             // Broadcast to all connections in this chat session
-            const connections = chatConnections.get(message.chatSessionId);
+            const connections = chatConnections.get(parseInt(message.chatSessionId));
             if (connections) {
               connections.forEach(conn => {
                 if (conn.readyState === WebSocket.OPEN) {

@@ -44,14 +44,12 @@ export function LiveChatDashboard() {
   // Fetch all chat sessions
   const { data: allSessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["/api/admin/chat/sessions"],
-    queryFn: getAdminQueryFn,
     refetchInterval: 5000, // Refetch every 5 seconds
   });
 
   // Fetch active chat sessions
   const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
     queryKey: ["/api/admin/chat/active"],
-    queryFn: getAdminQueryFn,
     refetchInterval: 3000, // Refetch every 3 seconds
   });
 
