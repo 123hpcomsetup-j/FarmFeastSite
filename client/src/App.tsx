@@ -15,6 +15,7 @@ import CriticalResourceLoader from "@/components/CriticalResourceLoader";
 import CriticalCSSOptimizer from "@/components/CriticalCSSOptimizer";
 import OptimizedAssetLoader from "@/components/OptimizedAssetLoader";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { LiveChat } from "@/components/LiveChat";
 
 // Import critical pages normally, lazy load secondary pages
 import Home from "@/pages/home";
@@ -157,6 +158,7 @@ function App() {
           <ServiceWorkerRegistration />
           <CustomScripts />
           <AnalyticsTracker />
+          <LiveChat visitorSessionId={window.localStorage?.getItem('visitor_session_id') || ''} />
           <Toaster />
           <Router />
           <CookieConsent />

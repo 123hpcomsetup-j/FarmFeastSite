@@ -15,6 +15,8 @@ import {
   visitorSessions,
   pageViews,
   analyticsEvents,
+  chatSessions,
+  chatMessages,
   type Booking, 
   type Service, 
   type Coupon, 
@@ -46,7 +48,11 @@ import {
   type PageView,
   type InsertPageView,
   type AnalyticsEvent,
-  type InsertAnalyticsEvent
+  type InsertAnalyticsEvent,
+  type ChatSession,
+  type InsertChatSession,
+  type ChatMessage,
+  type InsertChatMessage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -160,6 +166,18 @@ export interface IStorage {
     sessionsLast30Min: VisitorSession[];
     currentPageViews: { page: string; visitors: number }[];
   }>;
+
+  // Live Chat methods
+  createChatSession(session: InsertChatSession): Promise<ChatSession>;
+  getChatSession(id: number): Promise<ChatSession | undefined>;
+  getChatSessionByVisitorId(visitorSessionId: string): Promise<ChatSession | undefined>;
+  updateChatSession(id: number, updates: Partial<ChatSession>): Promise<ChatSession | undefined>;
+  getActiveChatSessions(adminId?: number): Promise<ChatSession[]>;
+  getAllChatSessions(): Promise<ChatSession[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  getChatMessages(chatSessionId: number): Promise<ChatMessage[]>;
+  markMessagesAsRead(chatSessionId: number, senderType: string): Promise<void>;
+  getUnreadMessageCount(chatSessionId: number, senderType: string): Promise<number>;
 }
 
 // Database Storage Implementation
@@ -751,6 +769,95 @@ class DatabaseStorage implements IStorage {
         visitors: parseInt(p.visitors as string) || 0 
       }))
     };
+  }
+
+  // Live Chat methods
+  async createChatSession(session: InsertChatSession): Promise<ChatSession> {
+    const [newSession] = await this.db.insert(chatSessions).values(session).returning();
+    return newSession;
+  }
+
+  async getChatSession(id: number): Promise<ChatSession | undefined> {
+    const [session] = await this.db.select().from(chatSessions).where(eq(chatSessions.id, id));
+    return session;
+  }
+
+  async getChatSessionByVisitorId(visitorSessionId: string): Promise<ChatSession | undefined> {
+    const [session] = await this.db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.visitorSessionId, visitorSessionId))
+      .orderBy(desc(chatSessions.startedAt));
+    return session;
+  }
+
+  async updateChatSession(id: number, updates: Partial<ChatSession>): Promise<ChatSession | undefined> {
+    const [updatedSession] = await this.db
+      .update(chatSessions)
+      .set(updates)
+      .where(eq(chatSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async getActiveChatSessions(adminId?: number): Promise<ChatSession[]> {
+    const baseQuery = this.db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.status, "active"));
+
+    if (adminId) {
+      return await baseQuery.where(eq(chatSessions.adminId, adminId));
+    }
+    
+    return await baseQuery.orderBy(desc(chatSessions.lastMessageAt));
+  }
+
+  async getAllChatSessions(): Promise<ChatSession[]> {
+    return await this.db.select().from(chatSessions).orderBy(desc(chatSessions.startedAt));
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [newMessage] = await this.db.insert(chatMessages).values(message).returning();
+    
+    // Update last message time in chat session
+    await this.db
+      .update(chatSessions)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(chatSessions.id, message.chatSessionId));
+    
+    return newMessage;
+  }
+
+  async getChatMessages(chatSessionId: number): Promise<ChatMessage[]> {
+    return await this.db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.chatSessionId, chatSessionId))
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async markMessagesAsRead(chatSessionId: number, senderType: string): Promise<void> {
+    await this.db
+      .update(chatMessages)
+      .set({ isRead: true })
+      .where(and(
+        eq(chatMessages.chatSessionId, chatSessionId),
+        eq(chatMessages.senderType, senderType === "admin" ? "visitor" : "admin")
+      ));
+  }
+
+  async getUnreadMessageCount(chatSessionId: number, senderType: string): Promise<number> {
+    const result = await this.db
+      .select({ count: sql`count(*)` })
+      .from(chatMessages)
+      .where(and(
+        eq(chatMessages.chatSessionId, chatSessionId),
+        eq(chatMessages.senderType, senderType === "admin" ? "visitor" : "admin"),
+        eq(chatMessages.isRead, false)
+      ));
+    
+    return parseInt(result[0]?.count as string) || 0;
   }
 }
 

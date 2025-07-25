@@ -308,6 +308,30 @@ export const analyticsEvents = pgTable("analytics_events", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Live Chat System Tables
+export const chatSessions = pgTable("chat_sessions", {
+  id: serial("id").primaryKey(),
+  visitorSessionId: text("visitor_session_id").notNull(),
+  visitorName: text("visitor_name"),
+  visitorEmail: text("visitor_email"),
+  status: text("status").notNull().default("active"), // 'active', 'closed', 'waiting'
+  adminId: integer("admin_id").references(() => adminUsers.id),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  closedAt: timestamp("closed_at"),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  chatSessionId: integer("chat_session_id").notNull().references(() => chatSessions.id),
+  senderType: text("sender_type").notNull(), // 'visitor', 'admin'
+  senderId: text("sender_id"), // visitor session ID or admin username
+  message: text("message").notNull(),
+  messageType: text("message_type").notNull().default("text"), // 'text', 'image', 'file'
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
   id: true,
   status: true,
@@ -345,6 +369,17 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
   createdAt: true,
 });
 
+export const insertChatSessionSchema = createInsertSchema(chatSessions).omit({
+  id: true,
+  startedAt: true,
+  lastMessageAt: true,
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Service = typeof services.$inferSelect;
@@ -375,6 +410,10 @@ export type PageView = typeof pageViews.$inferSelect;
 export type InsertPageView = z.infer<typeof insertPageViewSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 
 // Homepage Images table
 export const homepageImages = pgTable("homepage_images", {

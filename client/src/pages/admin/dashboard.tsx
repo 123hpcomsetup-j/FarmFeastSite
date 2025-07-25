@@ -19,6 +19,7 @@ import SiteSettingsManagement from "@/components/admin/SiteSettingsManagement";
 import HomepageImagesManagement from "@/components/admin/HomepageImagesManagement";
 import CustomScriptsManagement from "@/components/admin/CustomScriptsManagement";
 import AnalyticsDashboard from "@/pages/admin/AnalyticsDashboard";
+import { LiveChatDashboard } from "@/pages/admin/LiveChatDashboard";
 import { 
   Calendar, 
   Settings, 
@@ -37,12 +38,14 @@ import {
   Home,
   TrendingUp,
   Code,
-  Activity
+  Activity,
+  MessageCircle
 } from "lucide-react";
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: Home },
   { id: "analytics", label: "Analytics", icon: Activity },
+  { id: "live-chat", label: "Live Chat", icon: MessageCircle },
   { id: "bookings", label: "Bookings", icon: Calendar },
   { id: "confirmations", label: "Confirmations", icon: CheckCircle },
   { id: "payments", label: "Payments", icon: CreditCard },
@@ -246,6 +249,8 @@ export default function AdminDashboard() {
         );
       case "analytics":
         return <AnalyticsDashboard />;
+      case "live-chat":
+        return <LiveChatDashboard />;
       case "bookings":
         return <BookingsManagement />;
       case "confirmations":

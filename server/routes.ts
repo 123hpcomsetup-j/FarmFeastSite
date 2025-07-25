@@ -2157,6 +2157,261 @@ Farm Feast Farm House Team
     }
   });
 
+  // Live Chat API Routes
+  
+  // Start a new chat session (public)
+  app.post("/api/chat/start", async (req, res) => {
+    try {
+      const { visitorSessionId, visitorName, visitorEmail } = req.body;
+      
+      // Check if visitor already has an active chat session
+      let chatSession = await storage.getChatSessionByVisitorId(visitorSessionId);
+      
+      if (!chatSession || chatSession.status === "closed") {
+        // Create new chat session
+        chatSession = await storage.createChatSession({
+          visitorSessionId,
+          visitorName,
+          visitorEmail,
+          status: "waiting"
+        });
+      }
+      
+      res.json(chatSession);
+    } catch (error) {
+      console.error("Error starting chat session:", error);
+      res.status(500).json({ error: "Failed to start chat session" });
+    }
+  });
+
+  // Send a message (public)
+  app.post("/api/chat/message", async (req, res) => {
+    try {
+      const { chatSessionId, senderType, senderId, message } = req.body;
+      
+      const newMessage = await storage.createChatMessage({
+        chatSessionId,
+        senderType,
+        senderId,
+        message,
+        messageType: "text"
+      });
+      
+      // Broadcast message via WebSocket if function is available
+      if ((app as any).broadcastToChat) {
+        (app as any).broadcastToChat(chatSessionId, {
+          type: "new_message",
+          message: newMessage
+        });
+      }
+      
+      res.json(newMessage);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Get chat messages (public)
+  app.get("/api/chat/:sessionId/messages", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const messages = await storage.getChatMessages(sessionId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Admin Chat Routes (admin only)
+  
+  // Get all chat sessions (admin only)
+  app.get("/api/admin/chat/sessions", requireAdmin, async (req, res) => {
+    try {
+      const sessions = await storage.getAllChatSessions();
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching chat sessions:", error);
+      res.status(500).json({ error: "Failed to fetch chat sessions" });
+    }
+  });
+
+  // Get active chat sessions (admin only)
+  app.get("/api/admin/chat/active", requireAdmin, async (req, res) => {
+    try {
+      const activeSessions = await storage.getActiveChatSessions();
+      res.json(activeSessions);
+    } catch (error) {
+      console.error("Error fetching active chat sessions:", error);
+      res.status(500).json({ error: "Failed to fetch active chat sessions" });
+    }
+  });
+
+  // Assign admin to chat session (admin only)
+  app.put("/api/admin/chat/:sessionId/assign", requireAdmin, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const adminId = req.admin?.id;
+      
+      const updatedSession = await storage.updateChatSession(sessionId, {
+        adminId,
+        status: "active"
+      });
+      
+      // Notify visitor that admin joined
+      if ((app as any).broadcastToChat) {
+        (app as any).broadcastToChat(sessionId, {
+          type: "admin_joined",
+          session: updatedSession
+        });
+      }
+      
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error assigning admin to chat:", error);
+      res.status(500).json({ error: "Failed to assign admin" });
+    }
+  });
+
+  // Close chat session (admin only)
+  app.put("/api/admin/chat/:sessionId/close", requireAdmin, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      
+      const updatedSession = await storage.updateChatSession(sessionId, {
+        status: "closed",
+        closedAt: new Date()
+      });
+      
+      // Notify visitor that chat was closed
+      if ((app as any).broadcastToChat) {
+        (app as any).broadcastToChat(sessionId, {
+          type: "chat_closed",
+          session: updatedSession
+        });
+      }
+      
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error closing chat session:", error);
+      res.status(500).json({ error: "Failed to close chat session" });
+    }
+  });
+
+  // Mark messages as read (admin only)
+  app.put("/api/admin/chat/:sessionId/read", requireAdmin, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      await storage.markMessagesAsRead(sessionId, "admin");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      res.status(500).json({ error: "Failed to mark messages as read" });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // WebSocket Server for Real-time Chat
+  const { WebSocketServer, WebSocket } = await import("ws");
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws/chat' });
+  
+  interface ChatWebSocket extends WebSocket {
+    chatSessionId?: number;
+    userType?: 'admin' | 'visitor';
+    adminId?: number;
+    visitorSessionId?: string;
+  }
+  
+  const chatConnections = new Map<number, ChatWebSocket[]>(); // sessionId -> connections
+  
+  wss.on('connection', (ws: ChatWebSocket, req) => {
+    console.log('New WebSocket connection for chat');
+    
+    ws.on('message', async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        switch (message.type) {
+          case 'join_chat':
+            ws.chatSessionId = message.chatSessionId;
+            ws.userType = message.userType;
+            if (message.userType === 'admin') {
+              ws.adminId = message.adminId;
+            } else {
+              ws.visitorSessionId = message.visitorSessionId;
+            }
+            
+            // Add to connections map
+            if (!chatConnections.has(message.chatSessionId)) {
+              chatConnections.set(message.chatSessionId, []);
+            }
+            chatConnections.get(message.chatSessionId)?.push(ws);
+            
+            console.log(`${message.userType} joined chat session ${message.chatSessionId}`);
+            break;
+            
+          case 'send_message':
+            // Handle message sending through WebSocket
+            const newMessage = await storage.createChatMessage({
+              chatSessionId: message.chatSessionId,
+              senderType: message.senderType,
+              senderId: message.senderId,
+              message: message.content,
+              messageType: "text"
+            });
+            
+            // Broadcast to all connections in this chat session
+            const connections = chatConnections.get(message.chatSessionId);
+            if (connections) {
+              connections.forEach(conn => {
+                if (conn.readyState === WebSocket.OPEN) {
+                  conn.send(JSON.stringify({
+                    type: 'new_message',
+                    message: newMessage
+                  }));
+                }
+              });
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove from connections map
+      if (ws.chatSessionId) {
+        const connections = chatConnections.get(ws.chatSessionId);
+        if (connections) {
+          const index = connections.indexOf(ws);
+          if (index > -1) {
+            connections.splice(index, 1);
+          }
+          if (connections.length === 0) {
+            chatConnections.delete(ws.chatSessionId);
+          }
+        }
+      }
+    });
+  });
+  
+  // Broadcast function for chat messages
+  function broadcastToChat(chatSessionId: number, data: any) {
+    const connections = chatConnections.get(chatSessionId);
+    if (connections) {
+      connections.forEach(ws => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(data));
+        }
+      });
+    }
+  }
+  
+  // Make broadcastToChat available in the route handlers
+  (app as any).broadcastToChat = broadcastToChat;
+  
   return httpServer;
 }
