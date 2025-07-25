@@ -114,7 +114,12 @@ export function LiveChatDashboard() {
       
       switch (data.type) {
         case 'new_message':
-          setMessages(prev => [...prev, data.message]);
+          setMessages(prev => {
+            // Prevent duplicates by checking if message ID already exists
+            const exists = prev.find(m => m.id === data.message.id);
+            if (exists) return prev;
+            return [...prev, data.message];
+          });
           // Refetch sessions to update last message time
           refetchSessions();
           refetchActiveSessions();
@@ -190,9 +195,12 @@ export function LiveChatDashboard() {
     };
   }, []); // Only run once on mount
 
-  // Reconnect WebSocket when session changes
+  // Join session when session changes (don't send multiple join messages)
   useEffect(() => {
     if (selectedSession && wsRef.current?.readyState === WebSocket.OPEN) {
+      // Clear previous messages when switching sessions
+      setMessages([]);
+      
       wsRef.current.send(JSON.stringify({
         type: 'join_chat',
         chatSessionId: selectedSession.id,
@@ -395,9 +403,9 @@ export function LiveChatDashboard() {
               <CardContent className="flex-1 flex flex-col p-0">
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {messages.map((message) => (
+                  {messages.map((message, index) => (
                     <div
-                      key={`message-${message.id}-${message.chatSessionId}`}
+                      key={`message-${message.id}-${message.chatSessionId}-${index}`}
                       className={`flex ${message.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
