@@ -144,24 +144,26 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
 
   // Send message via WebSocket
   const sendMessage = () => {
-    if (!newMessage.trim() || !chatSession || !wsRef.current || !isConnected) return;
+    if (!newMessage.trim() || !chatSession || !wsRef.current || !isConnected) {
+      console.log("Cannot send message:", { 
+        hasMessage: !!newMessage.trim(), 
+        hasSession: !!chatSession, 
+        hasWs: !!wsRef.current, 
+        isConnected 
+      });
+      return;
+    }
     
-    console.log("Sending message:", {
+    const messageData = {
       type: 'send_message',
       chatSessionId: chatSession.id,
       senderType: 'visitor',
       senderId: sessionId,
       content: newMessage
-    });
+    };
     
-    wsRef.current.send(JSON.stringify({
-      type: 'send_message',
-      chatSessionId: chatSession.id,
-      senderType: 'visitor',
-      senderId: sessionId,
-      content: newMessage
-    }));
-    
+    console.log("Sending message:", messageData);
+    wsRef.current.send(JSON.stringify(messageData));
     setNewMessage("");
   };
 
