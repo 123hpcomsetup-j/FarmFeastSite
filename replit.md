@@ -179,6 +179,16 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Request Chain Optimization**: Reduced critical request chain length by 50% through resource inlining, bundling, and intelligent deferral strategies
 - **Cache Optimization**: Implemented long cache lifetimes (30min-1yr) with multi-layer caching strategy achieving 80% cache hit rate for repeat visits
 
+### Admin Authentication Fix - Production Dashboard Issue Resolved (July 2025)
+- **Critical Issue Fixed**: Resolved admin dashboard not properly fetching details on production site due to token storage inconsistencies
+- **Token Key Standardization**: Fixed inconsistencies where login stored "adminToken" but dashboard looked for "admin_token"
+- **Centralized Authentication System**: Created authUtils utility to prevent future token key mismatches across all admin components
+- **AdminRouter Component**: Added smart routing that checks authentication status and redirects appropriately when visiting /admin
+- **Universal Auth Integration**: Updated all admin components (dashboard, analytics, gallery, SEO) to use centralized authentication
+- **Production Verification**: Admin API requests now working correctly with proper authentication headers
+- **Analytics Dashboard Fix**: Fixed analytics queries that were using old token keys preventing data display
+- **Complete Admin Flow**: /admin now properly redirects to dashboard if authenticated, or shows login if not authenticated
+
 ### Search Console Review Snippets Fix - Server-Side Structured Data (July 2025)
 - **Critical Issue Resolved**: Google Search Console's "Test Live URL" tool now detects structured data enhancements on main homepage (/)
 - **Server-Side Rendering**: Added crawler detection in server/routes.ts to serve structured data for testing tools and search engines

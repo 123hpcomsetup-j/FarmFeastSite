@@ -51,7 +51,7 @@ export default function GalleryManagement() {
         method: "POST",
         body: formData,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
       });
       if (!response.ok) {

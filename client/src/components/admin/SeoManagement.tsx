@@ -36,7 +36,7 @@ export default function SeoManagement() {
     queryKey: ["/api/admin/reviews/settings"],
     meta: {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
       },
     },
   });

@@ -92,6 +92,7 @@ export default function AdminDashboard() {
 
   const { data: services = [] } = useQuery({
     queryKey: ["/api/services"],
+    queryFn: getAdminQueryFn,
     enabled: !!adminUser,
   });
 

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Activity, Users, Eye, Clock, Globe, Smartphone, Monitor, Tablet, MapPin, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { authUtils } from '@/lib/auth';
 
 interface AnalyticsOverview {
   totalVisitors: number;
@@ -65,14 +66,12 @@ export default function AnalyticsDashboard() {
   const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, error: overviewError } = useQuery<AnalyticsOverview>({
     queryKey: ['/api/admin/analytics/overview', timeRange],
     queryFn: async () => {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
+      if (!authUtils.isAuthenticated()) {
         throw new Error('No authentication token found');
       }
+      const authHeaders = authUtils.getAuthHeaders();
       const response = await fetch(`/api/admin/analytics/overview?days=${timeRange}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
       });
       if (!response.ok) {
         if (response.status === 401) {
@@ -90,14 +89,12 @@ export default function AnalyticsDashboard() {
   const { data: realtime, isLoading: realtimeLoading, refetch: refetchRealtime, error: realtimeError } = useQuery<RealtimeData>({
     queryKey: ['/api/admin/analytics/realtime'],
     queryFn: async () => {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
+      if (!authUtils.isAuthenticated()) {
         throw new Error('No authentication token found');
       }
+      const authHeaders = authUtils.getAuthHeaders();
       const response = await fetch('/api/admin/analytics/realtime', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
       });
       if (!response.ok) {
         if (response.status === 401) {

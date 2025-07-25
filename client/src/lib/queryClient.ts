@@ -59,23 +59,29 @@ export const getQueryFn: <T>(options: {
 
 // Admin query function with authentication
 export const getAdminQueryFn: QueryFunction = async ({ queryKey }) => {
-  const token = localStorage.getItem("adminToken");
+  const authHeaders = authUtils.getAuthHeaders();
+  const url = queryKey.join("/") as string;
   
-  const res = await fetch(queryKey.join("/") as string, {
+  console.log("Admin API request:", url, "Auth headers present:", !!authHeaders.Authorization);
+  
+  const res = await fetch(url, {
     credentials: "include",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: authHeaders,
   });
+  
+  console.log("Admin API response:", res.status, res.statusText);
   
   if (res.status === 401) {
     console.error("Admin authentication failed, clearing tokens");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
+    authUtils.clearAuth();
     window.location.href = "/admin";
     throw new Error("Authentication required");
   }
 
   await throwIfResNotOk(res);
-  return await res.json();
+  const data = await res.json();
+  console.log("Admin API data:", Array.isArray(data) ? `Array(${data.length})` : typeof data);
+  return data;
 };
 
 export const queryClient = new QueryClient({
