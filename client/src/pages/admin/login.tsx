@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { authUtils } from "@/lib/auth";
 import { useLocation } from "wouter";
 
 const loginSchema = z.object({
@@ -38,16 +39,14 @@ export default function AdminLogin() {
       const result = await response.json();
 
       if (result.admin && result.token) {
-        // Store the JWT token for authentication (use adminToken for consistency)
-        localStorage.setItem("adminToken", result.token);
-        localStorage.setItem("adminUser", JSON.stringify(result.admin));
+        // Store authentication data using centralized utility
+        authUtils.storeAuth(result.token, result.admin);
         
         console.log("Login successful, token stored:", result.token.substring(0, 20) + "...");
         
         // Verify storage immediately
-        const storedToken = localStorage.getItem("adminToken");
-        console.log("Token verification:", storedToken ? "stored successfully" : "storage failed");
-        console.log("Stored token matches:", storedToken === result.token);
+        const isAuthenticated = authUtils.isAuthenticated();
+        console.log("Authentication verification:", isAuthenticated ? "stored successfully" : "storage failed");
         
         toast({
           title: "Login Successful",
@@ -56,7 +55,7 @@ export default function AdminLogin() {
 
         // Small delay to ensure storage is complete before navigation
         setTimeout(() => {
-          console.log("Final token check before navigation:", localStorage.getItem("adminToken") ? "present" : "missing");
+          console.log("Final authentication check before navigation:", authUtils.isAuthenticated() ? "authenticated" : "not authenticated");
           setLocation("/admin/dashboard");
         }, 100);
       } else {

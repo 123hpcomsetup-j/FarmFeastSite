@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getAdminQueryFn } from "@/lib/queryClient";
+import { authUtils } from "@/lib/auth";
 import BookingsManagement from "@/components/admin/BookingsManagement";
 import ServicesManagement from "@/components/admin/ServicesManagement";
 import CouponsManagement from "@/components/admin/CouponsManagement";
@@ -69,19 +70,17 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const user = localStorage.getItem("admin_user");
-    
-    if (!token || !user) {
-      setLocation("/admin/login");
+    if (!authUtils.isAuthenticated()) {
+      setLocation("/admin");
       return;
     }
 
-    try {
-      setAdminUser(JSON.parse(user));
-    } catch (error) {
-      console.error("Error parsing admin user:", error);
-      setLocation("/admin/login");
+    const user = authUtils.getUser();
+    if (user) {
+      setAdminUser(user);
+    } else {
+      console.error("Error getting admin user data");
+      setLocation("/admin");
     }
   }, [setLocation]);
 
@@ -97,13 +96,12 @@ export default function AdminDashboard() {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_user");
+    authUtils.clearAuth();
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
-    setLocation("/admin/login");
+    setLocation("/admin");
   };
 
   if (!adminUser) {

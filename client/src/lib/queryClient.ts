@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { authUtils } from "./auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -23,10 +24,8 @@ export async function apiRequest(
       (method !== "GET" && url.includes("/api/blog-posts")) ||
       (method !== "GET" && url.includes("/api/services")) ||
       (method !== "GET" && url.includes("/api/coupons"))) {
-    const token = localStorage.getItem("adminToken");
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+    const authHeaders = authUtils.getAuthHeaders();
+    Object.assign(headers, authHeaders);
   }
 
   const res = await fetch(url, {

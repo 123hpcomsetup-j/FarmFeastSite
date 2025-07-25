@@ -15,7 +15,7 @@ import { LiveChatFixed } from "@/components/LiveChatFixed";
 import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Booking from "@/pages/booking";
-import AdminLogin from "@/pages/admin/login";
+import AdminRouter from "@/pages/admin/AdminRouter";
 import AdminDashboard from "@/pages/admin/dashboard";
 
 // Lazy load secondary pages
@@ -70,7 +70,7 @@ function App() {
                 <Route path="/cookie-policy" component={CookiePolicy} />
                 <Route path="/data-processing" component={DataProcessing} />
                 <Route path="/404-checker" component={NotFoundChecker} />
-                <Route path="/admin" component={AdminLogin} />
+                <Route path="/admin" component={AdminRouter} />
                 <Route path="/admin/dashboard" component={AdminDashboard} />
                 <Route component={NotFound} />
               </Switch>
