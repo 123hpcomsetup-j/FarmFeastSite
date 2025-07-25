@@ -8,6 +8,7 @@ import ContactSection from "@/components/contact-section";
 import MapComponent from "@/components/MapComponent";
 import SeoHead from "@/components/SeoHead";
 import LocationSeoContent from "@/components/LocationSeoContent";
+import StructuredData from "@/components/StructuredData";
 
 export default function Home() {
   console.log("Home component rendering...");
@@ -18,6 +19,7 @@ export default function Home() {
         description="Experience luxury farmhouse rental with modern amenities, pet-friendly accommodations, and farm-to-table dining. Book your perfect getaway today."
         type="website"
       />
+      <StructuredData page="home" includeReviews={true} />
       <FastNavbar />
       <main>
         <FastHeroSection />
