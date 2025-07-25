@@ -42,14 +42,14 @@ export function LiveChatDashboard() {
   const queryClient = useQueryClient();
 
   // Fetch all chat sessions with auth token - reduced frequency to reduce console spam
-  const { data: allSessions = [], refetch: refetchSessions } = useQuery({
+  const { data: allSessions = [], refetch: refetchSessions } = useQuery<ChatSession[]>({
     queryKey: ["/api/admin/chat/sessions"],
     queryFn: getAdminQueryFn,
     refetchInterval: 30000, // Refetch every 30 seconds instead of 5
   });
 
   // Fetch active chat sessions with auth token - reduced frequency to reduce console spam
-  const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
+  const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery<ChatSession[]>({
     queryKey: ["/api/admin/chat/active"],
     queryFn: getAdminQueryFn,
     refetchInterval: 30000, // Refetch every 30 seconds instead of 3
@@ -58,7 +58,8 @@ export function LiveChatDashboard() {
   // Assign admin to chat session
   const assignMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      return await apiRequest("PUT", `/api/admin/chat/${sessionId}/assign`, {});
+      const response = await apiRequest("PUT", `/api/admin/chat/${sessionId}/assign`, {});
+      return await response.json();
     },
     onSuccess: (updatedSession: ChatSession) => {
       setSelectedSession(updatedSession);
@@ -270,7 +271,7 @@ export function LiveChatDashboard() {
             
             <TabsContent value="active" className="mt-4 h-full">
               <div className="space-y-2 overflow-y-auto h-full">
-                {activeSessions.filter((session: ChatSession) => session.status !== 'closed').map((session: ChatSession) => (
+                {activeSessions.filter((session) => session.status !== 'closed').map((session) => (
                   <Card
                     key={`active-session-${session.id}`}
                     className={`cursor-pointer transition-colors hover:bg-gray-50 ${
@@ -318,7 +319,7 @@ export function LiveChatDashboard() {
                   </Card>
                 ))}
                 
-                {activeSessions.filter((s: ChatSession) => s.status !== 'closed').length === 0 && (
+                {activeSessions.filter((s) => s.status !== 'closed').length === 0 && (
                   <div className="text-center text-gray-500 py-8">
                     <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                     <p>No active chat sessions</p>
@@ -329,7 +330,7 @@ export function LiveChatDashboard() {
             
             <TabsContent value="all" className="mt-4 h-full">
               <div className="space-y-2 overflow-y-auto h-full">
-                {allSessions.map((session: ChatSession) => (
+                {allSessions.map((session) => (
                   <Card
                     key={`all-session-${session.id}`}
                     className={`cursor-pointer transition-colors hover:bg-gray-50 ${
@@ -396,7 +397,7 @@ export function LiveChatDashboard() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((message) => (
                     <div
-                      key={message.id}
+                      key={`message-${message.id}-${message.chatSessionId}`}
                       className={`flex ${message.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
