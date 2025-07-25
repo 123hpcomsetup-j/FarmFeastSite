@@ -107,7 +107,7 @@ const FastHeroSection = memo(() => {
                 width={800}
                 height={600}
                 loading="eager"
-
+                fetchpriority="high"
                 decoding="async"
                 style={{ 
                   aspectRatio: '4/3',

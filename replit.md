@@ -175,6 +175,7 @@ The architecture emphasizes developer experience with fast builds, type safety, 
 - **Console Error Resolution**: Fixed TypeScript errors, reduced debug noise, eliminated Vite warnings for clean production builds
 - **Critical Rendering Path Optimization**: Eliminated blocking requests delaying LCP through deferred API prefetching and inline resource loading
 - **Forced Reflow Elimination**: Fixed performance issues caused by geometric property queries after DOM changes with batched operations and caching
+- **LCP Optimization**: Made hero image immediately discoverable in HTML with fetchpriority="high" and removed lazy-loading for sub-3s LCP targets
 
 ### Critical SEO Crawler Solution - Server-Side Rendering Implemented (July 2025)
 - **Critical Issue Fixed**: Search engine crawlers now see dynamic SEO meta tags instead of static client-side rendered content

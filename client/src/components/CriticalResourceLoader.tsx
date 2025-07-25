@@ -12,12 +12,8 @@ export default function CriticalResourceLoader() {
         crossOrigin: 'anonymous',
         priority: 'high'
       },
-      // Hero image with high priority
-      {
-        href: '/api/placeholder/800/600',
-        as: 'image',
-        priority: 'high'
-      }
+      // Hero image is now immediately discoverable in HTML with fetchpriority="high"
+      // No need to preload it as the browser will discover it directly from FastHeroSection
     ];
 
     // Create preload links with priorities
