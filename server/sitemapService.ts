@@ -14,7 +14,12 @@ export class SitemapService {
 
   constructor(baseUrlOrStorage: string | any = 'https://farmfeastfarmhouse.co.in', storageInstance?: any) {
     if (typeof baseUrlOrStorage === 'string') {
-      this.baseUrl = baseUrlOrStorage.replace(/\/$/, ''); // Remove trailing slash
+      // Ensure production domain always uses HTTPS
+      let cleanUrl = baseUrlOrStorage.replace(/\/$/, ''); // Remove trailing slash
+      if (cleanUrl.includes('farmfeastfarmhouse.co.in') && cleanUrl.startsWith('http://')) {
+        cleanUrl = cleanUrl.replace('http://', 'https://');
+      }
+      this.baseUrl = cleanUrl;
       this.storage = storageInstance || storage;
     } else {
       // Legacy constructor for backward compatibility

@@ -1802,7 +1802,7 @@ Farm Feast Farm House Team
     try {
       // Determine base URL for production vs development
       const hostname = req.get('host');
-      const isProduction = hostname && !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+      const isProduction = hostname && hostname.includes('farmfeastfarmhouse.co.in');
       const baseUrl = isProduction ? 'https://farmfeastfarmhouse.co.in' : `${req.protocol}://${hostname}`;
       
       const { SitemapService } = await import("./sitemapService");
@@ -1825,7 +1825,7 @@ Farm Feast Farm House Team
     try {
       // Determine base URL for production vs development
       const hostname = req.get('host');
-      const isProduction = hostname && !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+      const isProduction = hostname && hostname.includes('farmfeastfarmhouse.co.in');
       const baseUrl = isProduction ? 'https://farmfeastfarmhouse.co.in' : `${req.protocol}://${hostname}`;
       
       const { SitemapService } = await import("./sitemapService");
