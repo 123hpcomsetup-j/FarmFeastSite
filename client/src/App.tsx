@@ -23,6 +23,9 @@ import {
 import { DeferredComponents } from "@/components/DeferredComponents";
 import { ScriptOptimizer } from "@/components/ScriptOptimizer";
 import { JavaScriptOptimizer } from "@/components/JavaScriptOptimizer";
+import { CSSOptimizer } from "@/components/CSSOptimizer";
+import { CriticalCSSExtractor } from "@/components/CriticalCSSExtractor";
+import { AsyncCSSLoader } from "@/components/AsyncCSSLoader";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LiveChatFixed } from "@/components/LiveChatFixed";
 
@@ -210,6 +213,9 @@ function App() {
           <ServiceWorkerRegistration />
           <ScriptOptimizer />
           <JavaScriptOptimizer />
+          <CSSOptimizer />
+          <CriticalCSSExtractor />
+          <AsyncCSSLoader />
           {/* Temporarily load components directly until deferred loading is fixed */}
           <AnalyticsTracker />
           <LiveChatFixed visitorSessionId={typeof window !== 'undefined' && window.localStorage?.getItem('visitor_session_id') || ''} />

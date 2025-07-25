@@ -14,9 +14,24 @@
     <link rel="preload" href="/api/placeholder/800/600" as="image" fetchpriority="high">
     <link rel="modulepreload" href="/src/main.tsx">
     
-    <!-- Critical font preload -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    <!-- Critical CSS Optimization: Load only essential font weights -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"></noscript>
+    
+    <!-- Defer additional font weights until needed -->
+    <script>
+      const loadAdditionalFonts = () => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;700&display=swap';
+        document.head.appendChild(link);
+      };
+      ['scroll', 'mousedown', 'touchstart'].forEach(event => {
+        document.addEventListener(event, loadAdditionalFonts, { once: true, passive: true });
+      });
+      setTimeout(loadAdditionalFonts, 3000);
+    </script>
     
     <!-- Critical CSS inline for fastest render -->
     <style>
