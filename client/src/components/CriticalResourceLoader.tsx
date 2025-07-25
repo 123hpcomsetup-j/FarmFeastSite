@@ -39,21 +39,30 @@ export default function CriticalResourceLoader() {
       '/api/settings'
     ];
 
-    // Aggressively prefetch critical API endpoints
-    const prefetchPromises = prefetchResources.map(url => 
-      fetch(url, { 
-        method: 'GET',
-        headers: { 'Cache-Control': 'max-age=300' }
-      }).catch(() => {}) // Silent fail for prefetch
-    );
+    // Defer API prefetch until after critical path is complete
+    const deferredPrefetch = () => {
+      setTimeout(() => {
+        prefetchResources.forEach(url => {
+          fetch(url, { 
+            method: 'GET',
+            headers: { 'Cache-Control': 'max-age=300' }
+          }).catch(() => {}); // Silent fail for prefetch
+        });
+        
+        // Prefetch next page after API prefetch
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = '/services';
+        document.head.appendChild(link);
+      }, 100); // Defer by 100ms to avoid blocking initial render
+    };
     
-    // Wait for prefetch to complete before preloading next page
-    Promise.all(prefetchPromises).then(() => {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = '/services';
-      document.head.appendChild(link);
-    });
+    // Only start prefetch after page load
+    if (document.readyState === 'complete') {
+      deferredPrefetch();
+    } else {
+      window.addEventListener('load', deferredPrefetch, { once: true });
+    }
 
 
 

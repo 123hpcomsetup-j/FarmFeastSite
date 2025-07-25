@@ -12,6 +12,8 @@ import ResourcePreloader from "@/components/ResourcePreloader";
 import PreloadFonts from "@/components/PreloadFonts";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import CriticalResourceLoader from "@/components/CriticalResourceLoader";
+import NonBlockingLoader from "@/components/NonBlockingLoader";
+import InlineResourceLoader from "@/components/InlineResourceLoader";
 import CriticalCSSOptimizer from "@/components/CriticalCSSOptimizer";
 import OptimizedAssetLoader from "@/components/OptimizedAssetLoader";
 import { 
@@ -206,7 +208,9 @@ function App() {
       <TooltipProvider>
         <TourProvider>
           <SeoHead />
+          <InlineResourceLoader />
           <CriticalResourceLoader />
+          <NonBlockingLoader />
           <CriticalCSSOptimizer />
           <CriticalResourcePreloader />
           <CriticalCSSInliner />
