@@ -160,7 +160,7 @@ export class SitemapService {
       const categorySet = new Set(activeImages.map((img: any) => img.category));
       const categories = Array.from(categorySet);
       
-      return categories.map((category: string) => ({
+      return categories.map((category) => ({
         loc: `${this.baseUrl}/gallery/${this.slugify(category)}`,
         lastmod: this.formatDate(new Date()),
         changefreq: 'weekly' as const,
@@ -187,7 +187,7 @@ export class SitemapService {
       });
       
       // Add individual blog posts
-      blogPosts.forEach(post => {
+      blogPosts.forEach((post: any) => {
         // Add user-facing blog post URL
         blogUrls.push({
           loc: `${this.baseUrl}/blog/${post.slug}`,
@@ -250,7 +250,13 @@ export class SitemapService {
       });
 
       // Generate XML
-      const xml = this.generateSitemapXML(allUrls);
+      let xml = this.generateSitemapXML(allUrls);
+      
+      // Ensure production domain always uses HTTPS
+      if (this.baseUrl.includes('farmfeastfarmhouse.co.in')) {
+        xml = xml.replace(/http:\/\/farmfeastfarmhouse\.co\.in/g, 'https://farmfeastfarmhouse.co.in');
+      }
+      
       return xml;
     } catch (error) {
       console.error('Error generating sitemap:', error);
@@ -292,11 +298,16 @@ ${sitemapClose}`;
   }
 
   async generateRobotsTxt(): Promise<string> {
+    // Ensure production domain uses HTTPS for sitemap reference
+    const sitemapUrl = this.baseUrl.includes('farmfeastfarmhouse.co.in') 
+      ? this.baseUrl.replace('http://', 'https://') 
+      : this.baseUrl;
+      
     const robotsTxt = `User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: ${this.baseUrl}/sitemap.xml
+Sitemap: ${sitemapUrl}/sitemap.xml
 
 # SEO-optimized crawler endpoints for better indexing
 Allow: /api/crawler/home

@@ -1846,9 +1846,10 @@ Farm Feast Farm House Team
 
   app.post("/api/admin/sitemap/regenerate", requireAdmin, async (req, res) => {
     try {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
+      // Determine base URL for production vs development
+      const hostname = req.get('host');
+      const isProduction = hostname && hostname.includes('farmfeastfarmhouse.co.in');
+      const baseUrl = isProduction ? 'https://farmfeastfarmhouse.co.in' : `${req.protocol}://${hostname}`;
       
       const { SitemapService } = await import("./sitemapService");
       const customSitemapService = new SitemapService(baseUrl);
