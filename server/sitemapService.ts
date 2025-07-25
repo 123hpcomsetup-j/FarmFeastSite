@@ -10,9 +10,17 @@ interface SitemapUrl {
 
 export class SitemapService {
   private baseUrl: string;
+  private storage: any;
 
-  constructor(baseUrl: string = 'https://farmfeastfarmhouse.shop') {
-    this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+  constructor(baseUrlOrStorage: string | any = 'https://farmfeastfarmhouse.co.in', storageInstance?: any) {
+    if (typeof baseUrlOrStorage === 'string') {
+      this.baseUrl = baseUrlOrStorage.replace(/\/$/, ''); // Remove trailing slash
+      this.storage = storageInstance || storage;
+    } else {
+      // Legacy constructor for backward compatibility
+      this.storage = baseUrlOrStorage;
+      this.baseUrl = 'https://farmfeastfarmhouse.co.in';
+    }
   }
 
   private formatDate(date: Date | string | null): string {
@@ -26,11 +34,11 @@ export class SitemapService {
     const today = this.formatDate(now);
 
     // Get SEO settings to determine if pages exist and their importance
-    const seoSettings = await storage.getAllSeoSettings();
-    const seoMap = seoSettings.reduce((acc, setting) => {
+    const seoSettings = await this.storage.getAllSeoSettings();
+    const seoMap = seoSettings.reduce((acc: any, setting: any) => {
       acc[setting.page] = setting;
       return acc;
-    }, {} as { [key: string]: typeof seoSettings[0] });
+    }, {} as { [key: string]: any });
 
     const staticPages: SitemapUrl[] = [
       {
@@ -123,7 +131,7 @@ export class SitemapService {
 
   private async getServicePages(): Promise<SitemapUrl[]> {
     try {
-      const services = await storage.getAllServices();
+      const services = await this.storage.getAllServices();
       const activeServices = services.filter((service: any) => service.active);
       
       return activeServices.map((service: any) => ({
@@ -140,7 +148,7 @@ export class SitemapService {
 
   private async getGalleryPages(): Promise<SitemapUrl[]> {
     try {
-      const images = await storage.getAllGalleryImages();
+      const images = await this.storage.getAllGalleryImages();
       const activeImages = images.filter((img: any) => img.active);
       
       // Get unique categories
@@ -161,7 +169,7 @@ export class SitemapService {
 
   private async getBlogPages(): Promise<SitemapUrl[]> {
     try {
-      const blogPosts = await storage.getPublishedBlogPosts();
+      const blogPosts = await this.storage.getPublishedBlogPosts();
       
       const blogUrls: SitemapUrl[] = [];
       

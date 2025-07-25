@@ -1136,7 +1136,11 @@ Farm Feast Farm House Team
   app.get("/api/crawler/:page", async (req, res) => {
     try {
       const { page } = req.params;
-      const fullUrl = `${req.protocol}://${req.get('host')}/${page === 'home' ? '' : page}`;
+      // Use production domain if available, otherwise current host
+      const hostname = req.get('host');
+      const isProduction = hostname && !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+      const baseUrl = isProduction ? `https://farmfeastfarmhouse.co.in` : `${req.protocol}://${hostname}`;
+      const fullUrl = `${baseUrl}/${page === 'home' ? '' : page}`;
       
       // Fetch SEO settings
       let seoSettings = await storage.getSeoSettingsByPage(page);
@@ -1153,7 +1157,7 @@ Farm Feast Farm House Team
           ogTitle: template.title,
           ogDescription: template.description,
           ogImage: '/api/placeholder/1200/630',
-          canonicalUrl: fullUrl,
+          canonicalUrl: isProduction ? `https://farmfeastfarmhouse.co.in/${page === 'home' ? '' : page}` : fullUrl,
           schemaType: (template as any).schemaType,
           schemaData: {},
           priority: 0.8,
@@ -1219,12 +1223,15 @@ Farm Feast Farm House Team
         }
       };
 
-      // Add review data if available
-      if (seoSettings?.reviewsEnabled && (seoSettings?.reviewCount || 0) > 0) {
+      // Add review data if available - prioritize admin settings over defaults
+      const finalReviewCount = seoSettings?.reviewCount || reviewData?.reviewCount || 1008;
+      const finalAverageRating = seoSettings?.averageRating || reviewData?.averageRating || "4.5";
+      
+      if (seoSettings?.reviewsEnabled !== false && finalReviewCount > 0) {
         structuredData.aggregateRating = {
           "@type": "AggregateRating",
-          "ratingValue": parseFloat(seoSettings.averageRating || "4.8"),
-          "reviewCount": seoSettings.reviewCount || 127,
+          "ratingValue": parseFloat(finalAverageRating),
+          "reviewCount": finalReviewCount,
           "bestRating": parseInt(seoSettings.ratingScale || "5"),
           "worstRating": 1
         };
@@ -1276,9 +1283,19 @@ Farm Feast Farm House Team
 
       const title = seoSettings?.title || "Farm Feast Farm House - Luxury Farmhouse Rental Near Hyderabad";
       const description = seoSettings?.description || "Escape to luxury at Farm Feast Farm House. Premium farmhouse rental with swimming pool, modern amenities, and professional services. Perfect for events, family gatherings, and weekend getaways near Hyderabad.";
-      const image = seoSettings?.ogImage || "/api/placeholder/1200/630";
+      
+      // Ensure image URLs use production domain when appropriate
+      const ogImageUrl = seoSettings?.ogImage || "/api/placeholder/1200/630";
+      const fullOgImage = ogImageUrl.startsWith('http') ? ogImageUrl : `${baseUrl}${ogImageUrl}`;
+      
       const keywords = seoSettings?.keywords || "farmhouse rental, luxury farmhouse, swimming pool, Hyderabad, weekend getaway, event venue, family gathering";
       const robots = seoSettings?.noindex ? "noindex,nofollow" : "index,follow";
+      
+      // Fix canonical URL to use production domain
+      const canonicalUrl = seoSettings?.canonicalUrl || fullUrl;
+      const finalCanonicalUrl = isProduction && !canonicalUrl.includes('farmfeastfarmhouse.co.in') 
+        ? canonicalUrl.replace(/https?:\/\/[^\/]+/, 'https://farmfeastfarmhouse.co.in')
+        : canonicalUrl;
 
       const metaHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -1294,7 +1311,7 @@ Farm Feast Farm House Team
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${image}" />
+    <meta property="og:image" content="${fullOgImage}" />
     <meta property="og:url" content="${fullUrl}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Farm Feast Farm House" />
@@ -1303,9 +1320,9 @@ Farm Feast Farm House Team
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${image}" />
+    <meta name="twitter:image" content="${fullOgImage}" />
     
-    ${seoSettings?.canonicalUrl ? `<link rel="canonical" href="${seoSettings.canonicalUrl}" />` : ''}
+    <link rel="canonical" href="${finalCanonicalUrl}" />
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -1783,9 +1800,10 @@ Farm Feast Farm House Team
   // Sitemap routes
   app.get("/sitemap.xml", async (req, res) => {
     try {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
+      // Determine base URL for production vs development
+      const hostname = req.get('host');
+      const isProduction = hostname && !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+      const baseUrl = isProduction ? 'https://farmfeastfarmhouse.co.in' : `${req.protocol}://${hostname}`;
       
       const { SitemapService } = await import("./sitemapService");
       const customSitemapService = new SitemapService(baseUrl);
@@ -1805,9 +1823,10 @@ Farm Feast Farm House Team
 
   app.get("/robots.txt", async (req, res) => {
     try {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
+      // Determine base URL for production vs development
+      const hostname = req.get('host');
+      const isProduction = hostname && !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+      const baseUrl = isProduction ? 'https://farmfeastfarmhouse.co.in' : `${req.protocol}://${hostname}`;
       
       const { SitemapService } = await import("./sitemapService");
       const customSitemapService = new SitemapService(baseUrl);
