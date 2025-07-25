@@ -20,27 +20,21 @@ export default function CustomScripts() {
     refetchOnWindowFocus: false,
   }) as { data: CustomScript[] };
 
-  // Debug log for production
-  console.log("🔧 CustomScripts component mounted in", process.env.NODE_ENV || 'production');
+  // Reduce console noise - only log in production when needed
+  if (process.env.NODE_ENV === 'production') {
+    console.log("🔧 CustomScripts component mounted");
+  }
 
   useEffect(() => {
-    console.log("🔧 CustomScripts: Loading scripts", scripts);
+    if (process.env.NODE_ENV === 'development' && scripts.length > 0) {
+      console.log("🔧 CustomScripts: Loading scripts", scripts);
+    }
     
-    // Force a re-fetch in production if no scripts but API should have them
+    // Reduce console noise in development
     if (!scripts.length) {
-      console.log("⚠️ CustomScripts: No scripts found - this might be a production caching issue");
-      
-      // In production, try to manually fetch scripts
-      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-        fetch('/api/custom-scripts')
-          .then(res => res.json())
-          .then(data => {
-            console.log("🔧 Manual fetch result:", data);
-            if (data.length > 0) {
-              console.log("⚠️ Found scripts via manual fetch - query cache issue detected");
-            }
-          })
-          .catch(err => console.error("❌ Manual fetch failed:", err));
+      // Only show warning in production where scripts should exist
+      if (process.env.NODE_ENV === 'production') {
+        console.log("⚠️ CustomScripts: No active scripts configured");
       }
       return;
     }
@@ -50,15 +44,16 @@ export default function CustomScripts() {
     existingScripts.forEach(script => script.remove());
 
     scripts.forEach((scriptConfig) => {
-      console.log(`🔧 CustomScripts: Processing script "${scriptConfig.name}"`, {
-        isActive: scriptConfig.isActive,
-        location: scriptConfig.location,
-        hostname: window.location.hostname,
-        script: scriptConfig.script?.substring(0, 100) + "..."
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔧 CustomScripts: Processing script "${scriptConfig.name}"`, {
+          isActive: scriptConfig.isActive,
+          location: scriptConfig.location,
+          hostname: window.location.hostname,
+          script: scriptConfig.script?.substring(0, 100) + "..."
+        });
+      }
 
       if (!scriptConfig.isActive) {
-        console.log(`CustomScripts: Skipping inactive script "${scriptConfig.name}"`);
         return;
       }
 

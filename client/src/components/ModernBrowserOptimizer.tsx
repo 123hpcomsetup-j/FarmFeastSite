@@ -295,7 +295,7 @@ function optimizeAsyncCode() {
   // Replace Promise chains with async/await in dynamic imports
   (window as any).__optimizedImport = async (modulePath: string) => {
     try {
-      const module = await import(modulePath);
+      const module = await import(/* @vite-ignore */ modulePath);
       return module;
     } catch (error) {
       console.error('Failed to import module:', modulePath, error);

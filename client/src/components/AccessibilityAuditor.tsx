@@ -7,6 +7,9 @@ export function AccessibilityAuditor() {
     if (process.env.NODE_ENV !== 'development') return;
     
     const auditAccessibility = () => {
+      // Only run accessibility audits in development to reduce console noise
+      if (process.env.NODE_ENV !== 'development') return;
+      
       console.group('🔍 Accessibility Audit Results');
       
       auditButtonAccessibility();
