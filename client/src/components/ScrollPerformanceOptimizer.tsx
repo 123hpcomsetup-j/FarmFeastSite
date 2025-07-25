@@ -72,30 +72,51 @@ export function ScrollPerformanceOptimizer() {
     updateParallaxElements(scrollY);
   };
 
-  // Update scroll progress indicators
+  // Update scroll progress indicators (cached to avoid repeated scrollHeight queries)
+  const documentHeightCache = useRef<number>(0);
+  
   const updateScrollProgress = (scrollY: number) => {
-    const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = Math.min(scrollY / documentHeight, 1);
+    // Cache document height to avoid forced reflows on every scroll
+    if (documentHeightCache.current === 0) {
+      documentHeightCache.current = document.documentElement.scrollHeight - window.innerHeight;
+    }
     
-    // Update progress bars
-    const progressBars = document.querySelectorAll('[data-scroll-progress]');
-    progressBars.forEach((bar) => {
-      (bar as HTMLElement).style.transform = `scaleX(${progress})`;
+    const progress = Math.min(scrollY / documentHeightCache.current, 1);
+    
+    // Batch DOM writes using requestAnimationFrame
+    requestAnimationFrame(() => {
+      const progressBars = document.querySelectorAll('[data-scroll-progress]');
+      progressBars.forEach((bar) => {
+        (bar as HTMLElement).style.transform = `scaleX(${progress})`;
+      });
     });
   };
 
-  // Update element visibility states based on scroll position
+  // Update element visibility states based on scroll position (optimized to avoid forced reflow)
   const updateVisibilityStates = (scrollY: number, windowHeight: number) => {
     const elements = document.querySelectorAll('[data-scroll-reveal]');
     
+    // Batch DOM reads first, then batch DOM writes to avoid forced reflows
+    const elementsToReveal: Element[] = [];
+    
     elements.forEach((element) => {
-      const rect = element.getBoundingClientRect();
-      const isVisible = rect.top < windowHeight && rect.bottom > 0;
-      
-      if (isVisible && !element.hasAttribute('data-revealed')) {
+      // Cache rect calculations to avoid repeated getBoundingClientRect calls
+      if (!element.hasAttribute('data-revealed')) {
+        const rect = element.getBoundingClientRect();
+        const isVisible = rect.top < windowHeight && rect.bottom > 0;
+        
+        if (isVisible) {
+          elementsToReveal.push(element);
+        }
+      }
+    });
+    
+    // Batch DOM writes after all reads are complete
+    requestAnimationFrame(() => {
+      elementsToReveal.forEach((element) => {
         element.setAttribute('data-revealed', 'true');
         element.classList.add('scroll-revealed');
-      }
+      });
     });
   };
 

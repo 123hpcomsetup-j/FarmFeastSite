@@ -30,6 +30,7 @@ import { CriticalCSSExtractor } from "@/components/CriticalCSSExtractor";
 import { AsyncCSSLoader } from "@/components/AsyncCSSLoader";
 import { PassiveEventOptimizer } from "@/components/PassiveEventOptimizer";
 import { ScrollPerformanceOptimizer } from "@/components/ScrollPerformanceOptimizer";
+import { ReflowOptimizer } from "@/components/ReflowOptimizer";
 import { ModernBrowserOptimizer } from "@/components/ModernBrowserOptimizer";
 import { AccessibilityAuditor } from "@/components/AccessibilityAuditor";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
@@ -226,6 +227,7 @@ function App() {
           <AsyncCSSLoader />
           <PassiveEventOptimizer />
           <ScrollPerformanceOptimizer />
+          <ReflowOptimizer />
           <ModernBrowserOptimizer />
           <AccessibilityAuditor />
           {/* Temporarily load components directly until deferred loading is fixed */}

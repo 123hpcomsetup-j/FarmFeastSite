@@ -68,12 +68,20 @@ function getOS(): string {
 let pageStartTime = Date.now();
 let scrollDepth = 0;
 
+// Cache document height to avoid forced reflows
+let cachedDocumentHeight = 0;
+
 function trackScrollDepth() {
   const windowHeight = window.innerHeight;
-  const documentHeight = document.documentElement.scrollHeight;
+  
+  // Cache document height on first call or window resize
+  if (cachedDocumentHeight === 0) {
+    cachedDocumentHeight = document.documentElement.scrollHeight;
+  }
+  
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   
-  const currentScrollDepth = Math.round(((scrollTop + windowHeight) / documentHeight) * 100);
+  const currentScrollDepth = Math.round(((scrollTop + windowHeight) / cachedDocumentHeight) * 100);
   scrollDepth = Math.max(scrollDepth, Math.min(currentScrollDepth, 100));
 }
 
