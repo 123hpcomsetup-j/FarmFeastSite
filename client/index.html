@@ -99,6 +99,22 @@
       /* Optimized loading states */
       .lazy-load { opacity: 0; transition: opacity 0.3s ease; }
       .lazy-load.loaded { opacity: 1; }
+      
+      /* Passive Event & Scroll Performance Optimizations */
+      * { touch-action: manipulation; }
+      html { scroll-behavior: smooth; }
+      body { -webkit-overflow-scrolling: touch; }
+      .passive-scroll { will-change: scroll-position; }
+      .scroll-optimized { contain: layout style paint; }
+      
+      /* Animation performance with GPU acceleration */
+      .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+      .animate-slide-up { animation: slideUp 0.4s ease-out; }
+      .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+      
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
   </head>
   <body>
