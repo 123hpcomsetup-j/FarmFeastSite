@@ -1,12 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <div className="w-full flex items-center justify-center py-20">
       <Card className="w-full max-w-md mx-4">
         <CardContent className="pt-6">

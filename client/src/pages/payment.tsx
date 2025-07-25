@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, CheckCircle, CreditCard, Smartphone, QrCode } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 interface BookingDetails {
@@ -103,7 +103,7 @@ export default function Payment() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <FastNavbar />
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="text-center">Loading booking details...</div>
         </div>
@@ -115,7 +115,7 @@ export default function Payment() {
   if (!booking) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <FastNavbar />
         <div className="max-w-2xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="text-center py-8">
@@ -134,7 +134,7 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <FastNavbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Booking Summary */}
         <Card className="mb-6">
@@ -154,7 +154,7 @@ export default function Payment() {
               </div>
               <div>
                 <p className="font-medium">Total Amount</p>
-                <p className="text-2xl font-bold text-green-600">₹{booking?.finalTotal?.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-primary">₹{booking?.finalTotal?.toLocaleString()}</p>
               </div>
               <div>
                 <p className="font-medium">Check-in</p>
@@ -179,7 +179,7 @@ export default function Payment() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <QrCode className="h-16 w-16 mx-auto mb-4 text-blue-600" />
+                <QrCode className="h-16 w-16 mx-auto mb-4 text-primary" />
                 <h3 className="text-lg font-semibold mb-2">Scan QR Code or Use UPI ID</h3>
                 <p className="text-gray-600 text-sm">
                   Pay ₹{booking?.finalTotal?.toLocaleString()} using any UPI app
@@ -288,7 +288,7 @@ export default function Payment() {
         {paymentStep === "confirmation" && (
           <Card>
             <CardContent className="text-center py-8">
-              <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-600" />
+              <CheckCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
               <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
               <p className="text-gray-600 mb-4">
                 Your payment details have been submitted successfully.

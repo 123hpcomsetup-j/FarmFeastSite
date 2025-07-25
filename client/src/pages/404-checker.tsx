@@ -16,7 +16,7 @@ import {
   Clock,
   Link as LinkIcon
 } from "lucide-react";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 interface UrlCheck {
@@ -180,7 +180,7 @@ export default function NotFoundChecker() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <div className="bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">

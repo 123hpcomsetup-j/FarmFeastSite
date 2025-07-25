@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 import MapComponent from "@/components/MapComponent";
 import SeoHead from "@/components/SeoHead";
@@ -11,7 +11,7 @@ export default function Location() {
         description="Find your way to Farm Feast Farm House with our interactive map, detailed directions, and travel tips. Get directions and contact information."
         type="website"
       />
-      <Navbar />
+      <FastNavbar />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Location & Directions</h1>

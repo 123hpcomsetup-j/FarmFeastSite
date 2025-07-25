@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, Home, Calendar } from "lucide-react";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 export default function PaymentSuccess() {
@@ -20,7 +20,7 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <Card className="border-green-200 bg-green-50">

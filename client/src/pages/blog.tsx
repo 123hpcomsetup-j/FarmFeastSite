@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, User, ArrowRight, BookOpen } from "lucide-react";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 import type { BlogPost } from "@shared/schema";
 
@@ -16,7 +16,7 @@ export default function Blog() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <FastNavbar />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -30,7 +30,7 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       
       <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}

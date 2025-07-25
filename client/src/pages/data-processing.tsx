@@ -2,13 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Shield, Mail, Download, Trash2, Eye, Edit } from "lucide-react";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 export default function DataProcessing() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
           <CardHeader>

@@ -1,11 +1,11 @@
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 import BookingForm from "@/components/booking-form";
 
 export default function Booking() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <main>
         {/* Header Section */}
         <section className="py-16 bg-gradient-to-r from-primary/10 to-primary/5">

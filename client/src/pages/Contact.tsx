@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import Navbar from "@/components/navbar";
+import FastNavbar from "@/components/FastNavbar";
 import Footer from "@/components/Footer";
 
 // Contact form schema
@@ -94,7 +94,7 @@ export default function Contact() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <FastNavbar />
         <div className="bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <Card className="shadow-xl">
@@ -126,7 +126,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <FastNavbar />
       <div className="bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
         <div className="max-w-7xl mx-auto">
         {/* Header Section */}
