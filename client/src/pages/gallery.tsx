@@ -17,6 +17,7 @@ export default function Gallery() {
   const { data: galleryImages = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/gallery"],
   });
+  console.log("Gallery data:", galleryImages, "isLoading:", isLoading);
 
   // Transform API data to match component expectations
   const transformedImages = galleryImages.map((img: any) => ({

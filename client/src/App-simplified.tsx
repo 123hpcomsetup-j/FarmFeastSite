@@ -11,10 +11,12 @@ import CustomScripts from "@/components/CustomScripts";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LiveChatFixed } from "@/components/LiveChatFixed";
 
-// Import critical pages normally
+// Import critical pages normally (including admin to fix 404 issue)
 import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Booking from "@/pages/booking";
+import AdminLogin from "@/pages/admin/login";
+import AdminDashboard from "@/pages/admin/dashboard";
 
 // Lazy load secondary pages
 const Gallery = lazy(() => import("@/pages/gallery"));
@@ -30,8 +32,6 @@ const TermsConditions = lazy(() => import("@/pages/terms-conditions"));
 const CookiePolicy = lazy(() => import("@/pages/cookie-policy"));
 const DataProcessing = lazy(() => import("@/pages/data-processing"));
 const NotFoundChecker = lazy(() => import("@/pages/404-checker"));
-const AdminLogin = lazy(() => import("@/pages/admin/login"));
-const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function App() {

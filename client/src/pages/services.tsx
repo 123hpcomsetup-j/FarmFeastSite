@@ -61,7 +61,7 @@ export default function Services() {
                   <Skeleton key={i} className="h-64 w-full rounded-xl" />
                 ))}
               </div>
-            ) : !services ? (
+            ) : !services || services.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Unable to load services at this time.</p>
               </div>
