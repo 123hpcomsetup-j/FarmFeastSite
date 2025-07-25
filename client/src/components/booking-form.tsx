@@ -611,7 +611,8 @@ export default function BookingForm() {
                                 variant="outline" 
                                 onClick={validateCoupon}
                                 disabled={validateCouponMutation.isPending}
-                                className="mobile-button"
+                                className="mobile-button accessible-button"
+                                aria-label={validateCouponMutation.isPending ? "Checking coupon code validity" : "Apply coupon code for discount"}
                               >
                                 {validateCouponMutation.isPending ? "Checking..." : "Apply"}
                               </Button>
@@ -746,11 +747,19 @@ export default function BookingForm() {
               <div className="space-y-3">
                 <h4 className="font-semibold">Contact Information</h4>
                 <div className="space-y-2">
-                  <a href="tel:8897326898" className="flex items-center text-primary hover:text-primary/80">
+                  <a 
+                    href="tel:8897326898" 
+                    className="flex items-center text-primary hover:text-primary/80 accessible-link"
+                    aria-label="Call Farm Feast Farm House at 8897326898"
+                  >
                     <Phone className="w-4 h-4 mr-2" />
                     8897326898
                   </a>
-                  <a href="tel:9951214770" className="flex items-center text-primary hover:text-primary/80">
+                  <a 
+                    href="tel:9951214770" 
+                    className="flex items-center text-primary hover:text-primary/80 accessible-link"
+                    aria-label="Call Farm Feast Farm House at 9951214770"
+                  >
                     <Phone className="w-4 h-4 mr-2" />
                     9951214770
                   </a>

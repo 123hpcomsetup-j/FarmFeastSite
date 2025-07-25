@@ -51,17 +51,23 @@ export default function HeroSection() {
             
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/booking">
-                <Button data-tour="booking-button" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button 
+                  data-tour="booking-button" 
+                  size="lg" 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 accessible-button"
+                  aria-label="Book your stay at Farm Feast Farm House - Reserve dates and check availability"
+                >
                   <Calendar className="w-5 h-5 mr-2" />
                   Book Your Stay
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" asChild className="accessible-button">
                 <a
                   href="https://wa.me/918897326898"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center"
+                  aria-label="Contact Farm Feast Farm House via WhatsApp at +91 88973 26898 - Opens in new tab"
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp

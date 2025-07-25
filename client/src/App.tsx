@@ -29,6 +29,7 @@ import { AsyncCSSLoader } from "@/components/AsyncCSSLoader";
 import { PassiveEventOptimizer } from "@/components/PassiveEventOptimizer";
 import { ScrollPerformanceOptimizer } from "@/components/ScrollPerformanceOptimizer";
 import { ModernBrowserOptimizer } from "@/components/ModernBrowserOptimizer";
+import { AccessibilityAuditor } from "@/components/AccessibilityAuditor";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LiveChatFixed } from "@/components/LiveChatFixed";
 
@@ -222,6 +223,7 @@ function App() {
           <PassiveEventOptimizer />
           <ScrollPerformanceOptimizer />
           <ModernBrowserOptimizer />
+          <AccessibilityAuditor />
           {/* Temporarily load components directly until deferred loading is fixed */}
           <AnalyticsTracker />
           <LiveChatFixed visitorSessionId={typeof window !== 'undefined' && window.localStorage?.getItem('visitor_session_id') || ''} />

@@ -2,49 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 30%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 75%);
-  --input: hsl(20, 5.9%, 75%);
-  --primary: hsl(142, 76%, 36%);
-  --primary-foreground: hsl(355, 7%, 97%);
-  --secondary: hsl(60, 4.8%, 92%);
-  --secondary-foreground: hsl(24, 9.8%, 15%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
-  --radius: 0.5rem;
-  --success: hsl(142, 76%, 36%);
-  --warning: hsl(38, 92%, 50%);
-}
+@layer base {
+  :root {
+    --background: hsl(20, 14.3%, 99.1%);
+    --foreground: hsl(20, 14.3%, 4.1%);
+    --card: hsl(20, 9.1%, 100%);
+    --card-foreground: hsl(20, 14.3%, 4.1%);
+    --popover: hsl(20, 9.1%, 100%);
+    --popover-foreground: hsl(20, 14.3%, 4.1%);
+    --primary: hsl(22, 65%, 53%);
+    --primary-foreground: hsl(210, 40%, 98%);
+    --secondary: hsl(19, 10%, 95%);
+    --secondary-foreground: hsl(20, 14.3%, 4.1%);
+    --muted: hsl(19, 10%, 95%);
+    --muted-foreground: hsl(25, 5.3%, 35%);
+    --accent: hsl(19, 10%, 95%);
+    --accent-foreground: hsl(20, 14.3%, 4.1%);
+    --destructive: hsl(0, 84.2%, 60.2%);
+    --destructive-foreground: hsl(210, 40%, 98%);
+    --border: hsl(20, 5.9%, 85%);
+    --input: hsl(20, 5.9%, 85%);
+    --ring: hsl(22, 65%, 53%);
+    --radius: 0.5rem;
+    --chart-1: hsl(22, 65%, 53%);
+    --chart-2: hsl(173, 58%, 39%);
+    --chart-3: hsl(197, 37%, 24%);
+    --chart-4: hsl(43, 74%, 66%);
+    --chart-5: hsl(27, 87%, 67%);
+  }
 
-/* Dark mode removed - not used in this application */
+  .dark {
+    --background: hsl(222.2, 84%, 4.9%);
+    --foreground: hsl(210, 40%, 98%);
+    --card: hsl(222.2, 84%, 4.9%);
+    --card-foreground: hsl(210, 40%, 98%);
+    --popover: hsl(222.2, 84%, 4.9%);
+    --popover-foreground: hsl(210, 40%, 98%);
+    --primary: hsl(22, 65%, 53%);
+    --primary-foreground: hsl(210, 40%, 98%);
+    --secondary: hsl(217.2, 32.6%, 17.5%);
+    --secondary-foreground: hsl(210, 40%, 98%);
+    --muted: hsl(217.2, 32.6%, 17.5%);
+    --muted-foreground: hsl(215, 20.2%, 65.1%);
+    --accent: hsl(217.2, 32.6%, 17.5%);
+    --accent-foreground: hsl(210, 40%, 98%);
+    --destructive: hsl(0, 62.8%, 30.6%);
+    --destructive-foreground: hsl(210, 40%, 98%);
+    --border: hsl(217.2, 32.6%, 17.5%);
+    --input: hsl(217.2, 32.6%, 17.5%);
+    --ring: hsl(22, 65%, 53%);
+  }
+}
 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground;
   }
 }
 
-/* Essential farmhouse styles - reduced to critical only */
-.hero-gradient {
-  background: linear-gradient(135deg, hsl(142, 76%, 36%, 0.1) 0%, hsl(142, 76%, 36%, 0.05) 100%);
-}
-
-/* Accessibility improvements */
+/* Accessibility Improvements - WCAG 2.1 AA Compliance */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
@@ -71,292 +90,234 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
-    --muted-foreground: hsl(25, 5.3%, 20%);
-    --border: hsl(20, 5.9%, 60%);
-    --input: hsl(20, 5.9%, 60%);
+    --muted-foreground: hsl(25, 5.3%, 30%);
+    --border: hsl(20, 5.9%, 75%);
+    --input: hsl(20, 5.9%, 75%);
   }
 }
 
-.gallery-image:hover {
-  transform: scale(1.05);
-}
-
-.sticky-nav {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-/* Luxury farmhouse color scheme */
-.text-success {
-  color: hsl(142, 76%, 36%);
-}
-
-.bg-success {
-  background-color: hsl(142, 76%, 36%);
-}
-
-.text-warning {
-  color: hsl(38, 92%, 50%);
-}
-
-.bg-warning {
-  background-color: hsl(38, 92%, 50%);
-}
-
-/* Essential animations only - unused keyframes removed for performance */
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Removed unused animations and CSS to reduce bundle size */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-@keyframes bounce {
-  0%, 20%, 53%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40%, 43% {
-    transform: translateY(-10px);
-  }
-  70% {
-    transform: translateY(-5px);
-  }
-}
-
-/* Progress indicator */
-.progress-step {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.progress-step::after {
-  content: '';
+/* Screen reader only content */
+.sr-only {
   position: absolute;
-  top: 50%;
-  left: 100%;
-  width: 50px;
-  height: 2px;
-  background: hsl(20, 5.9%, 90%);
-  transform: translateY(-50%);
-  transition: background-color 0.3s ease;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-.progress-step.completed::after {
-  background: hsl(142, 76%, 36%);
+/* Focus visible indicators for better keyboard navigation */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
-.progress-step:last-child::after {
-  display: none;
+/* Enhanced hero section */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--background)) 0%,
+    hsl(var(--accent)) 100%
+  );
 }
 
-/* Mobile-optimized form elements */
-.mobile-input {
-  transition: all 0.3s ease;
-  position: relative;
+/* Critical CSS for performance optimization */
+.critical {
+  visibility: visible !important;
 }
 
-.mobile-input:focus-within {
-  transform: scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+/* Service Worker compatible styles */
+@supports (display: grid) {
+  .grid {
+    display: grid;
+  }
 }
 
+/* Performance optimized animations */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-in {
+    animation: animate-in 0.3s ease-out;
+  }
+  
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Improved form styles for better UX */
 .mobile-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(0);
+  @apply w-full shadow-lg border rounded-lg;
+  border-color: rgb(229 231 235);
+  background-color: white;
 }
 
-.mobile-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+.mobile-input {
+  @apply w-full min-h-12 text-base;
 }
 
 .mobile-button {
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  @apply w-full sm:w-auto min-h-12 text-base font-medium;
 }
 
-.mobile-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
+.booking-step {
+  @apply animate-in;
 }
 
-.mobile-button:active::before {
-  left: 100%;
-}
-
-.mobile-button:active {
-  transform: scale(0.98);
-}
-
-/* Service selection animations */
 .service-item {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: scale(1);
-}
-
-.service-item:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  @apply transition-all duration-200 hover:shadow-md;
 }
 
 .service-item.selected {
-  animation: serviceSelected 0.4s ease-out;
-  box-shadow: 0 0 0 2px hsl(142, 76%, 36%);
+  @apply border-primary shadow-md;
+  background-color: hsl(var(--primary) / 0.05);
 }
 
-@keyframes serviceSelected {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1.02);
-  }
-}
-
-/* Coupon validation feedback */
 .coupon-feedback {
-  animation: fadeIn 0.3s ease-out;
+  @apply animate-in;
 }
 
 .coupon-success {
-  animation: slideInLeft 0.4s ease-out;
+  @apply text-green-700 border border-green-200;
+  background-color: rgb(240 253 244);
 }
 
 .coupon-error {
-  animation: slideInRight 0.4s ease-out;
+  @apply text-red-700 border border-red-200;
+  background-color: rgb(254 242 242);
 }
 
-/* Price summary animations */
-.price-item {
-  transition: all 0.3s ease;
-}
-
-.price-change {
-  animation: pulse 0.6s ease-out;
-  color: hsl(142, 76%, 36%);
-}
-
-.total-highlight {
-  animation: bounce 1s ease-out;
-  color: hsl(142, 76%, 36%);
-  font-weight: 600;
+/* Progress bar enhancement */
+.progress-container {
+  @apply relative overflow-hidden;
 }
 
 /* Loading states */
-.loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  animation: shimmer 1.5s infinite;
+.loading-skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+/* Enhanced button states */
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
-/* Mobile responsive enhancements */
+/* Responsive typography */
 @media (max-width: 768px) {
-  .mobile-form-section {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-  }
-  
-  .mobile-input {
+  .mobile-input, .mobile-button {
     font-size: 16px; /* Prevents zoom on iOS */
   }
-  
-  .mobile-button {
-    min-height: 48px; /* Touch-friendly button size */
-    font-size: 16px;
-  }
-  
-  .service-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .booking-step {
-    animation-delay: 0.1s;
-  }
-  
-  .booking-step:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  
-  .booking-step:nth-child(3) {
-    animation-delay: 0.3s;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
   }
 }
 
-/* Tour styling */
-.farm-tour [data-reactour-wrapper] {
-  border-radius: 12px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
-  max-width: 400px !important;
-  padding: 20px !important;
-  line-height: 1.6 !important;
-}
-
-.farm-tour [data-reactour-mask] {
-  color: rgba(0, 0, 0, 0.7) !important;
-}
-
-@keyframes tour-pulse {
-  0%, 100% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+/* Theme transition for better user experience */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  50% { 
+}
+
+/* Modern focus styles */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Accessibility: Ensure sufficient color contrast */
+.text-muted-foreground {
+  color: hsl(25, 5.3%, 35%); /* Improved contrast ratio */
+}
+
+.border {
+  border-color: hsl(20, 5.9%, 85%); /* Enhanced border visibility */
+}
+
+/* Container queries support for modern browsers */
+@container (min-width: 768px) {
+  .container-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* CSS Custom Properties for dynamic theming */
+.theme-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.theme-secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+/* Optimized styles for performance */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+/* Enhanced interaction states */
+@media (hover: hover) {
+  .hover\:scale-105:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
   }
 }
 
-.tour-highlight {
-  animation: tour-pulse 2s infinite;
+/* Modern CSS features for supported browsers */
+@supports (backdrop-filter: blur(10px)) {
+  .backdrop-blur {
+    backdrop-filter: blur(10px);
+  }
 }
+
+/* Grid system enhancements */
+.grid-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* Modern scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
+}
+
+/* CSS Grid fallbacks removed for modern browser targeting */
+/* All modern browsers support CSS Grid */
