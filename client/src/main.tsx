@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App";
+import App from "./App-simplified";
 import "./index.css";
 
 // Production debugging: Add error handling for React mounting
