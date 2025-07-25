@@ -13,7 +13,7 @@ export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Fetch gallery images from API
-  const { data: galleryImages = [], isLoading } = useQuery({
+  const { data: galleryImages = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/gallery"],
   });
 
