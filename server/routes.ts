@@ -805,7 +805,7 @@ Farm Feast Farm House Team
           ogTitle: template.title,
           ogDescription: template.description,
           ogImage: '/api/placeholder/1200/630',
-          canonicalUrl: `https://farmfeastfarmhouse.shop/${page === 'home' ? '' : page}`,
+          canonicalUrl: `https://farmfeastfarmhouse.co.in/${page === 'home' ? '' : page}`,
           schemaType: 'LodgingBusiness',
           schemaData: {},
           priority: 0.9,
@@ -815,8 +815,26 @@ Farm Feast Farm House Team
           reviewTitle: `Best Farm House for Rent in ${page === 'home' ? 'Keesara, Hyderabad' : 'Hyderabad'}`,
           reviewDescription: `Highly rated farmhouse rental in Keesara, Hyderabad with excellent reviews from families and corporate guests.`,
           reviewKeywords: 'best farmhouse hyderabad, top rated farm house, luxury accommodation keesara',
-          updatedAt: new Date()
-        };
+          updatedAt: new Date(),
+          score: null,
+          ranking: null,
+          reviewCount: null,
+          averageRating: null,
+          businessName: null,
+          ratingScale: null,
+          reviewsEnabled: null,
+          showInSnippets: null,
+          reviewSnippet1Title: null,
+          reviewSnippet1Author: null,
+          reviewSnippet1Date: null,
+          reviewSnippet1Rating: null,
+          reviewSnippet1Body: null,
+          reviewSnippet2Title: null,
+          reviewSnippet2Author: null,
+          reviewSnippet2Date: null,
+          reviewSnippet2Rating: null,
+          reviewSnippet2Body: null
+        } as any;
       }
       
       // Enhance existing settings with location keywords if missing
