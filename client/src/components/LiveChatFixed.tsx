@@ -49,7 +49,10 @@ export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }
   // Start chat session
   const startChatMutation = useMutation({
     mutationFn: async (data: { visitorSessionId: string; visitorName?: string; visitorEmail?: string; visitorPhone?: string }) => {
-      return await apiRequest("POST", "/api/chat/start", data);
+      const response = await apiRequest("POST", "/api/chat/start", data);
+      const result = await response.json();
+      console.log("API response for chat start:", result);
+      return result;
     },
     onSuccess: (session: ChatSession) => {
       console.log("Chat session created successfully:", session);

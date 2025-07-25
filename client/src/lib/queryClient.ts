@@ -23,7 +23,7 @@ export async function apiRequest(
       (method !== "GET" && url.includes("/api/blog-posts")) ||
       (method !== "GET" && url.includes("/api/services")) ||
       (method !== "GET" && url.includes("/api/coupons"))) {
-    const token = localStorage.getItem("admin_token");
+    const token = localStorage.getItem("adminToken");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -60,15 +60,15 @@ export const getQueryFn: <T>(options: {
 
 // Admin query function with authentication
 export const getAdminQueryFn: QueryFunction = async ({ queryKey }) => {
-  const token = localStorage.getItem("admin_token");
+  const token = localStorage.getItem("adminToken");
   const res = await fetch(queryKey.join("/") as string, {
     credentials: "include",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (res.status === 401) {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_user");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
     window.location.href = "/admin";
     throw new Error("Authentication required");
   }

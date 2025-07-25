@@ -2170,22 +2170,29 @@ Farm Feast Farm House Team
       
       if (!chatSession || chatSession.status === "closed") {
         // Create new chat session
-        chatSession = await storage.createChatSession({
+        const sessionData = {
           visitorSessionId,
           visitorName,
           visitorEmail,
           visitorPhone,
-          status: "waiting"
-        });
+          status: "waiting" as const
+        };
+        console.log("Creating session with data:", sessionData);
+        chatSession = await storage.createChatSession(sessionData);
         console.log("New chat session created:", chatSession);
       } else {
         console.log("Existing chat session found:", chatSession);
       }
       
+      if (!chatSession || !chatSession.id) {
+        console.error("Failed to create or retrieve chat session");
+        return res.status(500).json({ error: "Failed to create chat session" });
+      }
+      
       res.json(chatSession);
     } catch (error) {
       console.error("Error starting chat session:", error);
-      res.status(500).json({ error: "Failed to start chat session" });
+      res.status(500).json({ error: "Failed to start chat session", details: error instanceof Error ? error.message : String(error) });
     }
   });
 

@@ -44,36 +44,14 @@ export function LiveChatDashboard() {
   // Fetch all chat sessions with auth token
   const { data: allSessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["/api/admin/chat/sessions"],
-    queryFn: async () => {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/chat/sessions', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch sessions');
-      }
-      return response.json();
-    },
+    queryFn: getAdminQueryFn,
     refetchInterval: 5000, // Refetch every 5 seconds
   });
 
   // Fetch active chat sessions with auth token
   const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
     queryKey: ["/api/admin/chat/active"],
-    queryFn: async () => {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/chat/active', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch active sessions');
-      }
-      return response.json();
-    },
+    queryFn: getAdminQueryFn,
     refetchInterval: 3000, // Refetch every 3 seconds
   });
 
