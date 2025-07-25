@@ -61,12 +61,17 @@ export const getQueryFn: <T>(options: {
 // Admin query function with authentication
 export const getAdminQueryFn: QueryFunction = async ({ queryKey }) => {
   const token = localStorage.getItem("adminToken");
+  console.log("Making admin request with token:", token ? "present" : "missing");
+  
   const res = await fetch(queryKey.join("/") as string, {
     credentials: "include",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
+  console.log("Admin request response status:", res.status);
+  
   if (res.status === 401) {
+    console.error("Admin authentication failed, clearing tokens");
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
     window.location.href = "/admin";
