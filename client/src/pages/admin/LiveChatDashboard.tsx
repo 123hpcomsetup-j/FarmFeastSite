@@ -42,18 +42,18 @@ export function LiveChatDashboard() {
   const queryClient = useQueryClient();
 
   // Fetch all chat sessions with auth token - reduced frequency to reduce console spam
-  const { data: allSessions = [], refetch: refetchSessions } = useQuery<ChatSession[]>({
+  const { data: allSessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["/api/admin/chat/sessions"],
-    queryFn: getAdminQueryFn,
+    queryFn: () => getAdminQueryFn({ queryKey: ["/api/admin/chat/sessions"] }),
     refetchInterval: 30000, // Refetch every 30 seconds instead of 5
-  });
+  }) as { data: ChatSession[], refetch: () => void };
 
   // Fetch active chat sessions with auth token - reduced frequency to reduce console spam
-  const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery<ChatSession[]>({
+  const { data: activeSessions = [], refetch: refetchActiveSessions } = useQuery({
     queryKey: ["/api/admin/chat/active"],
-    queryFn: getAdminQueryFn,
+    queryFn: () => getAdminQueryFn({ queryKey: ["/api/admin/chat/active"] }),
     refetchInterval: 30000, // Refetch every 30 seconds instead of 3
-  });
+  }) as { data: ChatSession[], refetch: () => void };
 
   // Assign admin to chat session
   const assignMutation = useMutation({
@@ -264,7 +264,7 @@ export function LiveChatDashboard() {
           <Tabs defaultValue="active" className="h-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="active">
-                Active ({activeSessions.filter((s: ChatSession) => s.status !== 'closed').length})
+                Active ({activeSessions.filter((s) => s.status !== 'closed').length})
               </TabsTrigger>
               <TabsTrigger value="all">All ({allSessions.length})</TabsTrigger>
             </TabsList>
