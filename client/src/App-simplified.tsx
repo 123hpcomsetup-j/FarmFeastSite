@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -36,6 +36,10 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 
 function App() {
   console.log("App component rendering...");
+  
+  // Debug current route
+  const [location] = useLocation();
+  console.log("Current route:", location);
   
   return (
     <QueryClientProvider client={queryClient}>

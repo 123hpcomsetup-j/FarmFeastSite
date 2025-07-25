@@ -9,6 +9,7 @@ import SeoHead from "@/components/SeoHead";
 import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Gallery() {
+  console.log("Gallery component rendering...");
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
 

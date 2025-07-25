@@ -10,6 +10,7 @@ import SeoHead from "@/components/SeoHead";
 import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Home() {
+  console.log("Home component rendering...");
   return (
     <div className="min-h-screen bg-background">
       <SeoHead 

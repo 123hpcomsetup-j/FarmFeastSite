@@ -11,9 +11,11 @@ import SeoHead from "@/components/SeoHead";
 import LocationSeoContent from "@/components/LocationSeoContent";
 
 export default function Services() {
+  console.log("Services component rendering...");
   const { data: services, isLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
+  console.log("Services data:", services, "isLoading:", isLoading);
 
   const getIconForService = (name: string) => {
     const iconMap: { [key: string]: string } = {
