@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, X, User } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageCircle, X, User } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ChatMessage {
@@ -13,7 +13,7 @@ interface ChatMessage {
   senderType: 'visitor' | 'admin';
   senderId: string;
   message: string;
-  messageType: string;
+  messageType: 'text' | 'system';
   isRead: boolean;
   createdAt: string;
 }
@@ -23,14 +23,14 @@ interface ChatSession {
   visitorSessionId: string;
   visitorName?: string;
   visitorEmail?: string;
+  visitorPhone?: string;
   status: 'waiting' | 'active' | 'closed';
   adminId?: number;
   startedAt: string;
   lastMessageAt: string;
 }
 
-export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
-  // Use analytics session ID if no visitor session ID provided
+export function LiveChatFixed({ visitorSessionId }: { visitorSessionId: string }) {
   const sessionId = visitorSessionId || localStorage.getItem('visitor_session_id') || `visitor_${Date.now()}`;
   const [isOpen, setIsOpen] = useState(false);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
@@ -52,17 +52,19 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
       return await apiRequest("POST", "/api/chat/start", data);
     },
     onSuccess: (session: ChatSession) => {
+      console.log("Chat session created successfully:", session);
       setChatSession(session);
       setShowContactForm(false);
-      connectWebSocket(session.id);
-      fetchMessages(session.id);
-    }
-  });
-
-  // Send message
-  const sendMessageMutation = useMutation({
-    mutationFn: async (data: { chatSessionId: number; senderType: string; senderId: string; message: string }) => {
-      return await apiRequest("POST", "/api/chat/message", data);
+      // Connect WebSocket after successful session creation
+      if (session.id) {
+        setTimeout(() => {
+          connectWebSocket(session.id);
+          fetchMessages(session.id);
+        }, 100);
+      }
+    },
+    onError: (error) => {
+      console.error("Error starting chat:", error);
     }
   });
 
@@ -70,8 +72,10 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
   const fetchMessages = async (sessionId: number) => {
     try {
       const response = await fetch(`/api/chat/${sessionId}/messages`);
-      const data = await response.json();
-      setMessages(Array.isArray(data) ? data : []);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(Array.isArray(data) ? data : []);
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
       setMessages([]);
@@ -80,9 +84,15 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
 
   // WebSocket connection
   const connectWebSocket = (chatSessionId: number) => {
+    if (!chatSessionId || isNaN(chatSessionId)) {
+      console.error("Invalid chat session ID for WebSocket:", chatSessionId);
+      return;
+    }
+
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws/chat`;
     
+    console.log("Connecting to WebSocket with session ID:", chatSessionId);
     wsRef.current = new WebSocket(wsUrl);
     
     wsRef.current.onopen = () => {
@@ -97,9 +107,10 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
         visitorSessionId: sessionId
       }));
     };
-    
+
     wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log("WebSocket message received:", data);
       
       switch (data.type) {
         case 'new_message':
@@ -107,30 +118,9 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
           break;
         case 'admin_joined':
           setChatSession(data.session);
-          // Add system message
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            chatSessionId: data.session.id,
-            senderType: 'admin',
-            senderId: 'system',
-            message: 'An admin has joined the chat',
-            messageType: 'system',
-            isRead: true,
-            createdAt: new Date().toISOString()
-          } as ChatMessage]);
           break;
         case 'chat_closed':
           setChatSession(data.session);
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            chatSessionId: data.session.id,
-            senderType: 'admin',
-            senderId: 'system',
-            message: 'Chat session has been closed',
-            messageType: 'system',
-            isRead: true,
-            createdAt: new Date().toISOString()
-          } as ChatMessage]);
           break;
       }
     };
@@ -139,11 +129,16 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
       console.log("Chat WebSocket disconnected");
       setIsConnected(false);
     };
+
+    wsRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setIsConnected(false);
+    };
   };
 
   // Send message via WebSocket
   const sendMessage = () => {
-    if (!newMessage.trim() || !chatSession || !wsRef.current) return;
+    if (!newMessage.trim() || !chatSession || !wsRef.current || !isConnected) return;
     
     console.log("Sending message:", {
       type: 'send_message',
@@ -164,11 +159,6 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
     setNewMessage("");
   };
 
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   // Start chat with contact info
   const handleStartChat = () => {
     if (!visitorName.trim() || !visitorPhone.trim()) {
@@ -183,6 +173,11 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
       visitorPhone: visitorPhone.trim()
     });
   };
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Cleanup WebSocket on unmount
   useEffect(() => {
@@ -235,9 +230,10 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
               <div className="p-4 flex flex-col gap-3">
                 <p className="text-sm text-gray-600">Start a conversation with our team</p>
                 <Input
-                  placeholder="Your name"
+                  placeholder="Your name *"
                   value={visitorName}
                   onChange={(e) => setVisitorName(e.target.value)}
+                  required
                 />
                 <Input
                   placeholder="Phone number *"
@@ -311,16 +307,10 @@ export function LiveChat({ visitorSessionId }: { visitorSessionId: string }) {
                     <Button
                       onClick={sendMessage}
                       disabled={!newMessage.trim() || !isConnected || chatSession?.status === 'waiting'}
-                      size="icon"
+                      size="sm"
                     >
-                      <Send className="h-4 w-4" />
+                      Send
                     </Button>
-                  </div>
-                )}
-                
-                {chatSession?.status === 'closed' && (
-                  <div className="border-t p-3 text-center text-sm text-gray-500">
-                    This chat session has been closed
                   </div>
                 )}
               </>

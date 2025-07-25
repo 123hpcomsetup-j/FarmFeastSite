@@ -314,6 +314,7 @@ export const chatSessions = pgTable("chat_sessions", {
   visitorSessionId: text("visitor_session_id").notNull(),
   visitorName: text("visitor_name"),
   visitorEmail: text("visitor_email"),
+  visitorPhone: text("visitor_phone"),
   status: text("status").notNull().default("active"), // 'active', 'closed', 'waiting'
   adminId: integer("admin_id").references(() => adminUsers.id),
   startedAt: timestamp("started_at").defaultNow().notNull(),
