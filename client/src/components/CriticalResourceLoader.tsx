@@ -35,22 +35,45 @@ export default function CriticalResourceLoader() {
       '/api/settings'
     ];
 
-    // Defer API prefetch until after critical path is complete
+    // Defer API prefetch to avoid critical request chains
     const deferredPrefetch = () => {
-      setTimeout(() => {
-        prefetchResources.forEach(url => {
+      // Use requestIdleCallback for better performance
+      const scheduleIdlePrefetch = (callback: () => void) => {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(callback, { timeout: 5000 });
+        } else {
+          setTimeout(callback, 500); // Fallback for older browsers
+        }
+      };
+
+      scheduleIdlePrefetch(() => {
+        // Only prefetch if network is not slow
+        const connection = (navigator as any).connection;
+        if (connection && connection.effectiveType && 
+            ['slow-2g', '2g'].includes(connection.effectiveType)) {
+          console.debug('Skipping prefetch on slow connection');
+          return;
+        }
+
+        // Batch all prefetch requests to reduce chain length
+        const prefetchBatch = prefetchResources.map(url => 
           fetch(url, { 
             method: 'GET',
-            headers: { 'Cache-Control': 'max-age=300' }
-          }).catch(() => {}); // Silent fail for prefetch
+            headers: { 'Cache-Control': 'max-age=300' },
+            priority: 'low' // Use low priority to avoid competing with critical resources
+          } as any).catch(() => {})
+        );
+
+        Promise.allSettled(prefetchBatch).then(() => {
+          console.debug('API prefetch batch completed');
+          
+          // Prefetch next likely page
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = '/services';
+          document.head.appendChild(link);
         });
-        
-        // Prefetch next page after API prefetch
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = '/services';
-        document.head.appendChild(link);
-      }, 100); // Defer by 100ms to avoid blocking initial render
+      });
     };
     
     // Only start prefetch after page load
