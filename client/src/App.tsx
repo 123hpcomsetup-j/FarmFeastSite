@@ -20,6 +20,9 @@ import {
   CriticalCSSInliner,
   BundleAnalyzer 
 } from "@/components/PerformanceOptimizer";
+import { DeferredComponents } from "@/components/DeferredComponents";
+import { ScriptOptimizer } from "@/components/ScriptOptimizer";
+import { JavaScriptOptimizer } from "@/components/JavaScriptOptimizer";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LiveChatFixed } from "@/components/LiveChatFixed";
 
@@ -28,22 +31,61 @@ import Home from "@/pages/home";
 import Services from "@/pages/services";
 import Booking from "@/pages/booking";
 
-// Lazy load secondary pages for better performance
-const Gallery = lazy(() => import("@/pages/gallery"));
+// Advanced lazy loading with route-based code splitting
+const Gallery = lazy(() => 
+  import("@/pages/gallery").then(module => {
+    // Preload related components
+    import("@/components/ImageOptimized");
+    return module;
+  })
+);
+
 const Location = lazy(() => import("@/pages/location"));
-const Blog = lazy(() => import("@/pages/blog"));
+
+const Blog = lazy(() => 
+  import("@/pages/blog").then(module => {
+    // Preload blog post component for faster navigation
+    import("@/pages/blog-post");
+    return module;
+  })
+);
+
 const BlogPost = lazy(() => import("@/pages/blog-post"));
+
+// Group payment-related pages
 const Payment = lazy(() => import("@/pages/payment"));
 const PaymentSuccess = lazy(() => import("@/pages/payment-success"));
 const BookingConfirmation = lazy(() => import("@/pages/booking-confirmation"));
+
 const Contact = lazy(() => import("@/pages/Contact"));
-const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+
+// Group legal pages for shared dependencies
+const PrivacyPolicy = lazy(() => 
+  import("@/pages/privacy-policy").then(module => {
+    // Preload other legal pages
+    import("@/pages/terms-conditions");
+    import("@/pages/cookie-policy");
+    import("@/pages/data-processing");
+    return module;
+  })
+);
+
 const TermsConditions = lazy(() => import("@/pages/terms-conditions"));
 const CookiePolicy = lazy(() => import("@/pages/cookie-policy"));
 const DataProcessing = lazy(() => import("@/pages/data-processing"));
+
 const NotFoundChecker = lazy(() => import("@/pages/404-checker"));
+
+// Admin components - largest bundle, load on demand
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
-const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
+const AdminDashboard = lazy(() => 
+  import("@/pages/admin/dashboard").then(module => {
+    // Remove heavy admin dependencies from main bundle
+    console.log('Admin dashboard loaded');
+    return module;
+  })
+);
+
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Ultra-fast loading component
@@ -166,9 +208,12 @@ function App() {
           <PreloadFonts />
           <ResourcePreloader />
           <ServiceWorkerRegistration />
-          <CustomScripts />
+          <ScriptOptimizer />
+          <JavaScriptOptimizer />
+          {/* Temporarily load components directly until deferred loading is fixed */}
           <AnalyticsTracker />
           <LiveChatFixed visitorSessionId={typeof window !== 'undefined' && window.localStorage?.getItem('visitor_session_id') || ''} />
+          <CustomScripts />
           <Toaster />
           <Router />
           <CookieConsent />

@@ -89,7 +89,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Defer non-critical scripts -->
-    <script defer type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    <!-- JavaScript optimization: Defer non-critical scripts -->
+    <script>
+      // Defer Replit banner until user interaction to reduce network activity
+      const loadReplitBanner = () => {
+        const script = document.createElement('script');
+        script.src = 'https://replit.com/public/js/replit-dev-banner.js';
+        script.defer = true;
+        script.async = true;
+        document.head.appendChild(script);
+      };
+      
+      // Load on first user interaction - saves initial bandwidth
+      ['mousedown', 'touchstart', 'keydown', 'scroll'].forEach(event => {
+        document.addEventListener(event, loadReplitBanner, { once: true, passive: true });
+      });
+      
+      // Fallback timeout for non-interactive users
+      setTimeout(loadReplitBanner, 8000);
+    </script>
   </body>
 </html>
